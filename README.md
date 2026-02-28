@@ -1,35 +1,153 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# 🎮🌍 U!REKA Play4Change
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+![Kotlin](https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF?logo=kotlin&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-Backend-6DB33F?logo=spring&logoColor=white)
+![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Edge_AI-F38020?logo=cloudflare&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?logo=docker&logoColor=white)
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+**Play4Change** is a multiplatform serious game focused on **sustainability, digital skill development, and behavioral transformation**.
 
-### Build and Run Android Application
-
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
-
-### Build and Run iOS Application
-
-To build and run the development version of the iOS app, use the run configuration from the run widget
-in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+Developed as a BSc final-year project at **ISEL (Instituto Superior de Engenharia de Lisboa)** in collaboration with the **U!REKA European University Alliance** and the **University of Amsterdam of Applied Sciences**.
 
 ---
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+## 🏗 Architecture Overview
+
+This project follows a **scalable, enterprise-grade monorepo architecture**, applying:
+
+- Domain-Driven Design (DDD)
+- Single Responsibility Principle (SRP)
+- Clean Architecture
+- Unidirectional Data Flow (UDF)
+
+---
+
+## 📦 Core Modules
+
+### 📱 `composeApp` — Client (Kotlin Multiplatform)
+
+- Built with **Kotlin Multiplatform (KMP)**
+- UI powered by **Jetpack Compose**
+- Lifecycle-aware routing using **Decompose**
+- Enforces deterministic state management (UDF)
+- Shared UI logic across Android & iOS
+- Memory-safe state handling
+
+---
+
+### ⚙️ `server` — Backend (Spring Boot)
+
+- Kotlin + Spring Boot
+- RESTful API architecture
+- PostgreSQL persistence
+- JPA / Hibernate ORM
+- OAuth 2.0 & Magic Link authentication
+- 12-Factor compliant design
+
+---
+
+### 🧠 `core` — Shared Domain Layer
+
+The functional heart of the application.
+
+- Shared across client & server
+- Kotlin value classes for strong domain modeling
+- Custom Monadic Comprehension pattern
+  - `Result` wrappers
+  - `.bind()` operators
+- Boilerplate-free, type-safe error handling
+- Framework-agnostic pure business logic
+
+---
+
+### ⚡ `ai-agent` — Edge AI Inference
+
+Deployed using Cloudflare Workers.
+
+- Built with Hono (TypeScript)
+- Vector database integration
+- LLaMA model inference
+- Processes Item Response Theory (IRT) data
+- Generates low-latency contextual hints
+
+---
+
+### 🐳 `infra` — DevOps & Observability
+
+- Fully containerized with Docker
+- Docker Compose orchestration
+- Prometheus metrics
+- Grafana dashboards
+- Centralized telemetry & monitoring
+
+---
+
+## ✨ Key Game Features
+
+### 🎯 Daily Adaptive Tasks
+Players receive sustainability and digital education challenges tailored to their progression.
+
+### 🤖 AI-Powered Contextual Hints
+Edge AI analyzes progression using IRT models to generate adaptive hints in real time.
+
+### 📊 Progression & Behavioral Tracking
+- User identification & progression tracking
+- Reward mechanisms for task completion
+- Penalty mechanisms for non-compliance
+- Behavioral analytics
+
+### 📡 Offline-First Architecture
+Custom `SyncManager`:
+- Offline state persistence
+- Conflict resolution
+- Automatic backend synchronization
+
+---
+
+## 📂 Repository Structure
+
+```text
+.
+├── ai-agent/         # Cloudflare Worker, Hono API Gateway, LLM integration
+├── composeApp/       # KMP mobile application (Android/iOS shared UI)
+├── core/             # Shared functional domain, value classes, Result wrappers
+├── infra/            # Docker compose, Prometheus config, Grafana dashboards
+├── server/           # Spring Boot application, PostgreSQL entities
+└── build.gradle.kts  # Monorepo build configuration
+```
+
+---
+
+## 🚀 Getting Started
+
+### 📋 Prerequisites
+
+- JDK 17+
+- Docker & Docker Compose
+- Node.js & npm (Cloudflare Wrangler)
+- Android Studio / Xcode
+
+---
+
+## 🛡 Engineering Principles
+
+- Test-Driven Development (TDD)
+- Clean Architecture
+- Strict concurrency discipline (Coroutines, Flow, Channels)
+- 12-Factor methodology
+- Stateless services
+- Observability-first design
+
+---
+
+## 🤝 Collaborators
+
+- **Radesh Govind** — Computer Science Engineering Student  
+- **Prof. Nuno Miguel Soares Datia (ISEL)** — Project Orientator  
+- **U!REKA European Alliance** — Project Sponsor  
+
+---
+
+## 📄 License
+
+This project is developed for academic and research purposes.
