@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -39,6 +40,25 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            // Architecture
+            implementation(libs.decompose)
+            implementation(libs.decompose.compose)
+
+            // Utils
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.coroutines.core)
+
+            //koin
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+
+            //ktor
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.serialization.json)
+
+            //dependencies
+            implementation(project(":core"))
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
