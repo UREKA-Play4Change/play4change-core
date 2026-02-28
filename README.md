@@ -11,6 +11,28 @@ Developed as a BSc final-year project at **ISEL (Instituto Superior de Engenhari
 
 ---
 
+## ✨ Key Game Features
+
+### 🎯 Daily Adaptive Tasks
+Players receive sustainability and digital education challenges tailored to their progression.
+
+### 🤖 AI-Powered Contextual Hints
+Edge AI analyzes progression using IRT models to generate adaptive hints in real time.
+
+### 📊 Progression & Behavioral Tracking
+- User identification & progression tracking
+- Reward mechanisms for task completion
+- Penalty mechanisms for non-compliance
+- Behavioral analytics
+
+### 📡 Offline-First Architecture
+Custom `SyncManager`:
+- Offline state persistence
+- Conflict resolution
+- Automatic backend synchronization
+
+---
+
 ## 🏗 Architecture Overview
 
 This project follows a **scalable, enterprise-grade monorepo architecture**, applying:
@@ -19,6 +41,20 @@ This project follows a **scalable, enterprise-grade monorepo architecture**, app
 - Single Responsibility Principle (SRP)
 - Clean Architecture
 - Unidirectional Data Flow (UDF)
+
+---
+
+## 📂 Repository Structure
+
+```text
+.
+├── ai-agent/         # Cloudflare Worker, Hono API Gateway, LLM integration
+├── composeApp/       # KMP mobile application (Android/iOS shared UI)
+├── core/             # Shared functional domain, value classes, Result wrappers
+├── infra/            # Docker compose, Prometheus config, Grafana dashboards
+├── server/           # Spring Boot application, PostgreSQL entities
+└── build.gradle.kts  # Monorepo build configuration
+```
 
 ---
 
@@ -79,42 +115,6 @@ Deployed using Cloudflare Workers.
 - Prometheus metrics
 - Grafana dashboards
 - Centralized telemetry & monitoring
-
----
-
-## ✨ Key Game Features
-
-### 🎯 Daily Adaptive Tasks
-Players receive sustainability and digital education challenges tailored to their progression.
-
-### 🤖 AI-Powered Contextual Hints
-Edge AI analyzes progression using IRT models to generate adaptive hints in real time.
-
-### 📊 Progression & Behavioral Tracking
-- User identification & progression tracking
-- Reward mechanisms for task completion
-- Penalty mechanisms for non-compliance
-- Behavioral analytics
-
-### 📡 Offline-First Architecture
-Custom `SyncManager`:
-- Offline state persistence
-- Conflict resolution
-- Automatic backend synchronization
-
----
-
-## 📂 Repository Structure
-
-```text
-.
-├── ai-agent/         # Cloudflare Worker, Hono API Gateway, LLM integration
-├── composeApp/       # KMP mobile application (Android/iOS shared UI)
-├── core/             # Shared functional domain, value classes, Result wrappers
-├── infra/            # Docker compose, Prometheus config, Grafana dashboards
-├── server/           # Spring Boot application, PostgreSQL entities
-└── build.gradle.kts  # Monorepo build configuration
-```
 
 ---
 
