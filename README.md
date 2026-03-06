@@ -19,22 +19,6 @@
 
 ---
 
-## 📋 Table of Contents
-
-- [Overview](#-overview)
-- [Architecture](#-architecture)
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [Getting Started](#-getting-started)
-- [Project Structure](#-project-structure)
-- [Configuration](#-configuration)
-- [Deployment](#-deployment)
-- [Roadmap](#-roadmap)
-- [Academic Context](#-academic-context)
-- [License](#-license)
-
----
-
 ## 🎯 Overview
 
 U!REKA Play4Change is a **multiplatform serious game** in which players receive AI-generated daily challenges aligned with **sustainability** and **digital education** themes. Players earn points and badges for completing tasks, and lose points for inactivity — creating a powerful engagement loop grounded in established game-design research.
@@ -54,7 +38,7 @@ The platform is designed to be **fully configurable**: subject domains, difficul
 
 ## 🏗️ Architecture
 
-> See the [Architecture Wiki page](../../wiki/Architecture) for the full annotated diagram and design decisions.
+> See the Wiki page for the full annotated diagram and design decisions.
 
 The system follows a **clean architecture** pattern on both client and server:
 
@@ -63,24 +47,6 @@ The system follows a **clean architecture** pattern on both client and server:
 - **Database** — PostgreSQL for persistent state; `pgvector` extension for semantic deduplication of AI-generated tasks.
 - **AI Pipeline** — LangChain4j orchestrates task generation via the EU-hosted Mistral API. All generated content is schema-validated before storage.
 - **Observability** — Prometheus metrics exposed via Spring Boot Actuator, visualised in Grafana.
-
----
-
-## ✨ Features
-
-### Minimum Viable Features
-- [x] Android application (Kotlin Multiplatform)
-- [x] Passwordless OAuth 2.0 authentication with JWT access/refresh token rotation
-- [x] AI-generated daily tasks and hints (one configurable subject domain)
-- [x] Daily push notifications via device-native local scheduling
-- [x] Scoring engine: points, badges, and score-deduction penalties
-- [x] Backend deployed via Docker Compose (PostgreSQL + pgvector)
-
-### Extended Features
-- [ ] iOS build target
-- [ ] Multi-language support & Dark/Light theme toggle
-- [ ] User-selectable course catalogue (multiple subject domains)
-- [ ] Prometheus / Grafana observability dashboard
 
 ---
 
@@ -106,23 +72,6 @@ The system follows a **clean architecture** pattern on both client and server:
 | Scheduling | Spring `@Scheduled` |
 | Observability | Prometheus + Grafana |
 | Containerisation | Docker Compose |
-
----
-
-## 🗺️ Roadmap
-
-| Weeks | Milestone |
-|-------|-----------|
-| 1–2 | Monorepo scaffold, CI/CD pipeline |
-| 3–4 | KMP client end-to-end flow |
-| 5–6 | Authentication + DB schema |
-| 7–8 | Scoring/penalty engine + REST API — **M2: Progress Report (27 Apr)** |
-| 9–10 | AI content pipeline (LangChain4j + Mistral + pgvector) |
-| 11 | Offline-first client + cold-start content |
-| 12 | Notifications — **M3: Beta (1 Jun)** |
-| 13 | UI polish |
-| 14 | Prometheus + Grafana observability |
-| 15–16 | Final polish & submission — **M4: Final Report (11 Jul)** |
 
 ---
 
