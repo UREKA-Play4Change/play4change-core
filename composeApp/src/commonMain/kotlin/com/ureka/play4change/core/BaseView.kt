@@ -13,7 +13,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.ureka.play4change.core.component.base.BaseComponent
 import com.ureka.play4change.core.component.base.ComponentEvents
 import com.ureka.play4change.core.component.base.ComponentState
-import com.ureka.play4change.design.atoms.ErrorDialog
+import com.ureka.play4change.core.component.error.ErrorDialog
 
 /**
  * A standard wrapper for all screens.
