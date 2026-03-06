@@ -1,0 +1,35 @@
+name: Kotlin CI/CD Pipeline
+
+# This tells GitHub to run this script whenever someone pushes to main
+# or opens a Pull Request targeting the main branch.
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest # Runs on a fresh Linux virtual machine
+
+    steps:
+    # 1. Download your repository's code onto the virtual machine
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # 2. Install Java (Required to run Kotlin and Gradle)
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: 'gradle' # This magically speeds up future builds!
+
+    # 3. Give the machine permission to run your Gradle wrapper
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    # 4. The actual Build and Test command! 
+    # This compiles the Spring Boot server and the KMP client, and runs all tests.
+    - name: Build and run tests with Gradle
+      run: ./gradlew build
