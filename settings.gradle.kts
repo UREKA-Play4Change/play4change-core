@@ -31,3 +31,5 @@ dependencyResolutionManagement {
 include(":composeApp")
 include(":common")
 include(":server")
+include(":ai-agent:api")
+include(":ai-agent:langchain")
