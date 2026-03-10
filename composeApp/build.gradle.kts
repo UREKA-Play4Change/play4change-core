@@ -58,7 +58,7 @@ kotlin {
             implementation(libs.ktor.serialization.json)
 
             //dependencies
-            implementation(project(":core"))
+            implementation(project(":common"))
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

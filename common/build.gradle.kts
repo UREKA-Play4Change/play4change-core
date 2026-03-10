@@ -39,7 +39,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.ureka.play4change.core"
+    namespace = "com.ureka.play4change.common"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()

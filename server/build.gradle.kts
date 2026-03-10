@@ -11,7 +11,7 @@ group = "com.ureka.play4change"
 version = "0.0.0"
 
 dependencies {
-    implementation(project(":core"))
+    implementation(project(":common"))
 
     implementation(libs.spring.boot.starter.web)
     implementation(libs.spring.boot.starter.data.jpa)
