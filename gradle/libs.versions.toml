@@ -1,8 +1,5 @@
 [versions]
 agp = "8.11.2"
-android-compileSdk = "36"
-android-minSdk = "24"
-android-targetSdk = "36"
 androidx-activity = "1.12.2"
 androidx-appcompat = "1.7.1"
 androidx-core = "1.17.0"
@@ -26,6 +23,43 @@ springDependencyManagement = "1.1.4"
 jjwt = "0.12.5"
 google-auth = "1.23.0"
 uuid = "0.8.4"
+# Kotlin
+kotlinxCoroutines = "1.9.0"
+kotlinxSerialization = "1.7.3"
+kotlinxDatetime = "0.6.1"
+arrow = "1.2.4"
+
+# Android
+androidMinSdk = "24"
+androidTargetSdk = "35"
+androidCompileSdk = "35"
+
+# Compose
+compose = "1.7.5"
+activityCompose = "1.9.3"
+navigationCompose = "2.8.4"
+
+
+# AI
+langchain4j = "0.36.2"
+mistral = "0.36.2"
+
+# Database
+postgresql = "42.7.4"
+pgvector = "0.1.6"
+flyway = "10.20.1"
+hikari = "5.1.0"
+
+# Resilience
+resilience4j = "2.2.0"
+
+# Observability
+micrometer = "1.13.6"
+prometheusRegistry = "1.13.6"
+
+# Testing
+mockk = "1.13.12"
+kotest = "5.9.1"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -36,7 +70,7 @@ androidx-testExt-junit = { module = "androidx.test.ext:junit", version.ref = "an
 androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "androidx-espresso" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
-compose-uiTooling = { module = "org.jetbrains.compose.ui:ui-tooling", version.ref = "composeMultiplatform" }
+compose-multiplatform-uiTooling = { module = "org.jetbrains.compose.ui:ui-tooling", version.ref = "composeMultiplatform" }
 androidx-lifecycle-viewmodelCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtimeCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }
@@ -62,10 +96,12 @@ koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin-compose" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 # Spring Boot Starters
-spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web" }
-spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
-spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation" }
-spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator" }
+spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web", version.ref = "springBoot" }
+spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa", version.ref = "springBoot" }
+spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation", version.ref = "springBoot" }
+spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator", version.ref = "springBoot" }
+
+
 # Database
 postgresql = { module = "org.postgresql:postgresql" }
 jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
@@ -76,6 +112,56 @@ spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-
 google-auth-library = { module = "com.google.auth:google-auth-library-oauth2-http", version.ref = "google-auth" }
 google-api-client = { module = "com.google.api-client:google-api-client", version = "2.2.0" }
 kotlinx-uuid = { module = "com.benasher44:uuid", version.ref = "uuid" }
+# ── Kotlin ────────────────────────────────────────────────────────────────────
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
+
+# ── Arrow ─────────────────────────────────────────────────────────────────────
+arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
+arrow-fx-coroutines = { module = "io.arrow-kt:arrow-fx-coroutines", version.ref = "arrow" }
+
+# ── Android / Compose ─────────────────────────────────────────────────────────
+compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
+compose-navigation = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+
+# ── KMP ───────────────────────────────────────────────────────────────────────
+decompose-core = { module = "com.arkivanov.decompose:decompose", version.ref = "decompose" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
+ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+
+# ── Spring Boot ───────────────────────────────────────────────────────────────
+spring-boot-starter-oauth2-resource-server = { module = "org.springframework.boot:spring-boot-starter-oauth2-resource-server" }
+spring-retry = { module = "org.springframework.retry:spring-retry" }
+
+# ── AI ────────────────────────────────────────────────────────────────────────
+langchain4j-core = { module = "dev.langchain4j:langchain4j", version.ref = "langchain4j" }
+langchain4j-mistral = { module = "dev.langchain4j:langchain4j-mistral-ai", version.ref = "mistral" }
+langchain4j-pgvector = { module = "dev.langchain4j:langchain4j-pgvector", version.ref = "langchain4j" }
+
+# ── Database ──────────────────────────────────────────────────────────────────
+postgresql-driver = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+pgvector-jdbc = { module = "com.pgvector:pgvector", version.ref = "pgvector" }
+flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
+flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
+
+# ── Resilience ────────────────────────────────────────────────────────────────
+resilience4j-spring-boot3 = { module = "io.github.resilience4j:resilience4j-spring-boot3", version.ref = "resilience4j" }
+resilience4j-kotlin = { module = "io.github.resilience4j:resilience4j-kotlin", version.ref = "resilience4j" }
+
+# ── Observability ─────────────────────────────────────────────────────────────
+micrometer-core = { module = "io.micrometer:micrometer-core", version.ref = "micrometer" }
+micrometer-prometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "prometheusRegistry" }
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+kotest-runner = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
+kotest-assertions-arrow = { module = "io.kotest.extensions:kotest-assertions-arrow", version = "1.4.0" }
+spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -90,3 +176,5 @@ springDependencyManagement = { id = "io.spring.dependency-management", version.r
 kotlinSpring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
 kotlinJpa = { id = "org.jetbrains.kotlin.plugin.jpa", version.ref = "kotlin" }
 jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+flyway = { id = "org.flywaydb.flyway", version.ref = "flyway" }

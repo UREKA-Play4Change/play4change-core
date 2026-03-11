@@ -1,39 +1,41 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm")
-    alias(libs.plugins.springBoot)
-    alias(libs.plugins.springDependencyManagement)
+    alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.kotlinSpring)
-    alias(libs.plugins.kotlinJpa)
-    alias(libs.plugins.kotlinSerialization)
 }
-
-group = "com.ureka.play4change"
-version = "0.0.0"
 
 dependencies {
+    // Contract to implement
+    implementation(project(":ai-agent:api"))
     implementation(project(":common"))
 
+    // Spring (for @Service, @Component, @Value injection)
     implementation(libs.spring.boot.starter.web)
+
+    // LangChain4j — core + Mistral provider
+    implementation(libs.langchain4j.core)
+    implementation(libs.langchain4j.mistral)
+    implementation(libs.langchain4j.pgvector)
+
+    // Database — pgvector for similarity search
+    implementation(libs.postgresql.driver)
+    implementation(libs.pgvector.jdbc)
+
+    // Coroutines
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.arrow.core)
+    implementation(libs.kotlinx.datetime)
+
+    // Observability
+    implementation(libs.micrometer.core)
+
+    implementation(libs.postgresql.driver)
+    implementation(libs.pgvector.jdbc)
+
+    // Add this to provide JdbcTemplate and Spring Data capabilities
     implementation(libs.spring.boot.starter.data.jpa)
-    implementation(libs.spring.boot.starter.validation)
-    implementation(libs.spring.boot.starter.actuator)
 
-    runtimeOnly(libs.postgresql)
-
-    testImplementation(libs.junit)
-    testImplementation(libs.kotlin.test)
-
-    implementation(libs.spring.boot.starter.security)
-    implementation(libs.kotlinx.serialization.json)
-
-    implementation(libs.jjwt.api)
-    runtimeOnly(libs.jjwt.impl)
-    runtimeOnly(libs.jjwt.jackson)
-    implementation(libs.spring.security.crypto)
-    implementation("org.springframework.boot:spring-boot-starter-data-redis")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-}
-
-kotlin {
-    jvmToolchain(21)
+    // Testing
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotest.runner)
 }
