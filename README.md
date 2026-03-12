@@ -36,45 +36,6 @@ The platform is designed to be **fully configurable**: subject domains, difficul
 
 ---
 
-## 🏗️ Architecture
-
-> See the Wiki page for the full annotated diagram and design decisions.
-
-The system follows a **clean architecture** pattern on both client and server:
-
-- **Client** — Kotlin Multiplatform with Compose Multiplatform UI; Decompose for navigation; Koin for dependency injection. Offline-first with background sync.
-- **Server** — Spring Boot RESTful API with layered architecture (Web → Services → Repository → Domain). Spring `@Scheduled` drives nightly AI batch jobs.
-- **Database** — PostgreSQL for persistent state; `pgvector` extension for semantic deduplication of AI-generated tasks.
-- **AI Pipeline** — LangChain4j orchestrates task generation via the EU-hosted Mistral API. All generated content is schema-validated before storage.
-- **Observability** — Prometheus metrics exposed via Spring Boot Actuator, visualised in Grafana.
-
----
-
-## 🛠️ Tech Stack
-
-### Client
-| Layer | Technology |
-|-------|-----------|
-| UI | Compose Multiplatform |
-| Navigation | Decompose |
-| DI | Koin |
-| Networking | Ktor Client |
-| Targets | Android (primary), iOS (extended) |
-
-### Server
-| Layer | Technology |
-|-------|-----------|
-| Framework | Spring Boot 3.x |
-| Language | Kotlin (JVM) |
-| Persistence | PostgreSQL + pgvector |
-| AI Orchestration | LangChain4j |
-| LLM Provider | Mistral AI (EU-hosted) |
-| Scheduling | Spring `@Scheduled` |
-| Observability | Prometheus + Grafana |
-| Containerisation | Docker Compose |
-
----
-
 ## 🎓 Academic Context
 
 This project is developed as part of the **Projecto e Seminário** course unit in the **Licenciatura em Engenharia Informática e de Computadores** at [ISEL – Instituto Superior de Engenharia de Lisboa](https://www.isel.pt).
