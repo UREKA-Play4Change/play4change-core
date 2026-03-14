@@ -1,0 +1,79 @@
+  services:
+
+    # ── PostgreSQL + pgvector ──────────────────────────────────────────────────
+    # pgvector/pgvector image ships PostgreSQL 16 with the pgvector extension
+    # pre-installed. No manual extension setup needed.
+    postgres:
+      image: pgvector/pgvector:pg16
+      container_name: play4change-postgres
+      environment:
+        POSTGRES_DB: play4change
+        POSTGRES_USER: play4change
+        POSTGRES_PASSWORD: play4change
+      ports:
+        - "5432:5432"
+      volumes:
+        - postgres_data:/var/lib/postgresql/data
+        - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U play4change -d play4change"]
+        interval: 5s
+        timeout: 5s
+        retries: 5
+
+    # ── Spring Boot server ─────────────────────────────────────────────────────
+    server:
+      build:
+        context: .
+        dockerfile: server/Dockerfile
+      container_name: play4change-server
+      environment:
+        SPRING_PROFILES_ACTIVE: demo
+        DB_USER: play4change
+        DB_PASS: play4change
+        SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/play4change
+        MISTRAL_API_KEY: ${MISTRAL_API_KEY}
+      ports:
+        - "8080:8080"
+      depends_on:
+        postgres:
+          condition: service_healthy
+      healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+
+    # ── Prometheus ────────────────────────────────────────────────────────────
+    prometheus:
+      image: prom/prometheus:latest
+      container_name: play4change-prometheus
+      ports:
+        - "9090:9090"
+      volumes:
+        - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      command:
+        - "--config.file=/etc/prometheus/prometheus.yml"
+        - "--storage.tsdb.retention.time=7d"
+      depends_on:
+        - server
+
+    # ── Grafana ───────────────────────────────────────────────────────────────
+    grafana:
+      image: grafana/grafana:latest
+      container_name: play4change-grafana
+      ports:
+        - "3000:3000"
+      environment:
+        GF_SECURITY_ADMIN_PASSWORD: admin
+        GF_USERS_ALLOW_SIGN_UP: "false"
+      volumes:
+        - grafana_data:/var/lib/grafana
+        - ./infra/grafana/dashboards:/etc/grafana/dashboards
+        - ./infra/grafana/provisioning:/etc/grafana/provisioning
+      depends_on:
+        - prometheus
+
+  volumes:
+    postgres_data:
+    grafana_data:

@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: play4change-server
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://play4change-postgres:5432/play4change}
+    username: play4change
+    password: play4change
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus, metrics
+  metrics:
+    tags:
+      application: ${spring.application.name}

@@ -1,0 +1,11 @@
+# infra/grafana/provisioning/dashboards/dashboard.yml
+# Tells Grafana where to find dashboard JSON files.
+# Put your dashboard.json in infra/grafana/dashboards/ and it loads automatically.
+
+apiVersion: 1
+
+providers:
+  - name: play4change
+    type: file
+    options:
+      path: /etc/grafana/dashboards

@@ -1,3 +1,6 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     alias(libs.plugins.kotlinJvm) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
@@ -8,4 +11,12 @@ plugins {
     alias(libs.plugins.springBoot) apply false
     alias(libs.plugins.springDependencyManagement) apply false
     alias(libs.plugins.kotlinSpring) apply false
+}
+
+allprojects {
+    tasks.withType<KotlinCompile>().configureEach {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_21)
+        }
+    }
 }

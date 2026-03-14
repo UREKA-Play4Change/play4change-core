@@ -32,6 +32,7 @@ dependencies {
     implementation(libs.spring.security.crypto)
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("io.micrometer:micrometer-registry-prometheus")
 }
 
 kotlin {

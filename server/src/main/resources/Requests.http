@@ -1,0 +1,11 @@
+### Create a New Course
+POST http://localhost:8080/play4change/courses/create
+Content-Type: application/json
+
+{}
+
+### Get Daily Tasks
+GET http://localhost:8080/play4change/tasks/daily
+
+### Submit a Task (Note: This will currently return a 500/Internal Error because of the TODO())
+GET http://localhost:8080/play4change/tasks/submit
