@@ -3,9 +3,9 @@ package com.ureka.play4change.config
 import dev.langchain4j.model.chat.ChatLanguageModel
 import dev.langchain4j.model.embedding.EmbeddingModel
 import dev.langchain4j.model.mistralai.MistralAiChatModel
-import dev.langchain4j.model.mistralai.MistralAiChatModelName
 import dev.langchain4j.model.mistralai.MistralAiEmbeddingModel
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.time.Duration
@@ -13,17 +13,16 @@ import java.time.Duration
 // ─────────────────────────────────────────────────────────────────────────────
 //  LangChain4jConfig
 //
-//  Wires LangChain4j beans. This is the ONLY place Mistral is configured.
-//  To swap providers: replace these beans with OpenAI/Gemini equivalents.
-//  Everything else in :ai-agent:langchain and :server remains unchanged.
+//  @ConditionalOnProperty means these beans only load when
+//  ai.mistral.api-key is set to a real value in application.yml / .env
 //
-//  Provider agnosticism is achieved through:
-//  1. TaskGenerationPort interface (:ai-agent:api)
-//  2. LangChain4jTaskGenerationAdapter implements it (:ai-agent:langchain)
-//  3. ChatLanguageModel and EmbeddingModel are LangChain4j abstractions
-//     — they work the same regardless of which provider backs them
+//  Without a key: Spring starts fine, AI endpoints return 503 gracefully
+//  With a key: full AI pipeline activates automatically
+//
+//  This is the correct pattern for optional external dependencies.
 // ─────────────────────────────────────────────────────────────────────────────
 @Configuration
+@ConditionalOnProperty(name = ["ai.mistral.api-key"], matchIfMissing = false)
 class LangChain4jConfig(
     @Value("\${ai.mistral.api-key}") private val apiKey: String,
     @Value("\${ai.mistral.model:mistral-small-latest}") private val model: String,
@@ -38,15 +37,13 @@ class LangChain4jConfig(
             .modelName(model)
             .temperature(temperature)
             .timeout(Duration.ofSeconds(timeoutSeconds))
-            .logRequests(false)   // set true for debugging, never in prod
+            .logRequests(false)
             .logResponses(false)
             .build()
     }
 
     @Bean
     fun embeddingModel(): EmbeddingModel {
-        // Mistral embedding model for pgvector similarity search
-        // Same API key, different endpoint
         return MistralAiEmbeddingModel.builder()
             .apiKey(apiKey)
             .timeout(Duration.ofSeconds(timeoutSeconds))

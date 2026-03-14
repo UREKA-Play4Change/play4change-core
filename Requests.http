@@ -1,0 +1,46 @@
+### ── 1. Create course (seeds mock tasks, no Mistral needed) ─────────────────
+POST http://localhost:8080/play4change/courses/create
+Content-Type: application/json
+
+{
+  "title": "Sustainability Basics",
+  "subjectDomain": "sustainability",
+  "moduleTitle": "Introduction to Sustainability",
+  "moduleObjective": "Understand the core principles of sustainable living",
+  "durationDays": 3
+}
+
+### ── 2. Get today's task — copy moduleId from response above ─────────────────
+### First call: assigns a random task from pool, stores it
+### Repeat call: returns the same task (idempotency test)
+GET http://localhost:8080/play4change/tasks/daily?moduleId=4d5f3f99-268a-4d1a-a35d-900dab305af6&dayIndex=0
+X-User-Id: user1
+
+### ── 3. Different user — gets a different task from the same pool ────────────
+GET http://localhost:8080/play4change/tasks/daily?moduleId=PASTE_MODULE_ID&dayIndex=0
+X-User-Id: user2
+
+### ── 4. Submit MCQ answer — copy userTaskId from response above ──────────────
+### selectedOption 0 = first option shown (after shuffle)
+POST http://localhost:8080/play4change/tasks/PASTE_USER_TASK_ID/submit
+Content-Type: application/json
+X-User-Id: user1
+
+{
+  "selectedOption": 0
+}
+
+### ── 5. Submit TODO_ACTION answer ────────────────────────────────────────────
+POST http://localhost:8080/play4change/tasks/PASTE_USER_TASK_ID/submit
+Content-Type: application/json
+X-User-Id: user1
+
+{
+  "textAnswer": "I brought my reusable bag to the supermarket today instead of using plastic bags."
+}
+
+### ── Health check ─────────────────────────────────────────────────────────────
+GET http://localhost:8080/actuator/health
+
+### ── Prometheus metrics ───────────────────────────────────────────────────────
+GET http://localhost:8080/actuator/prometheus

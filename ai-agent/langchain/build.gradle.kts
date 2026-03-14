@@ -8,6 +8,7 @@ dependencies {
     implementation(project(":ai-agent:api"))
     implementation(project(":common"))
 
+    implementation(libs.kotlinx.serialization.json)
     // Spring (for @Service, @Component, @Value injection)
     implementation(libs.spring.boot.starter.web)
 

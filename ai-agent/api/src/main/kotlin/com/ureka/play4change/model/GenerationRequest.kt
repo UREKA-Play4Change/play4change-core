@@ -1,5 +1,7 @@
 package com.ureka.play4change.model
 
+import com.ureka.play4change.domain.AudienceLevel
+
 data class GenerationRequest(
     val courseId: String,
     val moduleId: String,

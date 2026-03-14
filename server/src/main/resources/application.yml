@@ -8,9 +8,37 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
+      properties:
+        hibernate:
+          dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
 
+    messages:
+      basename: i18n/messages
+      encoding: UTF-8
+
+# ── AI — only activates when api-key is set to a real value ──────────────────
+# Leave as 'not-set-yet' to run without Mistral
+# Set to your real key when ready to test AI generation
+ai:
+  mistral:
+    api-key: ${MISTRAL_API_KEY:not-set-yet}
+    model: mistral-small-latest
+    temperature: 0.7
+    timeout-seconds: 60
+  generation:
+    pool-size: 3
+    subtask-count: 3
+  dedup:
+    full-reuse-threshold: 0.90
+    partial-reuse-threshold: 0.65
+
+# ── Observability ─────────────────────────────────────────────────────────────
 management:
   endpoints:
     web:
@@ -19,3 +47,18 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+# ── Resilience4j ──────────────────────────────────────────────────────────────
+resilience4j:
+  circuit-breaker:
+    instances:
+      aiAgent:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+  retry:
+    instances:
+      aiAgent:
+        max-attempts: 3
+        wait-duration: 2s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2

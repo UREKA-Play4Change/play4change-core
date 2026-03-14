@@ -12,7 +12,7 @@ version = "0.0.0"
 
 dependencies {
     implementation(project(":common"))
-
+    implementation(project(":ai-agent:api"))
     implementation(libs.spring.boot.starter.web)
     implementation(libs.spring.boot.starter.data.jpa)
     implementation(libs.spring.boot.starter.validation)

@@ -8,17 +8,6 @@ import org.springframework.stereotype.Component
 import org.springframework.web.servlet.HandlerInterceptor
 import java.util.concurrent.TimeUnit
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  LoggingInterceptor
-//
-//  Logs every request with method, path, status code, and duration.
-//  Also records a Prometheus histogram for request duration — this is what
-//  feeds your Grafana dashboards with API latency data.
-//
-//  Runs AFTER the RequestIdFilter so every log line here has the request ID
-//  from MDC automatically (configured in logback.xml).
-//
-// ─────────────────────────────────────────────────────────────────────────────
 @Component
 class LoggingInterceptor(
     private val meterRegistry: MeterRegistry

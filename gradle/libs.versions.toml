@@ -31,8 +31,8 @@ arrow = "1.2.4"
 
 # Android
 androidMinSdk = "24"
-androidTargetSdk = "35"
-androidCompileSdk = "35"
+androidTargetSdk = "36"
+androidCompileSdk = "36"
 
 # Compose
 compose = "1.7.5"
