@@ -1,11 +1,13 @@
-package com.ureka.play4change.config
+package com.ureka.play4change.infra.config
 
+import com.ureka.play4change.model.*
 import dev.langchain4j.model.chat.ChatLanguageModel
 import dev.langchain4j.model.embedding.EmbeddingModel
 import dev.langchain4j.model.mistralai.MistralAiChatModel
 import dev.langchain4j.model.mistralai.MistralAiEmbeddingModel
+import kotlinx.serialization.json.*
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.time.Duration
@@ -22,7 +24,7 @@ import java.time.Duration
 //  This is the correct pattern for optional external dependencies.
 // ─────────────────────────────────────────────────────────────────────────────
 @Configuration
-@ConditionalOnProperty(name = ["ai.mistral.api-key"], matchIfMissing = false)
+@ConditionalOnExpression("'\${ai.mistral.api-key:}' != '' && '\${ai.mistral.api-key:}' != 'not-set-yet'")
 class LangChain4jConfig(
     @Value("\${ai.mistral.api-key}") private val apiKey: String,
     @Value("\${ai.mistral.model:mistral-small-latest}") private val model: String,

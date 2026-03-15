@@ -13,6 +13,14 @@ class TaskController(
     private val taskService: TaskService
 ) {
 
+    @GetMapping("/today")
+    fun todayTask(
+        @RequestHeader("X-User-Id") userId: String
+    ): ResponseEntity<TaskResponse> {
+        val task = taskService.getTodayTask(userId)
+        return ResponseEntity.ok(task)
+    }
+
     @GetMapping("/daily")
     fun dailyTask(
         @RequestHeader("X-User-Id") userId: String,

@@ -2,8 +2,12 @@ package com.ureka.play4change.services
 
 import com.ureka.play4change.domain.*
 import com.ureka.play4change.repo.TaskTemplateRepository
+import com.ureka.play4change.repo.UserSubscriptionRepository
 import com.ureka.play4change.repo.UserTaskEntity
 import com.ureka.play4change.repo.UserTaskRepository
+import org.springframework.http.HttpStatus
+import org.springframework.web.server.ResponseStatusException
+import java.time.temporal.ChronoUnit
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
@@ -15,11 +19,27 @@ import java.time.OffsetDateTime
 @Service
 class TaskService(
     private val taskTemplateRepository: TaskTemplateRepository,
-    private val userTaskRepository: UserTaskRepository
+    private val userTaskRepository: UserTaskRepository,
+    private val subscriptionRepository: UserSubscriptionRepository
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
     private val json = Json { ignoreUnknownKeys = true }
+
+    // ── GET today's task — resolves dayIndex from active subscription ─────────
+
+    @Transactional
+    fun getTodayTask(userId: String): TaskResponse {
+        val subscription = subscriptionRepository.findByUserIdAndStatus(userId, "ACTIVE")
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "No active subscription")
+
+        val dayIndex = ChronoUnit.DAYS.between(
+            subscription.enrolledAt.toLocalDate(),
+            LocalDate.now()
+        ).toInt()
+
+        return getDailyTask(userId, subscription.module.id, dayIndex)
+    }
 
     // ── GET daily task — lazy + idempotent ───────────────────────────────────
 

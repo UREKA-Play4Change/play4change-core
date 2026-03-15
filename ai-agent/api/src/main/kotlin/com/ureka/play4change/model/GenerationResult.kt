@@ -11,21 +11,23 @@ data class GeneratedTask(
     val description: String,
     val hint: String,
     val pointsReward: Int,
-    val embedding: FloatArray,       // pgvector embedding for deduplication
-    val status: GenerationStatus
+    val embedding: FloatArray,
+    val status: GenerationStatus,
+    val optionsJson: String? = null,       // e.g. ["correct","wrong1","wrong2","wrong3"]
+    val correctAnswerIndex: Int? = 0       // always 0 — system shuffles before showing user
 )
 
 data class GenerationMetadata(
     val tasksRequested: Int,
     val tasksGenerated: Int,
-    val tasksDeduplicated: Int,      // skipped due to semantic similarity
+    val tasksDeduplicated: Int,
     val tokensUsed: Long,
     val generationTimeMs: Long,
-    val providerName: String         // e.g. "mistral", "openai" — for observability
+    val providerName: String
 )
 
 enum class GenerationStatus {
     SUCCESS,
     FAILED,
-    DUPLICATE   // skipped by pgvector deduplication
+    DUPLICATE
 }

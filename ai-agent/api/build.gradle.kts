@@ -9,3 +9,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.datetime)
 }
+
+kotlin {
+    jvmToolchain(21)
+}

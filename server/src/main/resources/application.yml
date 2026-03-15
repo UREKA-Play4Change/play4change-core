@@ -8,7 +8,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
       properties:
         hibernate:
           dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -27,7 +27,7 @@ spring:
 # Set to your real key when ready to test AI generation
 ai:
   mistral:
-    api-key: ${MISTRAL_API_KEY:not-set-yet}
+    api-key: "${MISTRAL_API_KEY:not-set-yet}"
     model: mistral-small-latest
     temperature: 0.7
     timeout-seconds: 60

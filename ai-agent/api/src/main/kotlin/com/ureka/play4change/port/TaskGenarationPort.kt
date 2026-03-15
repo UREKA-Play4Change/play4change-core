@@ -10,6 +10,7 @@ import com.ureka.play4change.model.StruggleContext
  * THE contract between :server and the AI layer.
  * To swap LLM providers: implement this interface, register as @Primary bean.
  * */
+
 interface TaskGenerationPort {
 
     /**

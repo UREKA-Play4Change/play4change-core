@@ -74,3 +74,8 @@ data class CreateCourseResponse(
     val durationDays: Int,
     val tasksSeeded: Int
 )
+
+data class EnrollResponse(
+    val subscriptionId: String,
+    val enrolledAt: java.time.OffsetDateTime
+)

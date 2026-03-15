@@ -9,11 +9,18 @@ import org.springframework.stereotype.Repository
 interface CourseRepository : JpaRepository<CourseEntity, String>
 
 @Repository
-interface CourseModuleRepository : JpaRepository<CourseModuleEntity, String>
+interface CourseModuleRepository : JpaRepository<CourseModuleEntity, String> {
+    fun findByCourseIdOrderByOrderIndexAsc(courseId: String): List<CourseModuleEntity>
+}
 
 @Repository
 interface TaskTemplateRepository : JpaRepository<TaskTemplateEntity, String> {
     fun findByModuleIdAndDayIndex(moduleId: String, dayIndex: Int): List<TaskTemplateEntity>
+}
+
+@Repository
+interface UserSubscriptionRepository : JpaRepository<UserSubscriptionEntity, String> {
+    fun findByUserIdAndStatus(userId: String, status: String): UserSubscriptionEntity?
 }
 
 @Repository

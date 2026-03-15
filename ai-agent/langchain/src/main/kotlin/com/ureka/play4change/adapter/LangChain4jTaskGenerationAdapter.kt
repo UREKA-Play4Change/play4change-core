@@ -1,4 +1,4 @@
-package com.ureka.play4change
+package com.ureka.play4change.adapter
 
 import arrow.core.Either
 import arrow.core.left
@@ -7,22 +7,35 @@ import com.ureka.play4change.dedup.PgVectorDeduplicationService
 import com.ureka.play4change.dedup.SimilarityMatch
 import com.ureka.play4change.error.AppError
 import com.ureka.play4change.error.server.ServiceUnavailable
-import com.ureka.play4change.model.*
+import com.ureka.play4change.model.AdaptiveBranch
+import com.ureka.play4change.model.GeneratedTask
+import com.ureka.play4change.model.GenerationMetadata
+import com.ureka.play4change.model.GenerationRequest
+import com.ureka.play4change.model.GenerationResult
+import com.ureka.play4change.model.GenerationStatus
+import com.ureka.play4change.model.ReuseStrategy
+import com.ureka.play4change.model.StruggleContext
 import com.ureka.play4change.port.TaskGenerationPort
 import com.ureka.play4change.prompt.StruggleAnalysisPrompt
 import com.ureka.play4change.prompt.TaskGenerationPrompt
-import dev.langchain4j.model.chat.ChatLanguageModel
-import dev.langchain4j.model.embedding.EmbeddingModel
 import dev.langchain4j.data.message.SystemMessage
 import dev.langchain4j.data.message.UserMessage
+import dev.langchain4j.model.chat.ChatLanguageModel
+import dev.langchain4j.model.embedding.EmbeddingModel
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Primary
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Service
 import java.util.UUID
+import kotlin.collections.plus
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  LangChain4jTaskGenerationAdapter
@@ -34,6 +47,7 @@ import java.util.UUID
 //  TaskGenerationPort, mark it @Primary, done. Zero :server changes.
 // ─────────────────────────────────────────────────────────────────────────────
 @Service
+@Primary
 class LangChain4jTaskGenerationAdapter(
     private val chatModel: ChatLanguageModel,
     private val embeddingModel: EmbeddingModel,
@@ -209,7 +223,10 @@ class LangChain4jTaskGenerationAdapter(
 
     private fun parseTasksFromJson(rawJson: String, moduleId: String): List<GeneratedTask> {
         val json = Json { ignoreUnknownKeys = true }
-        val array = json.parseToJsonElement(rawJson.trim()).jsonArray
+        val cleaned = rawJson.trim()
+            .removePrefix("```json").removePrefix("```")
+            .removeSuffix("```").trim()
+        val array = json.parseToJsonElement(cleaned).jsonArray
 
         return array.mapNotNull { element ->
             runCatching {
@@ -218,6 +235,8 @@ class LangChain4jTaskGenerationAdapter(
                 val description = obj["description"]?.jsonPrimitive?.content ?: return@runCatching null
                 val hint = obj["hint"]?.jsonPrimitive?.content ?: return@runCatching null
                 val points = obj["pointsReward"]?.jsonPrimitive?.int ?: 20
+                val optionsJsonStr = obj["options"]?.jsonArray?.toString()
+                val correctIdx = obj["correctAnswerIndex"]?.jsonPrimitive?.int ?: 0
 
                 // Embed for deduplication check
                 val embedding = embeddingModel.embed("$title $description").content().vector()
@@ -231,7 +250,9 @@ class LangChain4jTaskGenerationAdapter(
                     hint = hint,
                     pointsReward = points,
                     embedding = embedding,
-                    status = if (isDuplicate) GenerationStatus.DUPLICATE else GenerationStatus.SUCCESS
+                    status = if (isDuplicate) GenerationStatus.DUPLICATE else GenerationStatus.SUCCESS,
+                    optionsJson = optionsJsonStr,
+                    correctAnswerIndex = correctIdx
                 )
             }.getOrNull()
         }

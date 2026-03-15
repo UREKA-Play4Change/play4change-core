@@ -5,6 +5,8 @@ import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 import java.time.OffsetDateTime
 import java.util.UUID
+import com.ureka.play4change.infra.converter.VectorConverter
+import org.hibernate.annotations.ColumnTransformer
 
 @Entity
 @Table(name = "courses")
@@ -46,7 +48,22 @@ class TaskTemplateEntity(
     @Column(columnDefinition = "jsonb") @JdbcTypeCode(SqlTypes.JSON) val options: String? = null,
     @Column(name = "correct_answer") val correctAnswer: Int? = null,
     @Column(name = "requires_ai_validation", nullable = false) val requiresAiValidation: Boolean = false,
-    @Column(name = "created_at", nullable = false) val createdAt: OffsetDateTime = OffsetDateTime.now()
+    @Column(name = "created_at", nullable = false) val createdAt: OffsetDateTime = OffsetDateTime.now(),
+    @Convert(converter = VectorConverter::class)
+    @Column(columnDefinition = "vector(384)")
+    @ColumnTransformer(write = "?::vector")
+    val embedding: FloatArray? = null
+)
+
+@Entity
+@Table(name = "user_subscriptions")
+class UserSubscriptionEntity(
+    @Id val id: String = UUID.randomUUID().toString(),
+    @Column(name = "user_id", nullable = false) val userId: String,
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "course_id", nullable = false) val course: CourseEntity,
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "module_id", nullable = false) val module: CourseModuleEntity,
+    @Column(name = "enrolled_at", nullable = false) val enrolledAt: OffsetDateTime = OffsetDateTime.now(),
+    @Column(nullable = false) val status: String = "ACTIVE"
 )
 
 @Entity

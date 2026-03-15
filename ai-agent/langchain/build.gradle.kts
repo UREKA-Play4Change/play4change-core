@@ -40,3 +40,7 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.kotest.runner)
 }
+
+kotlin {
+    jvmToolchain(21)
+}
