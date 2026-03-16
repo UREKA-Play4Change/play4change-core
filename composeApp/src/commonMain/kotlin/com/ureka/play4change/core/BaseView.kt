@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.ureka.play4change.core.component.base.BaseComponent
 import com.ureka.play4change.core.component.base.ComponentEvents
@@ -28,9 +27,7 @@ fun <S : ComponentState, E : ComponentEvents> BaseView(
 ) {
     val state by component.state.subscribeAsState()
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = screenAlignment
     ) {
         content(state, component::onEvent)

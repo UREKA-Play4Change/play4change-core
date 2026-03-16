@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- App -->
+  <string name="app_tagline">Play. Learn. Change.</string>
+  <string name="app_university">EUROPEAN UNIVERSITY</string>
+
+  <!-- Splash -->
+  <string name="splash_loading">Loading…</string>
+
+  <!-- Auth -->
+  <string name="login_welcome">Welcome</string>
+  <string name="login_subtitle">Sign in to continue your learning journey</string>
+  <string name="login_email_label">Email address</string>
+  <string name="login_email_error_invalid">Please enter a valid email address</string>
+  <string name="login_cta">Continue</string>
+  <string name="login_about_link">About U!REKA →</string>
+  <string name="login_link_sent_title">Check your inbox</string>
+  <string name="login_link_sent_body">We sent a sign-in link to %1$s</string>
+  <string name="login_link_expires">The link expires in 10 minutes</string>
+  <string name="login_resend">Resend link</string>
+  <string name="login_resend_countdown">Resend link (%1$ds)</string>
+
+  <!-- Home -->
+  <string name="home_greeting">Good morning, %1$s!</string>
+  <string name="home_this_week">This Week</string>
+  <string name="home_todays_challenge">Today\'s Challenge</string>
+  <string name="home_start_challenge">Start Challenge →</string>
+  <string name="home_completed_today">All done for today! See you tomorrow.</string>
+  <string name="home_no_task">No task available today. Check back tomorrow.</string>
+  <string name="home_pts_suffix">pts</string>
+  <string name="home_roadmap">Your Journey</string>
+
+  <!-- Task -->
+  <string name="task_question_label">Question</string>
+  <string name="task_show_hint">Show hint</string>
+  <string name="task_hide_hint">Hide hint</string>
+  <string name="task_submit">Submit</string>
+  <string name="task_continue">Continue →</string>
+  <string name="task_exit_title">Exit task?</string>
+  <string name="task_exit_body">Your progress on this question will be lost.</string>
+  <string name="task_exit_confirm">Exit</string>
+  <string name="task_exit_cancel">Keep going</string>
+  <string name="task_result_correct">Correct!</string>
+  <string name="task_result_wrong">Not quite — review the hint and try again tomorrow.</string>
+
+  <!-- Profile -->
+  <string name="profile_title">Profile</string>
+  <string name="profile_streak_label">Streak</string>
+  <string name="profile_points_label">Points</string>
+  <string name="profile_accuracy_label">Accuracy</string>
+  <string name="profile_level_label">Level %1$d</string>
+  <string name="profile_course_day">Day %1$d of %2$d</string>
+  <string name="profile_sign_out">Sign out</string>
+  <string name="profile_sign_out_confirm_title">Sign out?</string>
+  <string name="profile_sign_out_confirm_body">You will need to sign in again to continue.</string>
+
+  <!-- About -->
+  <string name="about_title">About</string>
+  <string name="about_project_title">The Project</string>
+  <string name="about_project_body">U!REKA Play4Change is a multiplatform serious game where players receive AI-generated daily challenges aligned with sustainability and digital education themes. Built as part of the Licenciatura em Engenharia Informática e de Computadores at ISEL.</string>
+  <string name="about_built_with">Built With</string>
+  <string name="about_architecture_title">Architecture</string>
+  <string name="about_architecture_body">Hexagonal architecture with a Ports &amp; Adapters AI pipeline. AI content generation runs as a nightly batch job, eliminating inference latency from the user experience. Adaptive branches provide personalised remediation via semantic similarity search using pgvector.</string>
+  <string name="about_author_label">Author</string>
+  <string name="about_author_name">Radesh Ilesh Gamanbhai Govind</string>
+  <string name="about_student_number">51620</string>
+  <string name="about_institution">ISEL — Instituto Superior de Engenharia de Lisboa</string>
+  <string name="about_supervisors">Prof. Nuno Datia · Prof. António Serrador · Prof. Michel Vorenhout</string>
+  <string name="about_footer">March 2026 · U!REKA European University</string>
+
+  <!-- Common -->
+  <string name="ok">OK</string>
+  <string name="cancel">Cancel</string>
+  <string name="error_unexpected">An unexpected error occurred.</string>
+  <string name="error_network">Could not connect. Check your internet connection.</string>
+  <string name="error_auth_required">Authentication required. Please sign in.</string>
+  <string name="error_service_unavailable">Service temporarily unavailable. Please try again later.</string>
+  <string name="error_not_found">The requested resource was not found.</string>
+  <string name="loading">Loading…</string>
+</resources>
