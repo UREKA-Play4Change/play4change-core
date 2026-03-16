@@ -8,11 +8,17 @@ plugins {
 kotlin {
     androidTarget {
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+            jvmTarget.set(JvmTarget.JVM_21)
         }
     }
 
-    jvm()
+    jvm {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_21)
+        }
+    }
+
+    jvmToolchain(21)
 
     listOf(
         iosX64(),
@@ -39,9 +45,9 @@ kotlin {
 }
 
 android {
-    namespace = "com.ureka.play4change.core"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    namespace = "com.ureka.play4change.common"
+    compileSdk = libs.versions.androidCompileSdk.get().toInt()
     defaultConfig {
-        minSdk = libs.versions.android.minSdk.get().toInt()
+        minSdk = libs.versions.androidMinSdk.get().toInt()
     }
 }

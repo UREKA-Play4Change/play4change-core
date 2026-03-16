@@ -1,4 +1,3 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -58,7 +57,7 @@ kotlin {
             implementation(libs.ktor.serialization.json)
 
             //dependencies
-            implementation(project(":core"))
+            implementation(project(":common"))
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -68,12 +67,12 @@ kotlin {
 
 android {
     namespace = "com.ureka.play4change"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    compileSdk = libs.versions.androidCompileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "com.ureka.play4change"
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        targetSdk = libs.versions.android.targetSdk.get().toInt()
+        minSdk = libs.versions.androidMinSdk.get().toInt()
+        targetSdk = libs.versions.androidTargetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
     }
@@ -94,6 +93,6 @@ android {
 }
 
 dependencies {
-    debugImplementation(libs.compose.uiTooling)
+    debugImplementation(libs.compose.multiplatform.uiTooling)
 }
 

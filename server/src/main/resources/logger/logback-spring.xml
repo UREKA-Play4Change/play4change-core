@@ -1,0 +1,32 @@
+<!-- logback-spring.xml -->
+<!-- Structured log format that includes the request ID from MDC -->
+<!-- Every log line during a request will show [req-id=a1b2c3] -->
+
+<configuration>
+
+    <springProfile name="default,demo">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <!-- Format: timestamp  LEVEL  [req-id]  logger  - message -->
+                <pattern>%d{HH:mm:ss.SSS} %highlight(%-5level) [%cyan(%X{req-id:--})] %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+        <!-- Your code at DEBUG level so you see full request flow -->
+        <logger name="com.ureka.play4change" level="DEBUG"/>
+    </springProfile>
+
+    <springProfile name="prod">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <!-- JSON structured logs in prod — parseable by log aggregators -->
+            </encoder>
+        </appender>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+</configuration>

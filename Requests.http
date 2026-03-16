@@ -1,0 +1,58 @@
+### ── 1. Create course ─────────────────────────────────────────────────────────
+### Copy the returned `id` into http-client.env.json as `courseId`
+POST {{baseUrl}}/play4change/courses/create
+Content-Type: application/json
+
+{
+  "title": "Sustainability Basics",
+  "subjectDomain": "sustainability",
+  "moduleTitle": "Introduction to Sustainability",
+  "moduleObjective": "Understand the core principles of sustainable living",
+  "durationDays": 3
+}
+
+### ── 2. Enroll user in course ─────────────────────────────────────────────────
+### Copy the returned `subscriptionId` — enrolledAt is your dayIndex anchor
+### Copy the returned `moduleId` into http-client.env.json as `moduleId`
+POST {{baseUrl}}/play4change/courses/{{courseId}}/enroll
+X-User-Id: {{userId}}
+
+### ── 3. Get today's task (uses enrolledAt to compute dayIndex server-side) ────
+### First call: assigns a random task from pool
+### Repeat call: returns the same task (idempotency)
+### Copy the returned `userTaskId` into http-client.env.json as `userTaskId`
+GET {{baseUrl}}/play4change/tasks/today
+X-User-Id: {{userId}}
+
+### ── 4. Get today's task — different user (should get different task) ──────────
+GET {{baseUrl}}/play4change/tasks/today
+X-User-Id: user2
+
+### ── 5. Submit MCQ answer ─────────────────────────────────────────────────────
+### selectedOption 0 = first option shown (after shuffle)
+POST {{baseUrl}}/play4change/tasks/{{userTaskId}}/submit
+Content-Type: application/json
+X-User-Id: {{userId}}
+
+{
+  "selectedOption": 3
+}
+
+### ── 6. Submit TODO_ACTION answer ─────────────────────────────────────────────
+POST {{baseUrl}}/play4change/tasks/{{userTaskId}}/submit
+Content-Type: application/json
+X-User-Id: {{userId}}
+
+{
+  "textAnswer": "I brought my reusable bag to the supermarket today instead of using plastic bags."
+}
+
+### ── 7. Get daily task (old endpoint, still works) ────────────────────────────
+GET {{baseUrl}}/play4change/tasks/daily?moduleId={{moduleId}}&dayIndex=0
+X-User-Id: {{userId}}
+
+### ── Health check ─────────────────────────────────────────────────────────────
+GET {{baseUrl}}/actuator/health
+
+### ── Prometheus metrics ───────────────────────────────────────────────────────
+GET {{baseUrl}}/actuator/prometheus

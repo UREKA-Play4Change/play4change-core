@@ -1,4 +1,4 @@
-rootProject.name = "Play4Change"
+rootProject.name = "play4change"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
@@ -29,5 +29,7 @@ dependencyResolutionManagement {
 }
 
 include(":composeApp")
-include(":core")
+include(":common")
 include(":server")
+include(":ai-agent:api")
+include(":ai-agent:langchain")
