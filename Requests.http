@@ -35,7 +35,7 @@ Content-Type: application/json
 X-User-Id: {{userId}}
 
 {
-  "selectedOption": 0
+  "selectedOption": 3
 }
 
 ### ── 6. Submit TODO_ACTION answer ─────────────────────────────────────────────
