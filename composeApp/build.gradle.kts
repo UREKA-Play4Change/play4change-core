@@ -56,6 +56,9 @@ kotlin {
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.serialization.json)
 
+            //icons
+            implementation(compose.materialIconsExtended)
+
             //dependencies
             implementation(project(":common"))
         }

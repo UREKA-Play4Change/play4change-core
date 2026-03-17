@@ -162,7 +162,6 @@ kotest-runner = { module = "io.kotest:kotest-runner-junit5", version.ref = "kote
 kotest-assertions-arrow = { module = "io.kotest.extensions:kotest-assertions-arrow", version = "1.4.0" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
 
-
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
