@@ -30,7 +30,7 @@ fun PointsDisplay(
     )
     Row(
         modifier = modifier,
-        verticalAlignment = Alignment.Baseline
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = "⭐",
