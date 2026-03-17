@@ -1,16 +1,7 @@
 package com.ureka.play4change
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.animation.*
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,62 +18,61 @@ import com.ureka.play4change.features.task.ui.TaskScreen
 
 @Composable
 fun App(root: RootComponent) {
-        UrekaTheme {
-            Scaffold(contentWindowInsets = WindowInsets.safeDrawing) { innerPadding ->
-                Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-                    val stack by root.childStack.subscribeAsState()
-                    val activeChild = stack.active.instance
+    UrekaTheme {
+        Scaffold(contentWindowInsets = WindowInsets.safeDrawing) { innerPadding ->
+            Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+                val stack by root.childStack.subscribeAsState()
+                val activeChild = stack.active.instance
 
-                    AnimatedContent(
-                        targetState = activeChild,
-                        transitionSpec = {
-                            when (targetState) {
-                                is RootComponent.Child.Task,
-                                is RootComponent.Child.Profile,
-                                is RootComponent.Child.About ->
-                                    slideInHorizontally { it } togetherWith slideOutHorizontally { -it }
-                                else ->
-                                    fadeIn() togetherWith fadeOut()
-                            }
-                        },
-                        label = "root_navigation"
-                    ) { child ->
-                        when (child) {
-                            is RootComponent.Child.Splash ->
-                                SplashScreen(
-                                    component = child.component,
-                                    onNavigateToLogin = root::navigateToLogin,
-                                    onNavigateToHome = root::navigateToHome
-                                )
-                            is RootComponent.Child.Login ->
-                                LoginScreen(
-                                    component = child.component,
-                                    onNavigateToAbout = root::navigateToAbout
-                                )
-                            is RootComponent.Child.Home ->
-                                HomeScreen(
-                                    component = child.component,
-                                    onNavigateToTask = root::navigateToTask,
-                                    onNavigateToProfile = root::navigateToProfile,
-                                    onNavigateToAbout = root::navigateToAbout
-                                )
-                            is RootComponent.Child.Task ->
-                                TaskScreen(
-                                    component = child.component,
-                                    onNavigateBack = root::navigateBack
-                                )
-                            is RootComponent.Child.Profile ->
-                                ProfileScreen(
-                                    component = child.component,
-                                    onNavigateToAbout = root::navigateToAbout,
-                                    onSignedOut = root::navigateToLogin
-                                )
+                AnimatedContent(
+                    targetState = activeChild,
+                    transitionSpec = {
+                        when (targetState) {
+                            is RootComponent.Child.Task,
+                            is RootComponent.Child.Profile,
                             is RootComponent.Child.About ->
-                                AboutScreen(
-                                    component = child.component,
-                                    onNavigateBack = root::navigateBack
-                                )
+                                slideInHorizontally { it } togetherWith slideOutHorizontally { -it }
+                            else ->
+                                fadeIn() togetherWith fadeOut()
                         }
+                    },
+                    label = "root_navigation"
+                ) { child ->
+                    when (child) {
+                        is RootComponent.Child.Splash ->
+                            SplashScreen(
+                                component = child.component,
+                                onNavigateToLogin = root::navigateToLogin,
+                                onNavigateToHome = root::navigateToHome
+                            )
+                        is RootComponent.Child.Login ->
+                            LoginScreen(
+                                component = child.component,
+                                onNavigateToAbout = root::navigateToAbout
+                            )
+                        is RootComponent.Child.Home ->
+                            HomeScreen(
+                                component = child.component,
+                                onNavigateToTask = root::navigateToTask,
+                                onNavigateToProfile = root::navigateToProfile,
+                                onNavigateToAbout = root::navigateToAbout
+                            )
+                        is RootComponent.Child.Task ->
+                            TaskScreen(
+                                component = child.component,
+                                onNavigateBack = root::navigateBack
+                            )
+                        is RootComponent.Child.Profile ->
+                            ProfileScreen(
+                                component = child.component,
+                                onNavigateToAbout = root::navigateToAbout,
+                                onSignedOut = root::navigateToLogin
+                            )
+                        is RootComponent.Child.About ->
+                            AboutScreen(
+                                component = child.component,
+                                onNavigateBack = root::navigateBack
+                            )
                     }
                 }
             }

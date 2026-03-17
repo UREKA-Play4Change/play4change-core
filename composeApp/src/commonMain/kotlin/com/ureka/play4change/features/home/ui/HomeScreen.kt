@@ -59,8 +59,8 @@ fun HomeScreen(
 ) {
     LaunchedEffect(component) {
         component.effects.collect { effect ->
-            when (effect as HomeEffect) {
-                is HomeEffect.NavigateToTask    -> onNavigateToTask(effect.userTaskId)
+            when (val homeEffect = effect as HomeEffect) {
+                is HomeEffect.NavigateToTask    -> onNavigateToTask(homeEffect.userTaskId)
                 HomeEffect.NavigateToProfile    -> onNavigateToProfile()
                 HomeEffect.NavigateToAbout      -> onNavigateToAbout()
             }
