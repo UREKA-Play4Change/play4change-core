@@ -42,7 +42,7 @@ abstract class BaseComponent<S : ComponentState, E : ComponentEvents>(
 
     abstract fun onEvent(event: E)
 
-    override fun updateState(reducer: (S) -> S) {
+    override fun updateState(reducer: S.() -> S) {
         _state.update(reducer)
     }
 }
