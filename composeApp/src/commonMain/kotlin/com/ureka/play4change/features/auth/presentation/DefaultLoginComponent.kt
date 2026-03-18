@@ -20,7 +20,7 @@ class DefaultLoginComponent(
     override fun onEvent(event: LoginEvents) {
         when (event) {
             is LoginEvents.EmailChanged -> updateState { copy(email = event.email, emailError = null) }
-            LoginEvents.Submit          -> submit()
+            LoginEvents.Submit          -> emitEffect(LoginEffect.NavigateToHome)//submit()
             LoginEvents.Resend          -> resend()
             LoginEvents.OpenAbout       -> emitEffect(LoginEffect.NavigateToAbout)
         }

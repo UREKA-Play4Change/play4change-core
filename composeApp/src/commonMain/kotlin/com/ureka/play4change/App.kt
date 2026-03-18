@@ -23,7 +23,6 @@ fun App(root: RootComponent) {
             Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
                 val stack by root.childStack.subscribeAsState()
                 val activeChild = stack.active.instance
-
                 AnimatedContent(
                     targetState = activeChild,
                     transitionSpec = {
@@ -48,7 +47,8 @@ fun App(root: RootComponent) {
                         is RootComponent.Child.Login ->
                             LoginScreen(
                                 component = child.component,
-                                onNavigateToAbout = root::navigateToAbout
+                                onNavigateToAbout = root::navigateToAbout,
+                                onNavigateToHome = root::navigateToHome//remove later todo()
                             )
                         is RootComponent.Child.Home ->
                             HomeScreen(
