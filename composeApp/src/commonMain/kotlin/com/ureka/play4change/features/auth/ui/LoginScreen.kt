@@ -117,7 +117,7 @@ private fun EmailInputContent(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(Spacing.xxl))
+            Spacer(modifier = Modifier.height(Spacing.huge))
             OutlinedTextField(
                 value = email,
                 onValueChange = onEmailChange,

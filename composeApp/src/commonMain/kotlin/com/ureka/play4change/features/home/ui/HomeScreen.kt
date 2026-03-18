@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -86,7 +87,8 @@ fun HomeScreen(
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
-                    }
+                    },
+                    windowInsets = WindowInsets(0, 0, 0, 0),
                 )
             }
         ) { innerPadding ->
@@ -114,6 +116,7 @@ fun HomeScreen(
                             .fillMaxSize()
                             .padding(innerPadding)
                             .padding(horizontal = Spacing.l),
+                        horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(Spacing.l)
                     ) {
                         item {
@@ -209,6 +212,7 @@ private fun HomeShimmer(modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxSize()
             .padding(Spacing.l),
+        horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Spacing.m)
     ) {
         ShimmerBox(modifier = Modifier.fillMaxWidth().height(120.dp))
