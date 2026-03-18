@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -46,13 +47,14 @@ import play4change.composeapp.generated.resources.login_welcome
 @Composable
 fun LoginScreen(
     component: DefaultLoginComponent,
-    onNavigateToAbout: () -> Unit
+    onNavigateToAbout: () -> Unit,
+    onNavigateToHome: () -> Unit //remove later todo()
 ) {
     LaunchedEffect(component) {
         component.effects.collect { effect ->
             when (effect as LoginEffect) {
                 LoginEffect.NavigateToAbout -> onNavigateToAbout()
-                LoginEffect.NavigateToHome  -> { /* handled by root */ }
+                LoginEffect.NavigateToHome  -> { onNavigateToHome() }//handled with the root remove later()
             }
         }
     }
@@ -97,54 +99,58 @@ private fun EmailInputContent(
             .fillMaxSize()
             .padding(Spacing.xl),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
     ) {
         UrekaLogo()
-        Spacer(modifier = Modifier.height(Spacing.xxxl))
-        Text(
-            text = stringResource(Res.string.login_welcome),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(Spacing.s))
-        Text(
-            text = stringResource(Res.string.login_subtitle),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(Spacing.xxl))
-        OutlinedTextField(
-            value = email,
-            onValueChange = onEmailChange,
-            label = { Text(stringResource(Res.string.login_email_label)) },
-            isError = emailError != null,
-            supportingText = if (emailError != null) {
-                { Text(stringResource(Res.string.login_email_error_invalid)) }
-            } else null,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(onDone = { onSubmit() }),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-        Spacer(modifier = Modifier.height(Spacing.l))
-        Button(
-            onClick = onSubmit,
-            enabled = !isLoading && email.isNotBlank(),
+        Spacer(modifier = Modifier.weight(1f))
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
-                )
-            } else {
-                Text(stringResource(Res.string.login_cta))
+            Text(
+                text = stringResource(Res.string.login_welcome),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(Spacing.s))
+            Text(
+                text = stringResource(Res.string.login_subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(Spacing.xxl))
+            OutlinedTextField(
+                value = email,
+                onValueChange = onEmailChange,
+                label = { Text(stringResource(Res.string.login_email_label)) },
+                isError = emailError != null,
+                supportingText = if (emailError != null) {
+                    { Text(stringResource(Res.string.login_email_error_invalid)) }
+                } else null,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(onDone = { onSubmit() }),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            Spacer(modifier = Modifier.height(Spacing.l))
+            Button(
+                onClick = onSubmit,
+                enabled = !isLoading && email.isNotBlank(),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(stringResource(Res.string.login_cta))
+                }
             }
         }
-        Spacer(modifier = Modifier.height(Spacing.xl))
+        Spacer(modifier = Modifier.weight(1f))
         TextButton(onClick = onAbout) {
             Text(
                 text = stringResource(Res.string.login_about_link),
