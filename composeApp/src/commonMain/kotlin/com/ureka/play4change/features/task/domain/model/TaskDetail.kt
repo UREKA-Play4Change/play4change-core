@@ -5,10 +5,11 @@ data class TaskDetail(
     val title: String,
     val description: String,
     val hint: String,
-    val options: List<String>,
-    val correctIndex: Int,
+    val options: List<String> = emptyList(),
+    val correctIndex: Int = 0,
     val pointsReward: Int,
-    val domain: String
+    val domain: String,
+    val content: TaskContent? = null
 )
 
 data class SubmitResult(

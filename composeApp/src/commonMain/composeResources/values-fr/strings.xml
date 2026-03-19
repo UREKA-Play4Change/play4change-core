@@ -68,6 +68,65 @@
   <string name="about_supervisors">Prof. Nuno Datia · Prof. António Serrador · Prof. Michel Vorenhout</string>
   <string name="about_footer">Mars 2026 · U!REKA European University</string>
 
+  <!-- Branding -->
+  <string name="app_play4change">PLAY4CHANGE</string>
+
+  <!-- Auth — Social + Register -->
+  <string name="auth_continue_google">Continuer avec Google</string>
+  <string name="auth_continue_facebook">Continuer avec Facebook</string>
+  <string name="auth_no_account">Vous n\'avez pas de compte ?</string>
+  <string name="auth_register">S\'inscrire</string>
+  <string name="auth_have_account">Vous avez déjà un compte ?</string>
+  <string name="auth_sign_in">Se connecter</string>
+  <string name="auth_name_label">Nom complet</string>
+  <string name="auth_name_error">Veuillez saisir votre nom</string>
+  <string name="auth_register_cta">Créer un compte</string>
+  <string name="auth_or_divider">ou</string>
+
+  <!-- Explore -->
+  <string name="explore_title">Explorer les Sujets</string>
+  <string name="explore_subtitle">Choisissez un sujet sur lequel vous concentrer. Vous ne pouvez être inscrit qu\'à un seul à la fois.</string>
+  <string name="explore_join">Rejoindre le sujet</string>
+  <string name="explore_active">Actif</string>
+  <string name="explore_switch_confirm_title">Changer de sujet ?</string>
+  <string name="explore_switch_confirm_body">Vous quitterez votre cours actuel. Votre progression sera sauvegardée mais mise en pause.</string>
+  <string name="explore_switch_confirm">Changer</string>
+  <string name="explore_topics_loading">Chargement des sujets…</string>
+  <string name="explore_joined">Inscrit !</string>
+
+  <!-- Badges -->
+  <string name="badges_title">Badges</string>
+  <string name="badge_locked">Verrouillé</string>
+  <string name="badge_first_task">Premier Pas</string>
+  <string name="badge_first_task_desc">Terminez votre première tâche</string>
+  <string name="badge_streak_3">En Feu</string>
+  <string name="badge_streak_3_desc">Maintenez une série de 3 jours</string>
+  <string name="badge_streak_7">Guerrier de la Semaine</string>
+  <string name="badge_streak_7_desc">Maintenez une série de 7 jours</string>
+  <string name="badge_perfect_quiz">Score Parfait</string>
+  <string name="badge_perfect_quiz_desc">Répondez correctement aux 5 questions</string>
+  <string name="badge_first_photo">Témoin Oculaire</string>
+  <string name="badge_first_photo_desc">Soumettez votre première tâche photo</string>
+  <string name="badge_explorer">Explorateur</string>
+  <string name="badge_explorer_desc">Passez à un nouveau sujet</string>
+
+  <!-- Task — Multi-step -->
+  <string name="task_question_of">Question %1$d sur %2$d</string>
+  <string name="task_step_of">Étape %1$d sur %2$d</string>
+  <string name="task_next_question">Suivant</string>
+  <string name="task_take_photo">Prendre une photo</string>
+  <string name="task_retake_photo">Reprendre</string>
+  <string name="task_photo_instruction">Prenez une photo pour compléter cette étape</string>
+  <string name="task_submit_quiz">Soumettre le quiz</string>
+  <string name="task_submit_task">Soumettre la tâche</string>
+  <string name="task_quiz_label">Quiz</string>
+  <string name="task_steps_label">Défi</string>
+  <string name="task_score">Score : %1$d/%2$d</string>
+
+  <!-- Profile additions -->
+  <string name="profile_about">À propos de U!REKA</string>
+  <string name="profile_sign_out_label">Se déconnecter</string>
+
   <!-- Common -->
   <string name="ok">OK</string>
   <string name="cancel">Annuler</string>

@@ -35,10 +35,10 @@ class MockHomeRepository : HomeRepository {
                 RoadmapNode(8, "Final Challenge",          NodeStatus.Locked,    pointsReward = 100),
             ),
             todayTask = TaskSummary(
-                id = "task-005",
-                title = "Which product has the lowest lifecycle carbon footprint?",
+                id = "task-quiz-001",
+                title = "Recycling Knowledge Check",
                 domain = "Sustainability",
-                pointsReward = 50
+                pointsReward = 100
             ),
             todayCompleted = false
         )

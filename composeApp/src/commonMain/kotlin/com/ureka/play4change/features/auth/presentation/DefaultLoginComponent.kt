@@ -4,6 +4,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.ureka.play4change.core.component.base.BaseComponent
 import com.ureka.play4change.core.error.AppError
 import com.ureka.play4change.core.component.stateful.safeLaunch
+import com.ureka.play4change.features.auth.domain.model.SocialProvider
 import com.ureka.play4change.features.auth.domain.repository.AuthRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -20,22 +21,29 @@ class DefaultLoginComponent(
     override fun onEvent(event: LoginEvents) {
         when (event) {
             is LoginEvents.EmailChanged -> updateState { copy(email = event.email, emailError = null) }
-            LoginEvents.Submit          -> emitEffect(LoginEffect.NavigateToHome)//submit()
+            is LoginEvents.NameChanged  -> updateState { copy(name = event.value, nameError = null) }
+            LoginEvents.Submit          -> emitEffect(LoginEffect.NavigateToHome)
             LoginEvents.Resend          -> resend()
+            is LoginEvents.SocialLogin  -> handleSocialLogin(event.provider)
+            LoginEvents.ToggleMode      -> updateState {
+                copy(
+                    mode = if (mode == AuthMode.Login) AuthMode.Register else AuthMode.Login,
+                    stage = LoginStage.EmailEntry,
+                    email = "", name = "", emailError = null, nameError = null
+                )
+            }
             LoginEvents.OpenAbout       -> emitEffect(LoginEffect.NavigateToAbout)
         }
     }
 
-    private fun submit() {
-        val email = state.value.email.trim()
-        if (!email.contains('@') || !email.contains('.')) {
-            updateState { copy(emailError = "login_email_error_invalid") }
-            return
-        }
+    private fun handleSocialLogin(provider: SocialProvider) {
         safeLaunch(scope) {
-            repository.sendMagicLink(email)
-            updateState { copy(linkSent = true) }
-            startCountdown()
+            updateState { copy(isLoading = true) }
+            repository.socialLogin(provider)?.let {
+                emitEffect(LoginEffect.NavigateToHome)
+            } ?: updateState {
+                copy(isLoading = false, error = AppError.ServerError.Unexpected("Social login failed"))
+            }
         }
     }
 

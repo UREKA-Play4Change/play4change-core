@@ -68,6 +68,65 @@
   <string name="about_supervisors">Prof. Nuno Datia · Prof. António Serrador · Prof. Michel Vorenhout</string>
   <string name="about_footer">Março 2026 · U!REKA European University</string>
 
+  <!-- Branding -->
+  <string name="app_play4change">PLAY4CHANGE</string>
+
+  <!-- Auth — Social + Register -->
+  <string name="auth_continue_google">Continuar com o Google</string>
+  <string name="auth_continue_facebook">Continuar com o Facebook</string>
+  <string name="auth_no_account">Não tens conta?</string>
+  <string name="auth_register">Registar</string>
+  <string name="auth_have_account">Já tens conta?</string>
+  <string name="auth_sign_in">Iniciar sessão</string>
+  <string name="auth_name_label">Nome completo</string>
+  <string name="auth_name_error">Por favor, insere o teu nome</string>
+  <string name="auth_register_cta">Criar conta</string>
+  <string name="auth_or_divider">ou</string>
+
+  <!-- Explore -->
+  <string name="explore_title">Explorar Tópicos</string>
+  <string name="explore_subtitle">Escolhe um tópico para te focares. Só podes estar inscrito num de cada vez.</string>
+  <string name="explore_join">Aderir ao tópico</string>
+  <string name="explore_active">Ativo</string>
+  <string name="explore_switch_confirm_title">Mudar de tópico?</string>
+  <string name="explore_switch_confirm_body">Vais sair do curso atual. O teu progresso será guardado mas pausado.</string>
+  <string name="explore_switch_confirm">Mudar</string>
+  <string name="explore_topics_loading">A carregar tópicos…</string>
+  <string name="explore_joined">Inscrito!</string>
+
+  <!-- Badges -->
+  <string name="badges_title">Conquistas</string>
+  <string name="badge_locked">Bloqueado</string>
+  <string name="badge_first_task">Primeiro Passo</string>
+  <string name="badge_first_task_desc">Completa a tua primeira tarefa</string>
+  <string name="badge_streak_3">Em Chamas</string>
+  <string name="badge_streak_3_desc">Mantém uma sequência de 3 dias</string>
+  <string name="badge_streak_7">Guerreiro Semanal</string>
+  <string name="badge_streak_7_desc">Mantém uma sequência de 7 dias</string>
+  <string name="badge_perfect_quiz">Pontuação Perfeita</string>
+  <string name="badge_perfect_quiz_desc">Responde corretamente a todas as 5 perguntas</string>
+  <string name="badge_first_photo">Testemunha Ocular</string>
+  <string name="badge_first_photo_desc">Submete a tua primeira tarefa fotográfica</string>
+  <string name="badge_explorer">Explorador</string>
+  <string name="badge_explorer_desc">Muda para um novo tópico</string>
+
+  <!-- Task — Multi-step -->
+  <string name="task_question_of">Pergunta %1$d de %2$d</string>
+  <string name="task_step_of">Passo %1$d de %2$d</string>
+  <string name="task_next_question">Seguinte</string>
+  <string name="task_take_photo">Tirar foto</string>
+  <string name="task_retake_photo">Repetir</string>
+  <string name="task_photo_instruction">Tira uma foto para completar este passo</string>
+  <string name="task_submit_quiz">Submeter quiz</string>
+  <string name="task_submit_task">Submeter tarefa</string>
+  <string name="task_quiz_label">Quiz</string>
+  <string name="task_steps_label">Desafio</string>
+  <string name="task_score">Pontuação: %1$d/%2$d</string>
+
+  <!-- Profile additions -->
+  <string name="profile_about">Sobre U!REKA</string>
+  <string name="profile_sign_out_label">Terminar sessão</string>
+
   <!-- Common -->
   <string name="ok">OK</string>
   <string name="cancel">Cancelar</string>

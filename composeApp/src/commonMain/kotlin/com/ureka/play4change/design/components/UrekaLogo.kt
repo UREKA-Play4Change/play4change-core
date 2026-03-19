@@ -25,8 +25,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.em
 import com.ureka.play4change.design.Spacing
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import play4change.composeapp.generated.resources.Res
+import play4change.composeapp.generated.resources.app_play4change
 import play4change.composeapp.generated.resources.app_university
 
 enum class LogoSize { Small, Medium, Large }
@@ -72,6 +75,20 @@ fun UrekaLogo(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(text = wordmark, style = wordmarkStyle)
+
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = stringResource(Res.string.app_play4change),
+                style = when (size) {
+                    LogoSize.Small  -> MaterialTheme.typography.labelSmall
+                    LogoSize.Medium -> MaterialTheme.typography.labelMedium
+                    LogoSize.Large  -> MaterialTheme.typography.titleSmall
+                }.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 0.25.em
+                ),
+                color = Color(0xFF3B8BD4)
+            )
 
             Spacer(modifier = Modifier.height(Spacing.xxs))
 

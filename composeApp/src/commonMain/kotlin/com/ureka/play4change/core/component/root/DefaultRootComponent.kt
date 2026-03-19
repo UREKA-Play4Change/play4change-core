@@ -10,6 +10,7 @@ import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.ureka.play4change.features.about.presentation.DefaultAboutComponent
 import com.ureka.play4change.features.auth.presentation.DefaultLoginComponent
+import com.ureka.play4change.features.explore.presentation.DefaultExploreComponent
 import com.ureka.play4change.features.home.presentation.DefaultHomeComponent
 import com.ureka.play4change.features.profile.presentation.DefaultProfileComponent
 import com.ureka.play4change.features.splash.presentation.DefaultSplashComponent
@@ -33,12 +34,41 @@ class DefaultRootComponent(
         childFactory = ::createChild
     )
 
-    override fun navigateToLogin()                 { navigation.replaceAll(Config.Login) }
-    override fun navigateToHome()                  { navigation.replaceAll(Config.Home) }
-    override fun navigateToTask(userTaskId: String){ navigation.push(Config.Task(userTaskId)) }
-    override fun navigateToProfile()               { navigation.push(Config.Profile) }
-    override fun navigateToAbout()                 { navigation.push(Config.About) }
-    override fun navigateBack()                    { navigation.pop() }
+    override fun navigateToLogin() {
+        navigation.replaceAll(Config.Login)
+    }
+
+    override fun navigateToHome() {
+        navigation.replaceAll(Config.Home)
+    }
+
+    override fun navigateToTask(userTaskId: String) {
+        if (childStack.value.active.configuration != Config.Task(userTaskId)) {
+            navigation.push(Config.Task(userTaskId))
+        }
+    }
+
+    override fun navigateToProfile() {
+        if (childStack.value.active.configuration != Config.Profile) {
+            navigation.push(Config.Profile)
+        }
+    }
+
+    override fun navigateToAbout() {
+        if (childStack.value.active.configuration != Config.About) {
+            navigation.push(Config.About)
+        }
+    }
+
+    override fun navigateToExplore() {
+        if (childStack.value.active.configuration != Config.Explore) {
+            navigation.push(Config.Explore)
+        }
+    }
+
+    override fun navigateBack() {
+        navigation.pop()
+    }
 
     private fun createChild(config: Config, context: ComponentContext): RootComponent.Child {
         return when (config) {
@@ -60,6 +90,9 @@ class DefaultRootComponent(
             Config.About -> RootComponent.Child.About(
                 get { parametersOf(context) }
             )
+            Config.Explore -> RootComponent.Child.Explore(
+                get { parametersOf(context, { navigateBack() }) }
+            )
         }
     }
 
@@ -71,5 +104,6 @@ class DefaultRootComponent(
         @Serializable data class  Task(val userTaskId: String) : Config
         @Serializable data object Profile : Config
         @Serializable data object About   : Config
+        @Serializable data object Explore : Config
     }
 }

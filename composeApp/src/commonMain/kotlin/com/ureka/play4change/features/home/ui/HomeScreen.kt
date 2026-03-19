@@ -16,17 +16,22 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Explore
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ureka.play4change.core.BaseView
 import com.ureka.play4change.design.Spacing
@@ -42,8 +48,10 @@ import com.ureka.play4change.design.components.DayDots
 import com.ureka.play4change.design.components.LogoSize
 import com.ureka.play4change.design.components.PointsDisplay
 import com.ureka.play4change.design.components.RoadmapView
-import com.ureka.play4change.design.components.ShimmerBox
 import com.ureka.play4change.design.components.StreakBadge
+import com.ureka.play4change.design.components.TaskCardShimmer
+import com.ureka.play4change.design.components.HeroCardShimmer
+import com.ureka.play4change.design.components.RoadmapNodeShimmer
 import com.ureka.play4change.design.components.UrekaLogo
 import com.ureka.play4change.design.components.XpBar
 import com.ureka.play4change.features.home.presentation.DefaultHomeComponent
@@ -51,9 +59,11 @@ import com.ureka.play4change.features.home.presentation.HomeEffect
 import com.ureka.play4change.features.home.presentation.HomeEvents
 import org.jetbrains.compose.resources.stringResource
 import play4change.composeapp.generated.resources.Res
+import play4change.composeapp.generated.resources.home_completed_today
 import play4change.composeapp.generated.resources.home_greeting
 import play4change.composeapp.generated.resources.home_no_task
 import play4change.composeapp.generated.resources.home_roadmap
+import play4change.composeapp.generated.resources.home_start_challenge
 import play4change.composeapp.generated.resources.home_this_week
 import play4change.composeapp.generated.resources.home_todays_challenge
 
@@ -63,7 +73,8 @@ fun HomeScreen(
     component: DefaultHomeComponent,
     onNavigateToTask: (String) -> Unit,
     onNavigateToProfile: () -> Unit,
-    onNavigateToAbout: () -> Unit
+    onNavigateToAbout: () -> Unit,
+    onNavigateToExplore: () -> Unit = {}
 ) {
     LaunchedEffect(component) {
         component.effects.collect { effect ->
@@ -90,6 +101,10 @@ fun HomeScreen(
                         }
                     },
                     actions = {
+                        IconButton(onClick = onNavigateToExplore) {
+                            Icon(Icons.Rounded.Explore, contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onBackground)
+                        }
                         val initial = (state.homeData?.userName?.firstOrNull() ?: 'U')
                             .toString().uppercase()
                         Box(
@@ -186,6 +201,96 @@ fun HomeScreen(
                             }
                         }
 
+                        // Today's task card — immediately after hero
+                        if (!data.todayCompleted) {
+                            data.todayTask?.let { task ->
+                                item {
+                                    ElevatedCard(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = MaterialTheme.shapes.large,
+                                        colors = CardDefaults.elevatedCardColors(
+                                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                        ),
+                                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 6.dp),
+                                        onClick = { onEvent(HomeEvents.StartTask(task.id)) }
+                                    ) {
+                                        Column(Modifier.padding(Spacing.l)) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                SuggestionChip(
+                                                    onClick = {},
+                                                    label = {
+                                                        Text(
+                                                            stringResource(Res.string.home_todays_challenge),
+                                                            style = MaterialTheme.typography.labelSmall
+                                                        )
+                                                    },
+                                                    colors = SuggestionChipDefaults.suggestionChipColors(
+                                                        containerColor = MaterialTheme.colorScheme.secondary,
+                                                        labelColor = MaterialTheme.colorScheme.onSecondary
+                                                    )
+                                                )
+                                                Spacer(Modifier.weight(1f))
+                                                Text(
+                                                    "+${task.pointsReward} pts",
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    color = MaterialTheme.colorScheme.tertiary,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                            Spacer(Modifier.height(Spacing.xs))
+                                            Text(
+                                                task.title,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Spacer(Modifier.height(Spacing.m))
+                                            Button(
+                                                onClick = { onEvent(HomeEvents.StartTask(task.id)) },
+                                                modifier = Modifier.fillMaxWidth(),
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = MaterialTheme.colorScheme.secondary
+                                                )
+                                            ) {
+                                                Text(
+                                                    stringResource(Res.string.home_start_challenge),
+                                                    style = MaterialTheme.typography.labelLarge
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            item {
+                                ElevatedCard(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = MaterialTheme.shapes.large,
+                                    colors = CardDefaults.elevatedCardColors(
+                                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                    )
+                                ) {
+                                    Row(
+                                        Modifier.padding(Spacing.l),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            Icons.Rounded.CheckCircle, null,
+                                            tint = MaterialTheme.colorScheme.secondary,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                        Spacer(Modifier.width(Spacing.xs))
+                                        Text(
+                                            stringResource(Res.string.home_completed_today),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
                         item {
                             SectionHeader(stringResource(Res.string.home_roadmap))
                         }
@@ -199,62 +304,7 @@ fun HomeScreen(
                             )
                         }
 
-                        // Today's task sticky card
-                        if (!data.todayCompleted) {
-                            data.todayTask?.let { task ->
-                                item {
-                                    ElevatedCard(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        shape = MaterialTheme.shapes.large,
-                                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp)
-                                    ) {
-                                        Row(
-                                            Modifier.padding(Spacing.l),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Column(Modifier.weight(1f)) {
-                                                SuggestionChip(
-                                                    onClick = {},
-                                                    label = {
-                                                        Text(
-                                                            task.domain,
-                                                            style = MaterialTheme.typography.labelSmall
-                                                        )
-                                                    },
-                                                    colors = SuggestionChipDefaults.suggestionChipColors(
-                                                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                                        labelColor = MaterialTheme.colorScheme.onSecondaryContainer
-                                                    )
-                                                )
-                                                Spacer(Modifier.height(Spacing.xxs))
-                                                Text(
-                                                    task.title,
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    fontWeight = FontWeight.SemiBold,
-                                                    maxLines = 2,
-                                                    overflow = TextOverflow.Ellipsis
-                                                )
-                                                Spacer(Modifier.height(Spacing.xxs))
-                                                Text(
-                                                    stringResource(Res.string.home_todays_challenge),
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                            Spacer(Modifier.width(Spacing.m))
-                                            FilledTonalButton(
-                                                onClick = { onEvent(HomeEvents.StartTask(task.id)) }
-                                            ) {
-                                                Text("+${task.pointsReward}")
-                                            }
-                                        }
-                                    }
-                                    Spacer(Modifier.height(Spacing.xxl))
-                                }
-                            }
-                        } else {
-                            item { Spacer(Modifier.height(Spacing.xxl)) }
-                        }
+                        item { Spacer(Modifier.height(Spacing.xxl)) }
                     }
                 }
             }
@@ -283,13 +333,14 @@ private fun HomeShimmer(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Spacing.m)
     ) {
-        ShimmerBox(modifier = Modifier.fillMaxWidth().height(120.dp))
-        ShimmerBox(modifier = Modifier.fillMaxWidth().height(40.dp))
-        repeat(4) {
-            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
-                ShimmerBox(modifier = Modifier.size(52.dp))
-                ShimmerBox(modifier = Modifier.weight(1f).height(52.dp))
-            }
+        ElevatedCard(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge) {
+            HeroCardShimmer(Modifier.padding(Spacing.l))
+        }
+        ElevatedCard(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
+            TaskCardShimmer()
+        }
+        repeat(3) {
+            RoadmapNodeShimmer(Modifier.padding(vertical = Spacing.xs))
         }
     }
 }
