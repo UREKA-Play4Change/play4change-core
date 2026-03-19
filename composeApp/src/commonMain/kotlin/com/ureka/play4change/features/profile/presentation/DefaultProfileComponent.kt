@@ -24,6 +24,7 @@ class DefaultProfileComponent(
 
     override fun onEvent(event: ProfileEvents) {
         when (event) {
+            ProfileEvents.NavigateBack -> emitEffect(ProfileEffect.NavigateBack)
             ProfileEvents.OpenAbout      -> emitEffect(ProfileEffect.NavigateToAbout)
             ProfileEvents.RequestSignOut -> updateState { copy(showSignOutDialog = true) }
             ProfileEvents.DismissSignOut -> updateState { copy(showSignOutDialog = false) }

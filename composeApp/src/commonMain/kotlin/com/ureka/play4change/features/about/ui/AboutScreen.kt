@@ -2,7 +2,10 @@ package com.ureka.play4change.features.about.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -11,23 +14,26 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.ureka.play4change.core.BaseView
 import com.ureka.play4change.design.Spacing
+import com.ureka.play4change.design.components.LogoSize
 import com.ureka.play4change.design.components.UrekaLogo
 import com.ureka.play4change.features.about.presentation.AboutEffect
 import com.ureka.play4change.features.about.presentation.AboutEvents
@@ -46,8 +52,9 @@ import play4change.composeapp.generated.resources.about_project_title
 import play4change.composeapp.generated.resources.about_student_number
 import play4change.composeapp.generated.resources.about_supervisors
 import play4change.composeapp.generated.resources.about_title
+import play4change.composeapp.generated.resources.app_tagline
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AboutScreen(
     component: DefaultAboutComponent,
@@ -70,7 +77,8 @@ fun AboutScreen(
                         IconButton(onClick = { onEvent(AboutEvents.NavigateBack) }) {
                             Icon(Icons.Rounded.ArrowBack, contentDescription = null)
                         }
-                    }
+                    },
+                    windowInsets = WindowInsets(0, 0, 0, 0)
                 )
             }
         ) { innerPadding ->
@@ -78,12 +86,34 @@ fun AboutScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(Spacing.l)
+                    .padding(horizontal = Spacing.l, vertical = Spacing.s)
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(Spacing.l)
             ) {
-                UrekaLogo(modifier = Modifier.fillMaxWidth())
-                HorizontalDivider()
+                // Hero card with logo
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.extraLarge,
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(Spacing.xl),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        UrekaLogo(size = LogoSize.Large, modifier = Modifier.fillMaxWidth())
+                        Spacer(Modifier.height(Spacing.s))
+                        Text(
+                            text = stringResource(Res.string.app_tagline),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
 
                 // Project section
                 SectionCard(title = stringResource(Res.string.about_project_title)) {
@@ -101,36 +131,30 @@ fun AboutScreen(
                     )
                 }
 
-                // Built with
+                // Built With section with tech chips
                 SectionCard(title = stringResource(Res.string.about_built_with)) {
-                    val items = listOf(
-                        "Kotlin Multiplatform" to "Cross-platform framework",
-                        "Compose Multiplatform" to "Declarative UI",
-                        "Decompose" to "Navigation & component lifecycle",
-                        "Koin" to "Dependency injection",
-                        "Ktor" to "HTTP client",
-                        "Spring Boot" to "Backend API",
-                        "PostgreSQL + pgvector" to "Database & semantic search",
-                        "OpenAI API" to "AI content generation"
-                    )
-                    items.forEach { (tech, description) ->
-                        Column(modifier = Modifier.padding(vertical = Spacing.xs)) {
-                            Text(
-                                text = tech,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = description,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.xxs)
+                    ) {
+                        listOf(
+                            "Kotlin Multiplatform", "Compose Multiplatform", "Material 3",
+                            "Decompose", "Koin", "Ktor", "PostgreSQL + pgvector",
+                            "OpenAI API", "Hexagonal Architecture"
+                        ).forEach { tech ->
+                            SuggestionChip(
+                                onClick = {},
+                                label = { Text(tech, style = MaterialTheme.typography.labelSmall) },
+                                colors = SuggestionChipDefaults.suggestionChipColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    labelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
                             )
                         }
                     }
                 }
 
-                // Author
+                // Author section
                 SectionCard(title = stringResource(Res.string.about_author_label)) {
                     Text(
                         text = stringResource(Res.string.about_author_name),
@@ -174,14 +198,14 @@ private fun SectionCard(
     title: String,
     content: @Composable () -> Unit
 ) {
-    Card(
+    ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        shape = MaterialTheme.shapes.large
     ) {
         Column(modifier = Modifier.padding(Spacing.l)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )

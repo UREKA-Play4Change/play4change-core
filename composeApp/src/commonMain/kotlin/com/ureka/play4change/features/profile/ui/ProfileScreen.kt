@@ -1,30 +1,40 @@
 package com.ureka.play4change.features.profile.ui
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import com.ureka.play4change.core.BaseView
 import com.ureka.play4change.design.Spacing
@@ -38,6 +48,7 @@ import play4change.composeapp.generated.resources.Res
 import play4change.composeapp.generated.resources.cancel
 import play4change.composeapp.generated.resources.ok
 import play4change.composeapp.generated.resources.profile_accuracy_label
+import play4change.composeapp.generated.resources.profile_course_day
 import play4change.composeapp.generated.resources.profile_points_label
 import play4change.composeapp.generated.resources.profile_sign_out
 import play4change.composeapp.generated.resources.profile_sign_out_confirm_body
@@ -56,6 +67,7 @@ fun ProfileScreen(
     LaunchedEffect(component) {
         component.effects.collect { effect ->
             when (effect as ProfileEffect) {
+                ProfileEffect.NavigateBack    -> onNavigateToAbout()
                 ProfileEffect.NavigateToAbout -> onNavigateToAbout()
                 ProfileEffect.SignedOut        -> onSignedOut()
             }
@@ -66,7 +78,13 @@ fun ProfileScreen(
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text(stringResource(Res.string.profile_title)) }
+                    title = { Text(stringResource(Res.string.profile_title)) },
+                    navigationIcon = {
+                        IconButton(onClick = { onEvent(ProfileEvents.NavigateBack) }) {
+                            Icon(Icons.Rounded.ArrowBack, contentDescription = null)
+                        }
+                    },
+                    windowInsets = WindowInsets(0, 0, 0, 0)
                 )
             }
         ) { innerPadding ->
@@ -93,9 +111,9 @@ fun ProfileScreen(
                             .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(Spacing.l)
                     ) {
-                        // Name + Level
-                        Card(modifier = Modifier.fillMaxWidth()) {
-                            Column(modifier = Modifier.padding(Spacing.l)) {
+                        // User identity card
+                        ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                            Column(Modifier.padding(Spacing.l)) {
                                 Text(
                                     text = profile.name,
                                     style = MaterialTheme.typography.titleLarge,
@@ -114,38 +132,73 @@ fun ProfileScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                                 Spacer(Modifier.height(Spacing.xs))
-                                XpBar(
-                                    progress = profile.currentDay.toFloat() / profile.totalDays.toFloat()
+                                val xpProgress by animateFloatAsState(
+                                    profile.currentDay.toFloat() / profile.totalDays.toFloat(),
+                                    tween(800),
+                                    label = "xp"
                                 )
+                                XpBar(progress = xpProgress)
                                 Spacer(Modifier.height(Spacing.xs))
                                 Text(
-                                    text = "Day ${profile.currentDay} of ${profile.totalDays}",
+                                    text = stringResource(
+                                        Res.string.profile_course_day,
+                                        profile.currentDay,
+                                        profile.totalDays
+                                    ),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
 
-                        // Stats row
+                        // Stats row — 3 ElevatedCards
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.m)
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.s)
                         ) {
-                            StatCard(
-                                label = stringResource(Res.string.profile_streak_label),
-                                value = "${profile.streakDays}🔥",
-                                modifier = Modifier.weight(1f)
-                            )
-                            StatCard(
-                                label = stringResource(Res.string.profile_points_label),
-                                value = "${profile.totalPoints}⭐",
-                                modifier = Modifier.weight(1f)
-                            )
-                            StatCard(
-                                label = stringResource(Res.string.profile_accuracy_label),
-                                value = "${(profile.accuracy * 100).roundToInt()}%",
-                                modifier = Modifier.weight(1f)
-                            )
+                            listOf(
+                                Triple(
+                                    "🔥",
+                                    "${profile.streakDays}d",
+                                    stringResource(Res.string.profile_streak_label)
+                                ),
+                                Triple(
+                                    "⚡",
+                                    profile.totalPoints.toString(),
+                                    stringResource(Res.string.profile_points_label)
+                                ),
+                                Triple(
+                                    "🎯",
+                                    "${(profile.accuracy * 100).roundToInt()}%",
+                                    stringResource(Res.string.profile_accuracy_label)
+                                )
+                            ).forEach { (icon, value, label) ->
+                                ElevatedCard(
+                                    modifier = Modifier.weight(1f),
+                                    colors = CardDefaults.elevatedCardColors(
+                                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                    )
+                                ) {
+                                    Column(
+                                        Modifier.padding(Spacing.m),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text(icon, style = MaterialTheme.typography.titleLarge)
+                                        Text(
+                                            value,
+                                            style = MaterialTheme.typography.headlineSmall,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            label,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                                                .copy(alpha = 0.7f)
+                                        )
+                                    }
+                                }
+                            }
                         }
 
                         // About link
@@ -171,53 +224,29 @@ fun ProfileScreen(
                         }
                     }
                 }
-            }
 
-            // Sign out dialog
-            if (state.showSignOutDialog) {
-                AlertDialog(
-                    onDismissRequest = { onEvent(ProfileEvents.DismissSignOut) },
-                    title = { Text(stringResource(Res.string.profile_sign_out_confirm_title)) },
-                    text = { Text(stringResource(Res.string.profile_sign_out_confirm_body)) },
-                    confirmButton = {
-                        TextButton(onClick = { onEvent(ProfileEvents.ConfirmSignOut) }) {
-                            Text(
-                                text = stringResource(Res.string.ok),
-                                color = MaterialTheme.colorScheme.error
-                            )
+                // Sign out dialog
+                if (state.showSignOutDialog) {
+                    AlertDialog(
+                        onDismissRequest = { onEvent(ProfileEvents.DismissSignOut) },
+                        title = { Text(stringResource(Res.string.profile_sign_out_confirm_title)) },
+                        text = { Text(stringResource(Res.string.profile_sign_out_confirm_body)) },
+                        confirmButton = {
+                            TextButton(onClick = { onEvent(ProfileEvents.ConfirmSignOut) }) {
+                                Text(
+                                    text = stringResource(Res.string.ok),
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { onEvent(ProfileEvents.DismissSignOut) }) {
+                                Text(stringResource(Res.string.cancel))
+                            }
                         }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { onEvent(ProfileEvents.DismissSignOut) }) {
-                            Text(stringResource(Res.string.cancel))
-                        }
-                    }
-                )
+                    )
+                }
             }
-        }
-    }
-}
-
-@Composable
-private fun StatCard(label: String, value: String, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Column(
-            modifier = Modifier.padding(Spacing.m),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }
