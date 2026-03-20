@@ -123,37 +123,6 @@ fun AboutScreen(
                     )
                 }
 
-                // Architecture section
-                SectionCard(title = stringResource(Res.string.about_architecture_title)) {
-                    Text(
-                        text = stringResource(Res.string.about_architecture_body),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-
-                // Built With section with tech chips
-                SectionCard(title = stringResource(Res.string.about_built_with)) {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
-                        verticalArrangement = Arrangement.spacedBy(Spacing.xxs)
-                    ) {
-                        listOf(
-                            "Kotlin Multiplatform", "Compose Multiplatform", "Material 3",
-                            "Decompose", "Koin", "Ktor", "PostgreSQL + pgvector",
-                            "OpenAI API", "Hexagonal Architecture"
-                        ).forEach { tech ->
-                            SuggestionChip(
-                                onClick = {},
-                                label = { Text(tech, style = MaterialTheme.typography.labelSmall) },
-                                colors = SuggestionChipDefaults.suggestionChipColors(
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                    labelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            )
-                        }
-                    }
-                }
-
                 // Author section
                 SectionCard(title = stringResource(Res.string.about_author_label)) {
                     Text(
