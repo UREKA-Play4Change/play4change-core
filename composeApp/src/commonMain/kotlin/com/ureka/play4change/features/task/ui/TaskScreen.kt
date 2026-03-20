@@ -3,8 +3,12 @@ package com.ureka.play4change.features.task.ui
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +29,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Cancel
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Lightbulb
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
@@ -61,9 +67,7 @@ import com.ureka.play4change.design.components.OptionState
 import com.ureka.play4change.design.components.ResultOverlay
 import com.ureka.play4change.design.components.ShimmerBox
 import com.ureka.play4change.design.components.TaskOptionButton
-import com.ureka.play4change.features.task.domain.model.Question
 import com.ureka.play4change.features.task.domain.model.TaskContent
-import com.ureka.play4change.features.task.domain.model.TaskStep
 import com.ureka.play4change.features.task.presentation.DefaultTaskComponent
 import com.ureka.play4change.features.task.presentation.SubmissionState
 import com.ureka.play4change.features.task.presentation.TaskEffect
@@ -72,11 +76,17 @@ import com.ureka.play4change.features.task.presentation.TaskState
 import org.jetbrains.compose.resources.stringResource
 import play4change.composeapp.generated.resources.Res
 import play4change.composeapp.generated.resources.task_continue
+import play4change.composeapp.generated.resources.task_correct_next_in
 import play4change.composeapp.generated.resources.task_hide_hint
 import play4change.composeapp.generated.resources.task_next_question
 import play4change.composeapp.generated.resources.task_question_label
 import play4change.composeapp.generated.resources.task_question_of
+import play4change.composeapp.generated.resources.task_result_correct
+import play4change.composeapp.generated.resources.task_result_wrong
+import play4change.composeapp.generated.resources.task_review_skipped
 import play4change.composeapp.generated.resources.task_show_hint
+import play4change.composeapp.generated.resources.task_skip_question
+import play4change.composeapp.generated.resources.task_skipped_label
 import play4change.composeapp.generated.resources.task_step_of
 import play4change.composeapp.generated.resources.task_submit
 import play4change.composeapp.generated.resources.task_submit_quiz
@@ -97,6 +107,7 @@ fun TaskScreen(
     }
 
     BaseView(component = component, screenAlignment = Alignment.TopStart) { state, onEvent ->
+
         Box(Modifier.fillMaxSize()) {
             Scaffold(
                 topBar = {
@@ -109,8 +120,11 @@ fun TaskScreen(
                             )
                         },
                         navigationIcon = {
-                            IconButton(onClick = { onEvent(TaskEvents.ExitRequested) }) {
-                                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null)
+                            // Back arrow only visible after submission (when task is done)
+                            if (!state.isBackBlocked) {
+                                IconButton(onClick = { onEvent(TaskEvents.Continue) }) {
+                                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null)
+                                }
                             }
                         },
                         windowInsets = WindowInsets(0, 0, 0, 0)
@@ -181,79 +195,247 @@ private fun QuizModeContent(
     onEvent: (TaskEvents) -> Unit
 ) {
     val q = content.questions[state.currentQuestionIndex]
-    val isLast = state.currentQuestionIndex == content.questions.size - 1
+    val totalQuestions = content.questions.size
     val selectedAnswer = state.answers[state.currentQuestionIndex]
+    val isAnswered = selectedAnswer != null
+    val isInReview = state.reviewQueue.isNotEmpty()
+    val isLastInReview = isInReview && state.reviewQueuePosition == state.reviewQueue.size - 1
+    val noMoreUnanswered = nextUnansweredOrNull(state, content) == null
 
-    // Progress chips row
-    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
-        content.questions.forEachIndexed { i, _ ->
-            val answered = state.answers.containsKey(i)
-            val current = i == state.currentQuestionIndex
-            Box(
-                Modifier
-                    .height(4.dp)
-                    .weight(1f)
-                    .clip(CircleShape)
-                    .background(
-                        when {
-                            answered -> MaterialTheme.colorScheme.secondary
-                            current  -> MaterialTheme.colorScheme.primary
-                            else     -> MaterialTheme.colorScheme.surfaceVariant
-                        }
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+
+        // ── Progress bar ──────────────────────────────────────────────────
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            content.questions.forEachIndexed { i, _ ->
+                val color = when {
+                    i in state.answers       -> MaterialTheme.colorScheme.secondary
+                    i in state.skippedIndices -> MaterialTheme.colorScheme.tertiary
+                    i == state.currentQuestionIndex -> MaterialTheme.colorScheme.primary
+                    else -> MaterialTheme.colorScheme.surfaceVariant
+                }
+                Box(
+                    Modifier
+                        .height(5.dp)
+                        .weight(1f)
+                        .clip(CircleShape)
+                        .background(color)
+                )
+            }
+        }
+
+        // ── Question counter ──────────────────────────────────────────────
+        Text(
+            text = if (isInReview)
+                stringResource(Res.string.task_skipped_label) +
+                    " ${state.reviewQueuePosition + 1}/${state.reviewQueue.size}"
+            else
+                stringResource(
+                    Res.string.task_question_of,
+                    state.currentQuestionIndex + 1,
+                    totalQuestions
+                ),
+            style = MaterialTheme.typography.labelMedium,
+            color = if (isInReview) MaterialTheme.colorScheme.tertiary
+                    else MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        // ── Question card ──────────────────────────────────────────────────
+        ElevatedCard(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large
+        ) {
+            Column(Modifier.padding(Spacing.l)) {
+                Text(q.text, style = MaterialTheme.typography.titleMedium)
+
+                // ── HINT — always has dedicated space, expands on tap ──────
+                Spacer(Modifier.height(Spacing.m))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                Spacer(Modifier.height(Spacing.xs))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Lightbulb,
+                        contentDescription = null,
+                        tint = if (state.showHint) MaterialTheme.colorScheme.tertiary
+                               else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.size(16.dp)
                     )
-            )
-        }
-    }
-    Spacer(Modifier.height(Spacing.xs))
+                    Spacer(Modifier.width(4.dp))
+                    TextButton(
+                        onClick = { onEvent(TaskEvents.ToggleHint) },
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        Text(
+                            text = stringResource(
+                                if (state.showHint) Res.string.task_hide_hint
+                                else Res.string.task_show_hint
+                            ),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
+                }
 
-    Text(
-        stringResource(Res.string.task_question_of, state.currentQuestionIndex + 1, content.questions.size),
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
-    )
-
-    // Question card
-    ElevatedCard(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
-        Column(Modifier.padding(Spacing.l)) {
-            Text(q.text, style = MaterialTheme.typography.titleMedium)
-        }
-    }
-
-    // Options
-    q.options.forEachIndexed { i, option ->
-        val optState = when {
-            !state.quizSubmitted && selectedAnswer == i -> OptionState.Selected
-            state.quizSubmitted && i == q.correctIndex   -> OptionState.Correct
-            state.quizSubmitted && i == selectedAnswer && i != q.correctIndex -> OptionState.Wrong
-            else -> OptionState.Idle
-        }
-        TaskOptionButton(
-            text = option,
-            optionState = optState,
-            onClick = {
-                if (!state.quizSubmitted) {
-                    onEvent(TaskEvents.SelectAnswer(state.currentQuestionIndex, i))
+                // Hint content — expands with animation
+                AnimatedVisibility(
+                    visible = state.showHint,
+                    enter = expandVertically(tween(250)) + fadeIn(tween(200)),
+                    exit  = shrinkVertically(tween(200)) + fadeOut(tween(150))
+                ) {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = Spacing.xs),
+                        shape = MaterialTheme.shapes.small,
+                        color = MaterialTheme.colorScheme.tertiaryContainer
+                    ) {
+                        Text(
+                            text = state.task?.hint ?: "",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontStyle = FontStyle.Italic
+                            ),
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier.padding(Spacing.s)
+                        )
+                    }
                 }
             }
-        )
-    }
+        }
 
-    Spacer(Modifier.height(Spacing.s))
-    if (!isLast) {
-        Button(
-            onClick = { onEvent(TaskEvents.NextQuestion) },
-            modifier = Modifier.fillMaxWidth().height(52.dp),
-            enabled = selectedAnswer != null,
-            shape = MaterialTheme.shapes.medium
-        ) { Text(stringResource(Res.string.task_next_question)) }
-    } else {
-        Button(
-            onClick = { onEvent(TaskEvents.SubmitQuiz) },
-            modifier = Modifier.fillMaxWidth().height(52.dp),
-            enabled = state.answers.size == content.questions.size && !state.quizSubmitted,
-            shape = MaterialTheme.shapes.medium,
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-        ) { Text(stringResource(Res.string.task_submit_quiz)) }
+        // ── Answer result banner — shown for 3 seconds after answering ────
+        AnimatedVisibility(
+            visible = state.lastAnswerCorrect != null && state.autoAdvanceCountdown > 0,
+            enter = slideInVertically { -it } + fadeIn(),
+            exit  = slideOutVertically { -it } + fadeOut()
+        ) {
+            val isCorrect = state.lastAnswerCorrect == true
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
+                color = if (isCorrect) MaterialTheme.colorScheme.secondaryContainer
+                        else MaterialTheme.colorScheme.errorContainer
+            ) {
+                Row(
+                    Modifier.padding(Spacing.s),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = if (isCorrect) Icons.Rounded.CheckCircle
+                                          else Icons.Rounded.Cancel,
+                            contentDescription = null,
+                            tint = if (isCorrect) MaterialTheme.colorScheme.secondary
+                                   else MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(Modifier.width(Spacing.xs))
+                        Text(
+                            text = if (isCorrect) stringResource(Res.string.task_result_correct)
+                                   else stringResource(Res.string.task_result_wrong),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (isCorrect) MaterialTheme.colorScheme.onSecondaryContainer
+                                    else MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                    Text(
+                        text = stringResource(Res.string.task_correct_next_in, state.autoAdvanceCountdown),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isCorrect) MaterialTheme.colorScheme.onSecondaryContainer
+                                else MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+            }
+        }
+
+        // ── Options ────────────────────────────────────────────────────────
+        q.options.forEachIndexed { i, option ->
+            val optionState = when {
+                state.autoAdvanceCountdown > 0 && selectedAnswer == i && state.lastAnswerCorrect == true
+                    -> OptionState.Correct
+                state.autoAdvanceCountdown > 0 && selectedAnswer == i && state.lastAnswerCorrect == false
+                    -> OptionState.Wrong
+                state.autoAdvanceCountdown > 0 && i == q.correctIndex && state.lastAnswerCorrect == false
+                    -> OptionState.Correct
+                selectedAnswer == i && state.autoAdvanceCountdown == 0
+                    -> OptionState.Selected
+                else -> OptionState.Idle
+            }
+            TaskOptionButton(
+                text = option,
+                optionState = optionState,
+                onClick = {
+                    if (!isAnswered && state.autoAdvanceCountdown == 0) {
+                        onEvent(TaskEvents.SelectAnswer(state.currentQuestionIndex, i))
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // ── Bottom action row: Skip + Submit/Review ────────────────────────
+        Spacer(Modifier.height(Spacing.xs))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+        ) {
+            // Skip button — hidden when answered or in review mode
+            if (!isAnswered && !isInReview && state.autoAdvanceCountdown == 0) {
+                OutlinedButton(
+                    onClick = { onEvent(TaskEvents.SkipQuestion) },
+                    modifier = Modifier.weight(1f),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Text(stringResource(Res.string.task_skip_question))
+                }
+            }
+
+            // Submit / Review skipped button
+            val hasSkipped = state.skippedIndices.isNotEmpty()
+            if (noMoreUnanswered || isInReview) {
+                val buttonText = when {
+                    isInReview && !isLastInReview -> stringResource(Res.string.task_next_question)
+                    isInReview && isLastInReview  -> stringResource(Res.string.task_submit_quiz)
+                    hasSkipped ->
+                        stringResource(Res.string.task_review_skipped) +
+                            " (${state.skippedIndices.size})"
+                    else -> stringResource(Res.string.task_submit_quiz)
+                }
+                val isEnabled = when {
+                    isInReview -> isAnswered && state.autoAdvanceCountdown == 0
+                    else       -> isAnswered || (noMoreUnanswered && state.autoAdvanceCountdown == 0)
+                }
+                Button(
+                    onClick = {
+                        when {
+                            isInReview && isLastInReview -> onEvent(TaskEvents.SubmitFinal)
+                            else -> onEvent(TaskEvents.SubmitOrReview)
+                        }
+                    },
+                    modifier = Modifier.weight(1f).height(52.dp),
+                    enabled = isEnabled,
+                    shape = MaterialTheme.shapes.medium,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
+                    Text(buttonText, style = MaterialTheme.typography.labelLarge)
+                }
+            }
+        }
+    }
+}
+
+// Returns null when all questions are answered or skipped
+private fun nextUnansweredOrNull(state: TaskState, content: TaskContent.QuizContent): Int? {
+    return (0 until content.questions.size).firstOrNull {
+        it !in state.answers && it !in state.skippedIndices
     }
 }
 
@@ -266,7 +448,6 @@ private fun StepModeContent(
     val step = content.steps[state.currentStepIndex]
     val isLast = state.currentStepIndex == content.steps.size - 1
 
-    // Progress bar
     LinearProgressIndicator(
         progress = { (state.currentStepIndex + 1f) / content.steps.size },
         modifier = Modifier.fillMaxWidth(),
@@ -280,14 +461,12 @@ private fun StepModeContent(
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
 
-    // Step instruction card
     ElevatedCard(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
         Column(Modifier.padding(Spacing.l)) {
             Text(step.instruction, style = MaterialTheme.typography.bodyLarge, lineHeight = 26.sp)
         }
     }
 
-    // Camera section — only on last step
     if (step.requiresPhoto) {
         Spacer(Modifier.height(Spacing.s))
         CameraSection(
@@ -320,7 +499,6 @@ private fun LegacyQuizContent(
     task: com.ureka.play4change.features.task.domain.model.TaskDetail,
     onEvent: (TaskEvents) -> Unit
 ) {
-    // Question card
     ElevatedCard(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
         Column(Modifier.padding(Spacing.l)) {
             SuggestionChip(
@@ -389,7 +567,6 @@ private fun LegacyQuizContent(
         }
     }
 
-    // Options
     task.options.forEachIndexed { index, option ->
         val optionState = when {
             !state.submitted && state.selectedIndex == index -> OptionState.Selected
@@ -405,7 +582,6 @@ private fun LegacyQuizContent(
         )
     }
 
-    // Submit / Continue
     val submitState = when {
         state.submitted                                    -> "continue"
         state.selectedIndex != null && state.isLoading     -> "loading"

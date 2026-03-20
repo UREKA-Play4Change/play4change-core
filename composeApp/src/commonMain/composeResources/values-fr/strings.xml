@@ -110,6 +110,15 @@
   <string name="badge_explorer">Explorateur</string>
   <string name="badge_explorer_desc">Passez à un nouveau sujet</string>
 
+  <!-- Task — Skip / review / auto-advance -->
+  <string name="task_skip_question">Passer</string>
+  <string name="task_skipped_label">Passée</string>
+  <string name="task_review_skipped">Répondre aux questions passées</string>
+  <string name="task_exit_blocked">Terminez ou passez toutes les questions pour quitter</string>
+  <string name="task_hint_title">Indice</string>
+  <string name="task_correct_next_in">Suivant dans %1$ds…</string>
+  <string name="task_wrong_next_in">Suivant dans %1$ds…</string>
+
   <!-- Task — Multi-step -->
   <string name="task_question_of">Question %1$d sur %2$d</string>
   <string name="task_step_of">Étape %1$d sur %2$d</string>

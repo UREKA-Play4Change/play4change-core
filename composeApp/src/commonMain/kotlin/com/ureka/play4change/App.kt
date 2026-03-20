@@ -83,7 +83,6 @@ fun App(root: RootComponent) {
                             ProfileScreen(
                                 component = child.component,
                                 onNavigateBack = root::navigateBack,
-                                onNavigateToAbout = root::navigateToAbout,
                                 onSignedOut = root::navigateToLogin
                             )
                         is RootComponent.Child.About ->

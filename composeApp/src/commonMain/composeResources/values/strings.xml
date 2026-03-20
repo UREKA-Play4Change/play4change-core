@@ -110,6 +110,15 @@
   <string name="badge_explorer">Explorer</string>
   <string name="badge_explorer_desc">Switch to a new topic</string>
 
+  <!-- Task — Skip / review / auto-advance -->
+  <string name="task_skip_question">Skip</string>
+  <string name="task_skipped_label">Skipped</string>
+  <string name="task_review_skipped">Answer skipped questions</string>
+  <string name="task_exit_blocked">Complete or skip all questions to exit</string>
+  <string name="task_hint_title">Hint</string>
+  <string name="task_correct_next_in">Next in %1$ds…</string>
+  <string name="task_wrong_next_in">Next in %1$ds…</string>
+
   <!-- Task — Multi-step -->
   <string name="task_question_of">Question %1$d of %2$d</string>
   <string name="task_step_of">Step %1$d of %2$d</string>
