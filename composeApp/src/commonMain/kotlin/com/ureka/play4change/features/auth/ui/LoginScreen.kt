@@ -28,7 +28,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -36,6 +38,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -69,6 +72,8 @@ import com.ureka.play4change.features.auth.presentation.AuthMode
 import com.ureka.play4change.features.auth.presentation.DefaultLoginComponent
 import com.ureka.play4change.features.auth.presentation.LoginEvents
 import com.ureka.play4change.features.auth.presentation.LoginState
+import com.ureka.play4change.features.auth.presentation.isEmailLoading
+import com.ureka.play4change.features.auth.presentation.loadingProvider
 import org.jetbrains.compose.resources.stringResource
 import play4change.composeapp.generated.resources.Res
 import play4change.composeapp.generated.resources.auth_continue_facebook
@@ -92,20 +97,30 @@ import play4change.composeapp.generated.resources.login_resend_countdown
 import play4change.composeapp.generated.resources.login_subtitle
 import play4change.composeapp.generated.resources.login_welcome
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(component: DefaultLoginComponent) {
-    BaseView(component = component) { state, onEvent, _ ->
+    BaseView(
+        component = component,
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { UrekaLogo(size = LogoSize.Small) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
+            )
+        },
+        bottomBar = {
+        }
+    ) { state, onEvent, _ ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = Spacing.xl),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Spacer(Modifier.height(Spacing.xxl))
-
-            UrekaLogo(size = LogoSize.Medium)
-
             Spacer(Modifier.height(Spacing.xxl))
 
             AnimatedContent(
@@ -120,7 +135,7 @@ fun LoginScreen(component: DefaultLoginComponent) {
                     LinkSentContent(
                         email = state.email,
                         countdown = state.resendCountdown,
-                        isLoading = state.isLoading,
+                        isLoading = state.isEmailLoading,
                         onResend = { onEvent(LoginEvents.Resend) }
                     )
                 } else {
@@ -152,14 +167,17 @@ fun LoginScreen(component: DefaultLoginComponent) {
                         Spacer(Modifier.height(Spacing.l))
                         OrDivider()
                         Spacer(Modifier.height(Spacing.m))
+                        val anyLoading = state.loadingAction != null
                         GoogleSignInButton(
                             onClick = { onEvent(LoginEvents.SocialLogin(SocialProvider.GOOGLE)) },
-                            isLoading = state.isLoading
+                            isLoading = state.loadingProvider == SocialProvider.GOOGLE,
+                            enabled = !anyLoading || state.loadingProvider == SocialProvider.GOOGLE
                         )
                         Spacer(Modifier.height(Spacing.xs))
                         FacebookSignInButton(
                             onClick = { onEvent(LoginEvents.SocialLogin(SocialProvider.FACEBOOK)) },
-                            isLoading = state.isLoading
+                            isLoading = state.loadingProvider == SocialProvider.FACEBOOK,
+                            enabled = !anyLoading || state.loadingProvider == SocialProvider.FACEBOOK
                         )
                         Spacer(Modifier.height(Spacing.xl))
                         ToggleModeRow(
@@ -175,7 +193,6 @@ fun LoginScreen(component: DefaultLoginComponent) {
                                 color = MaterialTheme.colorScheme.secondary
                             )
                         }
-                        Spacer(Modifier.height(Spacing.xl))
                     }
                 }
             }
@@ -237,10 +254,10 @@ private fun LoginFormContent(
         Button(
             onClick = onSubmit,
             modifier = Modifier.fillMaxWidth().height(52.dp),
-            enabled = !state.isLoading && state.email.isNotBlank() && state.emailError == null,
+            enabled = !state.isEmailLoading && state.email.isNotBlank() && state.emailError == null,
             shape = MaterialTheme.shapes.medium
         ) {
-            if (state.isLoading) {
+            if (state.isEmailLoading) {
                 CircularProgressIndicator(
                     Modifier.size(20.dp),
                     color = MaterialTheme.colorScheme.onPrimary,
@@ -308,10 +325,10 @@ private fun RegisterFormContent(
         Button(
             onClick = onSubmit,
             modifier = Modifier.fillMaxWidth().height(52.dp),
-            enabled = !state.isLoading && state.name.isNotBlank() && state.email.isNotBlank(),
+            enabled = !state.isEmailLoading && state.name.isNotBlank() && state.email.isNotBlank(),
             shape = MaterialTheme.shapes.medium
         ) {
-            if (state.isLoading) {
+            if (state.isEmailLoading) {
                 CircularProgressIndicator(
                     Modifier.size(20.dp),
                     color = MaterialTheme.colorScheme.onPrimary,
@@ -339,7 +356,7 @@ private fun OrDivider() {
 }
 
 @Composable
-private fun GoogleSignInButton(onClick: () -> Unit, isLoading: Boolean) {
+private fun GoogleSignInButton(onClick: () -> Unit, isLoading: Boolean, enabled: Boolean) {
     OutlinedButton(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth().height(52.dp),
@@ -349,7 +366,7 @@ private fun GoogleSignInButton(onClick: () -> Unit, isLoading: Boolean) {
             contentColor = Color(0xFF1F1F1F)
         ),
         border = BorderStroke(1.dp, Color(0xFFDADADA)),
-        enabled = !isLoading
+        enabled = enabled
     ) {
         if (isLoading) {
             CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
@@ -383,7 +400,7 @@ private fun GoogleGIcon(modifier: Modifier) {
 }
 
 @Composable
-private fun FacebookSignInButton(onClick: () -> Unit, isLoading: Boolean) {
+private fun FacebookSignInButton(onClick: () -> Unit, isLoading: Boolean, enabled: Boolean) {
     Button(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth().height(52.dp),
@@ -392,7 +409,7 @@ private fun FacebookSignInButton(onClick: () -> Unit, isLoading: Boolean) {
             containerColor = Color(0xFF1877F2),
             contentColor = Color.White
         ),
-        enabled = !isLoading
+        enabled = enabled
     ) {
         if (isLoading) {
             CircularProgressIndicator(Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)

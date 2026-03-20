@@ -219,6 +219,8 @@ fun HomeScreen(component: DefaultHomeComponent) {
                 ) {
                     item {
                         // Hero card
+
+                        Spacer(Modifier.height(Spacing.xxl))
                         ElevatedCard(
                             modifier = Modifier.fillMaxWidth(),
                             shape = MaterialTheme.shapes.extraLarge,

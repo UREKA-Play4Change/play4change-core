@@ -7,8 +7,6 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -28,8 +26,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.Cancel
-import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Lightbulb
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
@@ -74,13 +70,10 @@ import com.ureka.play4change.features.task.presentation.TaskState
 import org.jetbrains.compose.resources.stringResource
 import play4change.composeapp.generated.resources.Res
 import play4change.composeapp.generated.resources.task_continue
-import play4change.composeapp.generated.resources.task_correct_next_in
 import play4change.composeapp.generated.resources.task_hide_hint
 import play4change.composeapp.generated.resources.task_next_question
 import play4change.composeapp.generated.resources.task_question_label
 import play4change.composeapp.generated.resources.task_question_of
-import play4change.composeapp.generated.resources.task_result_correct
-import play4change.composeapp.generated.resources.task_result_wrong
 import play4change.composeapp.generated.resources.task_review_skipped
 import play4change.composeapp.generated.resources.task_show_hint
 import play4change.composeapp.generated.resources.task_skip_question
@@ -289,52 +282,6 @@ private fun QuizModeContent(
                             modifier = Modifier.padding(Spacing.s)
                         )
                     }
-                }
-            }
-        }
-
-        // ── Answer result banner — shown for 3 seconds after answering ────
-        AnimatedVisibility(
-            visible = state.lastAnswerCorrect != null && state.autoAdvanceCountdown > 0,
-            enter = slideInVertically { -it } + fadeIn(),
-            exit  = slideOutVertically { -it } + fadeOut()
-        ) {
-            val isCorrect = state.lastAnswerCorrect == true
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium,
-                color = if (isCorrect) MaterialTheme.colorScheme.secondaryContainer
-                        else MaterialTheme.colorScheme.errorContainer
-            ) {
-                Row(
-                    Modifier.padding(Spacing.s),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = if (isCorrect) Icons.Rounded.CheckCircle
-                                          else Icons.Rounded.Cancel,
-                            contentDescription = null,
-                            tint = if (isCorrect) MaterialTheme.colorScheme.secondary
-                                   else MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(Modifier.width(Spacing.xs))
-                        Text(
-                            text = if (isCorrect) stringResource(Res.string.task_result_correct)
-                                   else stringResource(Res.string.task_result_wrong),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = if (isCorrect) MaterialTheme.colorScheme.onSecondaryContainer
-                                    else MaterialTheme.colorScheme.onErrorContainer
-                        )
-                    }
-                    Text(
-                        text = stringResource(Res.string.task_correct_next_in, state.autoAdvanceCountdown),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (isCorrect) MaterialTheme.colorScheme.onSecondaryContainer
-                                else MaterialTheme.colorScheme.onErrorContainer
-                    )
                 }
             }
         }

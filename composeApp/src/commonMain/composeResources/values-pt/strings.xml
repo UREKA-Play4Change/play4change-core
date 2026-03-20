@@ -116,9 +116,6 @@
   <string name="task_review_skipped">Responder perguntas saltadas</string>
   <string name="task_exit_blocked">Completa ou salta todas as perguntas para sair</string>
   <string name="task_hint_title">Dica</string>
-  <string name="task_correct_next_in">Próxima em %1$ds…</string>
-  <string name="task_wrong_next_in">Próxima em %1$ds…</string>
-
   <!-- Task — Multi-step -->
   <string name="task_question_of">Pergunta %1$d de %2$d</string>
   <string name="task_step_of">Passo %1$d de %2$d</string>
