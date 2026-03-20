@@ -67,7 +67,6 @@ import com.ureka.play4change.design.components.UrekaLogo
 import com.ureka.play4change.features.auth.domain.model.SocialProvider
 import com.ureka.play4change.features.auth.presentation.AuthMode
 import com.ureka.play4change.features.auth.presentation.DefaultLoginComponent
-import com.ureka.play4change.features.auth.presentation.LoginEffect
 import com.ureka.play4change.features.auth.presentation.LoginEvents
 import com.ureka.play4change.features.auth.presentation.LoginState
 import org.jetbrains.compose.resources.stringResource
@@ -94,21 +93,8 @@ import play4change.composeapp.generated.resources.login_subtitle
 import play4change.composeapp.generated.resources.login_welcome
 
 @Composable
-fun LoginScreen(
-    component: DefaultLoginComponent,
-    onNavigateToAbout: () -> Unit,
-    onNavigateToHome: () -> Unit
-) {
-    LaunchedEffect(component) {
-        component.effects.collect { effect ->
-            when (effect as LoginEffect) {
-                LoginEffect.NavigateToAbout -> onNavigateToAbout()
-                LoginEffect.NavigateToHome  -> onNavigateToHome()
-            }
-        }
-    }
-
-    BaseView(component = component) { state, onEvent ->
+fun LoginScreen(component: DefaultLoginComponent) {
+    BaseView(component = component) { state, onEvent, _ ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -116,7 +102,7 @@ fun LoginScreen(
                 .padding(horizontal = Spacing.xl),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(Spacing.xxxl + Spacing.xl))
+            Spacer(Modifier.height(Spacing.xxl))
 
             UrekaLogo(size = LogoSize.Medium)
 

@@ -4,6 +4,4 @@ import com.ureka.play4change.core.component.base.BaseComponent
 
 sealed class ProfileEffect : BaseComponent.Effect {
     data object NavigateBack : ProfileEffect()
-    data object SignedOut    : ProfileEffect()
-    // NavigateToAbout is REMOVED — About is no longer reachable from Profile
 }

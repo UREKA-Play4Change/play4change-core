@@ -7,6 +7,5 @@ import com.ureka.play4change.features.profile.domain.model.ProfileData
 data class ProfileState(
     override val isLoading: Boolean = true,
     override val error: AppError? = null,
-    val profile: ProfileData? = null,
-    val showSignOutDialog: Boolean = false
+    val profile: ProfileData? = null
 ) : ComponentState

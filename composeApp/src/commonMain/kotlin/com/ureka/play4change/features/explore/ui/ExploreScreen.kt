@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,14 +27,12 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,7 +44,6 @@ import com.ureka.play4change.design.components.ShimmerBox
 import com.ureka.play4change.features.explore.domain.model.Topic
 import com.ureka.play4change.features.explore.domain.model.TopicIconType
 import com.ureka.play4change.features.explore.presentation.DefaultExploreComponent
-import com.ureka.play4change.features.explore.presentation.ExploreEffect
 import com.ureka.play4change.features.explore.presentation.ExploreEvents
 import org.jetbrains.compose.resources.stringResource
 import play4change.composeapp.generated.resources.Res
@@ -62,90 +58,76 @@ import play4change.composeapp.generated.resources.explore_title
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExploreScreen(
-    component: DefaultExploreComponent,
-    onNavigateBack: () -> Unit
-) {
-    LaunchedEffect(component) {
-        component.effects.collect { effect ->
-            when (effect as ExploreEffect) {
-                ExploreEffect.NavigateBack  -> onNavigateBack()
-                ExploreEffect.TopicSwitched -> { /* optional: show snackbar */ }
+fun ExploreScreen(component: DefaultExploreComponent) {
+    BaseView(
+        component = component,
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(Res.string.explore_title)) },
+                navigationIcon = {
+                    IconButton(onClick = { component.onEvent(ExploreEvents.NavigateBack) }) {
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null)
+                    }
+                }
+            )
+        }
+    ) { state, onEvent, innerPadding ->
+        if (state.isLoading) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(Spacing.l),
+                verticalArrangement = Arrangement.spacedBy(Spacing.m)
+            ) {
+                repeat(4) {
+                    ShimmerBox(modifier = Modifier.fillMaxWidth().height(96.dp))
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                contentPadding = PaddingValues(Spacing.l),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+            ) {
+                item {
+                    Text(
+                        stringResource(Res.string.explore_subtitle),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(Spacing.m))
+                }
+                items(state.topics) { topic ->
+                    TopicCard(
+                        topic = topic,
+                        onSwitch = { onEvent(ExploreEvents.RequestSwitch(topic)) }
+                    )
+                }
             }
         }
-    }
 
-    BaseView(component = component, screenAlignment = Alignment.TopStart) { state, onEvent ->
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text(stringResource(Res.string.explore_title)) },
-                    navigationIcon = {
-                        IconButton(onClick = { onEvent(ExploreEvents.NavigateBack) }) {
-                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null)
+        // Confirm switch dialog
+        state.pendingSwitch?.let {
+            AlertDialog(
+                onDismissRequest = { onEvent(ExploreEvents.DismissSwitch) },
+                title = { Text(stringResource(Res.string.explore_switch_confirm_title)) },
+                text = { Text(stringResource(Res.string.explore_switch_confirm_body)) },
+                confirmButton = {
+                    Button(onClick = { onEvent(ExploreEvents.ConfirmSwitch) }) {
+                        if (state.isLoading) {
+                            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+                        } else {
+                            Text(stringResource(Res.string.explore_switch_confirm))
                         }
-                    },
-                    windowInsets = WindowInsets(0, 0, 0, 0)
-                )
-            }
-        ) { padding ->
-            if (state.isLoading) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                        .padding(Spacing.l),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.m)
-                ) {
-                    repeat(4) {
-                        ShimmerBox(modifier = Modifier.fillMaxWidth().height(96.dp))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { onEvent(ExploreEvents.DismissSwitch) }) {
+                        Text(stringResource(Res.string.cancel))
                     }
                 }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(padding),
-                    contentPadding = PaddingValues(Spacing.l),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
-                ) {
-                    item {
-                        Text(
-                            stringResource(Res.string.explore_subtitle),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(Modifier.height(Spacing.m))
-                    }
-                    items(state.topics) { topic ->
-                        TopicCard(
-                            topic = topic,
-                            onSwitch = { onEvent(ExploreEvents.RequestSwitch(topic)) }
-                        )
-                    }
-                }
-            }
-
-            // Confirm switch dialog
-            state.pendingSwitch?.let { _ ->
-                AlertDialog(
-                    onDismissRequest = { onEvent(ExploreEvents.DismissSwitch) },
-                    title = { Text(stringResource(Res.string.explore_switch_confirm_title)) },
-                    text = { Text(stringResource(Res.string.explore_switch_confirm_body)) },
-                    confirmButton = {
-                        Button(onClick = { onEvent(ExploreEvents.ConfirmSwitch) }) {
-                            if (state.isLoading) {
-                                CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-                            } else {
-                                Text(stringResource(Res.string.explore_switch_confirm))
-                            }
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { onEvent(ExploreEvents.DismissSwitch) }) {
-                            Text(stringResource(Res.string.cancel))
-                        }
-                    }
-                )
-            }
+            )
         }
     }
 }

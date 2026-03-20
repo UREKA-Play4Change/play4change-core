@@ -31,28 +31,14 @@ import com.ureka.play4change.design.Spacing
 import com.ureka.play4change.design.components.LogoSize
 import com.ureka.play4change.design.components.UrekaLogo
 import com.ureka.play4change.features.splash.presentation.DefaultSplashComponent
-import com.ureka.play4change.features.splash.presentation.SplashEffect
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 import play4change.composeapp.generated.resources.Res
 import play4change.composeapp.generated.resources.app_tagline
 
 @Composable
-fun SplashScreen(
-    component: DefaultSplashComponent,
-    onNavigateToLogin: () -> Unit,
-    onNavigateToHome: () -> Unit
-) {
-    LaunchedEffect(component) {
-        component.effects.collect { effect ->
-            when (effect as SplashEffect) {
-                SplashEffect.NavigateToLogin -> onNavigateToLogin()
-                SplashEffect.NavigateToHome  -> onNavigateToHome()
-            }
-        }
-    }
-
-    BaseView(component = component) { _, _ ->
+fun SplashScreen(component: DefaultSplashComponent) {
+    BaseView(component = component, contentAlignment = Alignment.Center) { _, _, _ ->
         Box(
             modifier = Modifier
                 .fillMaxSize()

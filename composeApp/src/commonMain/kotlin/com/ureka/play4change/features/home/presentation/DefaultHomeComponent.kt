@@ -5,10 +5,12 @@ import com.ureka.play4change.core.component.base.BaseComponent
 import com.ureka.play4change.core.error.AppError
 import com.ureka.play4change.core.component.stateful.safeLaunch
 import com.ureka.play4change.features.home.domain.repository.HomeRepository
+import com.ureka.play4change.features.profile.domain.repository.ProfileRepository
 
 class DefaultHomeComponent(
     componentContext: ComponentContext,
-    private val repository: HomeRepository
+    private val repository: HomeRepository,
+    private val profileRepository: ProfileRepository
 ) : BaseComponent<HomeState, HomeEvents>(componentContext, HomeState()), HomeComponent {
 
     init {
@@ -27,6 +29,14 @@ class DefaultHomeComponent(
             is HomeEvents.StartTask  -> emitEffect(HomeEffect.NavigateToTask(event.userTaskId))
             HomeEvents.OpenProfile   -> emitEffect(HomeEffect.NavigateToProfile)
             HomeEvents.OpenAbout     -> emitEffect(HomeEffect.NavigateToAbout)
+            HomeEvents.OpenExplore   -> emitEffect(HomeEffect.NavigateToExplore)
+            HomeEvents.RequestLogOut -> updateState { copy(showLogOutDialog = true) }
+            HomeEvents.DismissLogOut -> updateState { copy(showLogOutDialog = false) }
+            HomeEvents.ConfirmLogOut -> safeLaunch(scope) {
+                updateState { copy(showLogOutDialog = false) }
+                profileRepository.signOut()
+                emitEffect(HomeEffect.LoggedOut)
+            }
         }
     }
 

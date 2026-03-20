@@ -136,6 +136,15 @@
   <string name="profile_about">À propos de U!REKA</string>
   <string name="profile_sign_out_label">Se déconnecter</string>
 
+  <!-- Navigation Drawer -->
+  <string name="nav_drawer_menu">Menu</string>
+  <string name="nav_drawer_close">Fermer le menu</string>
+  <string name="nav_profile">Profil</string>
+  <string name="nav_about">À propos</string>
+  <string name="nav_log_out">Se déconnecter</string>
+  <string name="nav_log_out_confirm_title">Se déconnecter ?</string>
+  <string name="nav_log_out_confirm_body">Vous serez déconnecté de votre compte.</string>
+
   <!-- Common -->
   <string name="ok">OK</string>
   <string name="cancel">Annuler</string>

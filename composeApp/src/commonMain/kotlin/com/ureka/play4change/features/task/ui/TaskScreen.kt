@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -45,14 +44,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,6 +58,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.ureka.play4change.core.BaseView
 import com.ureka.play4change.core.camera.CameraSection
 import com.ureka.play4change.design.Spacing
@@ -70,7 +69,6 @@ import com.ureka.play4change.design.components.TaskOptionButton
 import com.ureka.play4change.features.task.domain.model.TaskContent
 import com.ureka.play4change.features.task.presentation.DefaultTaskComponent
 import com.ureka.play4change.features.task.presentation.SubmissionState
-import com.ureka.play4change.features.task.presentation.TaskEffect
 import com.ureka.play4change.features.task.presentation.TaskEvents
 import com.ureka.play4change.features.task.presentation.TaskState
 import org.jetbrains.compose.resources.stringResource
@@ -94,89 +92,76 @@ import play4change.composeapp.generated.resources.task_submit_task
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TaskScreen(
-    component: DefaultTaskComponent,
-    onNavigateBack: () -> Unit
-) {
-    LaunchedEffect(component) {
-        component.effects.collect { effect ->
-            when (effect as TaskEffect) {
-                TaskEffect.NavigateBack -> onNavigateBack()
-            }
-        }
-    }
-
-    BaseView(component = component, screenAlignment = Alignment.TopStart) { state, onEvent ->
-
-        Box(Modifier.fillMaxSize()) {
-            Scaffold(
-                topBar = {
-                    CenterAlignedTopAppBar(
-                        title = {
-                            Text(
-                                text = state.task?.title ?: stringResource(Res.string.task_question_label),
-                                style = MaterialTheme.typography.titleMedium,
-                                maxLines = 1
-                            )
-                        },
-                        navigationIcon = {
-                            // Back arrow only visible after submission (when task is done)
-                            if (!state.isBackBlocked) {
-                                IconButton(onClick = { onEvent(TaskEvents.Continue) }) {
-                                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null)
-                                }
-                            }
-                        },
-                        windowInsets = WindowInsets(0, 0, 0, 0)
+fun TaskScreen(component: DefaultTaskComponent) {
+    BaseView(
+        component = component,
+        topBar = {
+            val taskState by component.state.subscribeAsState()
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = taskState.task?.title ?: stringResource(Res.string.task_question_label),
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1
                     )
+                },
+                navigationIcon = {
+                    if (!taskState.isBackBlocked) {
+                        IconButton(onClick = { component.onEvent(TaskEvents.Continue) }) {
+                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null)
+                        }
+                    }
                 }
-            ) { innerPadding ->
-                if (state.isLoading) {
+            )
+        }
+    ) { state, onEvent, innerPadding ->
+        Box(Modifier.fillMaxSize()) {
+            if (state.isLoading) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .padding(Spacing.l),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.m)
+                ) {
+                    ShimmerBox(modifier = Modifier.fillMaxWidth().height(80.dp))
+                    repeat(4) {
+                        ShimmerBox(modifier = Modifier.fillMaxWidth().height(56.dp))
+                    }
+                }
+            } else {
+                val task = state.task
+                if (task == null) {
+                    Box(
+                        modifier = Modifier.fillMaxSize().padding(innerPadding),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No task found.",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding)
-                            .padding(Spacing.l),
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = Spacing.l, vertical = Spacing.m),
                         verticalArrangement = Arrangement.spacedBy(Spacing.m)
                     ) {
-                        ShimmerBox(modifier = Modifier.fillMaxWidth().height(80.dp))
-                        repeat(4) {
-                            ShimmerBox(modifier = Modifier.fillMaxWidth().height(56.dp))
-                        }
-                    }
-                } else {
-                    val task = state.task
-                    if (task == null) {
-                        Box(
-                            modifier = Modifier.fillMaxSize().padding(innerPadding),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "No task found.",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    } else {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(innerPadding)
-                                .verticalScroll(rememberScrollState())
-                                .padding(horizontal = Spacing.l, vertical = Spacing.m),
-                            verticalArrangement = Arrangement.spacedBy(Spacing.m)
-                        ) {
-                            when (val content = task.content) {
-                                is TaskContent.QuizContent -> QuizModeContent(state, content, onEvent)
-                                is TaskContent.StepContent -> StepModeContent(state, content, onEvent)
-                                null -> LegacyQuizContent(state, task, onEvent)
-                            }
+                        when (val content = task.content) {
+                            is TaskContent.QuizContent -> QuizModeContent(state, content, onEvent)
+                            is TaskContent.StepContent -> StepModeContent(state, content, onEvent)
+                            null -> LegacyQuizContent(state, task, onEvent)
                         }
                     }
                 }
             }
 
-            // Full-screen result overlay
+            // Full-screen result overlay — fills the Box which starts at window origin,
+            // covering topBar and all content when visible.
             val isResolved = state.submission is SubmissionState.Resolved
             ResultOverlay(
                 visible = state.submitted || isResolved,

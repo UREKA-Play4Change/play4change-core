@@ -7,5 +7,6 @@ import com.ureka.play4change.features.home.domain.model.HomeData
 data class HomeState(
     override val isLoading: Boolean = true,
     override val error: AppError? = null,
-    val homeData: HomeData? = null
+    val homeData: HomeData? = null,
+    val showLogOutDialog: Boolean = false
 ) : ComponentState
