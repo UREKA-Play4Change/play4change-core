@@ -28,8 +28,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -85,7 +87,6 @@ import play4change.composeapp.generated.resources.auth_or_divider
 import play4change.composeapp.generated.resources.auth_register
 import play4change.composeapp.generated.resources.auth_register_cta
 import play4change.composeapp.generated.resources.auth_sign_in
-import play4change.composeapp.generated.resources.login_about_link
 import play4change.composeapp.generated.resources.login_cta
 import play4change.composeapp.generated.resources.login_email_error_invalid
 import play4change.composeapp.generated.resources.login_email_label
@@ -110,92 +111,102 @@ fun LoginScreen(component: DefaultLoginComponent) {
                 )
             )
         },
-        bottomBar = {
-        }
     ) { state, onEvent, _ ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = Spacing.xl),
+                .padding(horizontal = Spacing.l),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Spacer(Modifier.height(Spacing.xxl))
 
-            AnimatedContent(
-                targetState = state.linkSent,
-                transitionSpec = {
-                    slideInVertically { it / 2 } + fadeIn() togetherWith
-                    slideOutVertically { -it / 2 } + fadeOut()
-                },
-                label = "login_stage"
-            ) { linkSent ->
-                if (linkSent) {
-                    LinkSentContent(
-                        email = state.email,
-                        countdown = state.resendCountdown,
-                        isLoading = state.isEmailLoading,
-                        onResend = { onEvent(LoginEvents.Resend) }
-                    )
-                } else {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        AnimatedContent(
-                            targetState = state.mode,
-                            transitionSpec = {
-                                slideInVertically { it / 3 } + fadeIn(tween(250)) togetherWith
-                                slideOutVertically { -it / 3 } + fadeOut(tween(200))
-                            },
-                            label = "auth_mode"
-                        ) { mode ->
-                            if (mode == AuthMode.Login) {
-                                LoginFormContent(
-                                    state = state,
-                                    onEmailChange = { onEvent(LoginEvents.EmailChanged(it)) },
-                                    onSubmit = { onEvent(LoginEvents.Submit) }
-                                )
-                            } else {
-                                RegisterFormContent(
-                                    state = state,
-                                    onNameChange = { onEvent(LoginEvents.NameChanged(it)) },
-                                    onEmailChange = { onEvent(LoginEvents.EmailChanged(it)) },
-                                    onSubmit = { onEvent(LoginEvents.Submit) }
-                                )
-                            }
-                        }
-
-                        Spacer(Modifier.height(Spacing.l))
-                        OrDivider()
-                        Spacer(Modifier.height(Spacing.m))
-                        val anyLoading = state.loadingAction != null
-                        GoogleSignInButton(
-                            onClick = { onEvent(LoginEvents.SocialLogin(SocialProvider.GOOGLE)) },
-                            isLoading = state.loadingProvider == SocialProvider.GOOGLE,
-                            enabled = !anyLoading || state.loadingProvider == SocialProvider.GOOGLE
-                        )
-                        Spacer(Modifier.height(Spacing.xs))
-                        FacebookSignInButton(
-                            onClick = { onEvent(LoginEvents.SocialLogin(SocialProvider.FACEBOOK)) },
-                            isLoading = state.loadingProvider == SocialProvider.FACEBOOK,
-                            enabled = !anyLoading || state.loadingProvider == SocialProvider.FACEBOOK
-                        )
-                        Spacer(Modifier.height(Spacing.xl))
-                        ToggleModeRow(
-                            mode = state.mode,
-                            onToggle = { onEvent(LoginEvents.ToggleMode) }
-                        )
-                        TextButton(
-                            onClick = { onEvent(LoginEvents.OpenAbout) },
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        ) {
-                            Text(
-                                stringResource(Res.string.login_about_link),
-                                color = MaterialTheme.colorScheme.secondary
+            // ── Form card — elevated surface, slightly darker than background ──
+            ElevatedCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.extraLarge,
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.elevatedCardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(Spacing.l),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    AnimatedContent(
+                        targetState = state.linkSent,
+                        transitionSpec = {
+                            slideInVertically { it / 2 } + fadeIn() togetherWith
+                            slideOutVertically { -it / 2 } + fadeOut()
+                        },
+                        label = "login_stage"
+                    ) { linkSent ->
+                        if (linkSent) {
+                            LinkSentContent(
+                                email = state.email,
+                                countdown = state.resendCountdown,
+                                isLoading = state.isEmailLoading,
+                                onResend = { onEvent(LoginEvents.Resend) }
                             )
+                        } else {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                AnimatedContent(
+                                    targetState = state.mode,
+                                    transitionSpec = {
+                                        slideInVertically { it / 3 } + fadeIn(tween(250)) togetherWith
+                                        slideOutVertically { -it / 3 } + fadeOut(tween(200))
+                                    },
+                                    label = "auth_mode"
+                                ) { mode ->
+                                    if (mode == AuthMode.Login) {
+                                        LoginFormContent(
+                                            state = state,
+                                            onEmailChange = { onEvent(LoginEvents.EmailChanged(it)) },
+                                            onSubmit = { onEvent(LoginEvents.Submit) }
+                                        )
+                                    } else {
+                                        RegisterFormContent(
+                                            state = state,
+                                            onNameChange = { onEvent(LoginEvents.NameChanged(it)) },
+                                            onEmailChange = { onEvent(LoginEvents.EmailChanged(it)) },
+                                            onSubmit = { onEvent(LoginEvents.Submit) }
+                                        )
+                                    }
+                                }
+
+                                Spacer(Modifier.height(Spacing.l))
+                                OrDivider()
+                                Spacer(Modifier.height(Spacing.m))
+                                val anyLoading = state.loadingAction != null
+                                GoogleSignInButton(
+                                    onClick = { onEvent(LoginEvents.SocialLogin(SocialProvider.GOOGLE)) },
+                                    isLoading = state.loadingProvider == SocialProvider.GOOGLE,
+                                    enabled = !anyLoading || state.loadingProvider == SocialProvider.GOOGLE
+                                )
+                                Spacer(Modifier.height(Spacing.xs))
+                                FacebookSignInButton(
+                                    onClick = { onEvent(LoginEvents.SocialLogin(SocialProvider.FACEBOOK)) },
+                                    isLoading = state.loadingProvider == SocialProvider.FACEBOOK,
+                                    enabled = !anyLoading || state.loadingProvider == SocialProvider.FACEBOOK
+                                )
+                                Spacer(Modifier.height(Spacing.xl))
+                                ToggleModeRow(
+                                    mode = state.mode,
+                                    onToggle = { onEvent(LoginEvents.ToggleMode) }
+                                )
+                                Spacer(Modifier.height(Spacing.m))
+                            }
                         }
                     }
                 }
             }
+            // ── End of card ────────────────────────────────────────────────
+
+            Spacer(Modifier.height(Spacing.xxl))
         }
     }
 }

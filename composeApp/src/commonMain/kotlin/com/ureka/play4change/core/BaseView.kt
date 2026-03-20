@@ -23,16 +23,37 @@ import com.ureka.play4change.core.component.error.ErrorDialog
 
 /**
  * Standard wrapper for all screens.
+ *
  * Provides a [Scaffold] with optional [ModalNavigationDrawer].
- * The [content] lambda receives the current [state], the [onEvent] dispatcher,
- * and [innerPadding] from the Scaffold so each screen can apply insets correctly.
+ *
+ * All three active slots — [topBar], [bottomBar], and [content] — receive
+ * the component's current [state] and [onEvent] dispatcher so every part
+ * of the screen can react to state and fire events without passing lambdas
+ * manually through intermediate composables.
+ *
+ * [content] also receives [innerPadding] from the Scaffold so scroll
+ * containers can apply it as contentPadding.
+ *
+ * Usage — screen with a stateful bottom bar:
+ *
+ *   BaseView(
+ *       component = component,
+ *       bottomBar = { state, onEvent ->
+ *           Button(
+ *               onClick = { onEvent(MyEvents.Submit) },
+ *               enabled = state.isValid
+ *           ) { Text("Submit") }
+ *       }
+ *   ) { state, onEvent, innerPadding ->
+ *       // main content
+ *   }
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <S : ComponentState, E : ComponentEvents> BaseView(
     component: BaseComponent<S, E>,
     topBar: @Composable () -> Unit = {},
-    bottomBar: @Composable () -> Unit = {},
+    bottomBar: @Composable (state: S, onEvent: (E) -> Unit) -> Unit = { _, _ -> },
     drawerState: DrawerState? = null,
     drawerContent: @Composable ColumnScope.() -> Unit = {},
     contentAlignment: Alignment = Alignment.TopStart,
@@ -40,32 +61,30 @@ fun <S : ComponentState, E : ComponentEvents> BaseView(
 ) {
     val state by component.state.subscribeAsState()
 
+    val scaffold: @Composable () -> Unit = {
+        Scaffold(
+            topBar = topBar,
+            bottomBar = { bottomBar(state, component::onEvent) },
+            contentWindowInsets = WindowInsets.safeDrawing
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = contentAlignment
+            ) {
+                content(state, component::onEvent, innerPadding)
+                ErrorDialog(component, state.error)
+            }
+        }
+    }
+
     if (drawerState != null) {
         ModalNavigationDrawer(
             drawerState = drawerState,
             drawerContent = { ModalDrawerSheet(content = drawerContent) }
         ) {
-            Scaffold(
-                topBar = topBar,
-                bottomBar = bottomBar,
-                contentWindowInsets = WindowInsets.safeDrawing
-            ) { innerPadding ->
-                Box(Modifier.fillMaxSize(), contentAlignment = contentAlignment) {
-                    content(state, component::onEvent, innerPadding)
-                    ErrorDialog(component, state.error)
-                }
-            }
+            scaffold()
         }
     } else {
-        Scaffold(
-            topBar = topBar,
-            bottomBar = bottomBar,
-            contentWindowInsets = WindowInsets.safeDrawing
-        ) { innerPadding ->
-            Box(Modifier.fillMaxSize(), contentAlignment = contentAlignment) {
-                content(state, component::onEvent, innerPadding)
-                ErrorDialog(component, state.error)
-            }
-        }
+        scaffold()
     }
 }

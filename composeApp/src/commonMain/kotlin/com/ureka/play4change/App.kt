@@ -75,8 +75,7 @@ fun App(root: RootComponent) {
                         LaunchedEffect(child.component) {
                             child.component.effects.collect { effect ->
                                 when (effect as LoginEffect) {
-                                    LoginEffect.NavigateToAbout -> root.navigateToAbout()
-                                    LoginEffect.NavigateToHome  -> root.navigateToHome()
+                                    LoginEffect.NavigateToHome -> root.navigateToHome()
                                 }
                             }
                         }

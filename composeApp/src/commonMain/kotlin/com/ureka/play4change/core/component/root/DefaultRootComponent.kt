@@ -76,7 +76,7 @@ class DefaultRootComponent(
                 get { parametersOf(context) }
             )
             Config.Login -> RootComponent.Child.Login(
-                get { parametersOf(context, { navigation.push(Config.About) }) }
+                get { parametersOf(context) }
             )
             Config.Home -> RootComponent.Child.Home(
                 get { parametersOf(context) }

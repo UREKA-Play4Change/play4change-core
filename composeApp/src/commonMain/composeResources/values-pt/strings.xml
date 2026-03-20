@@ -13,7 +13,6 @@
   <string name="login_email_label">Endereço de e-mail</string>
   <string name="login_email_error_invalid">Por favor, insere um endereço de e-mail válido</string>
   <string name="login_cta">Continuar</string>
-  <string name="login_about_link">Sobre U!REKA →</string>
   <string name="login_link_sent_title">Verifica a tua caixa de entrada</string>
   <string name="login_link_sent_body">Enviámos um link de acesso para %1$s</string>
   <string name="login_link_expires">O link expira em 10 minutos</string>

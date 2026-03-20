@@ -7,8 +7,7 @@ import org.koin.dsl.module
 
 val authModule = module {
     single<AuthRepository> { MockAuthRepository() }
-    factory { (context: com.arkivanov.decompose.ComponentContext,
-               onNavigateToAbout: () -> Unit) ->
-        DefaultLoginComponent(context, get(), onNavigateToAbout)
+    factory { (context: com.arkivanov.decompose.ComponentContext) ->
+        DefaultLoginComponent(context, get())
     }
 }

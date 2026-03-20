@@ -10,5 +10,4 @@ sealed interface LoginEvents : ComponentEvents {
     data object Resend : LoginEvents
     data class SocialLogin(val provider: SocialProvider) : LoginEvents
     data object ToggleMode : LoginEvents
-    data object OpenAbout : LoginEvents
 }

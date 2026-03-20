@@ -13,7 +13,6 @@ import kotlin.coroutines.cancellation.CancellationException
 class DefaultLoginComponent(
     componentContext: ComponentContext,
     private val repository: AuthRepository,
-    private val onNavigateToAbout: () -> Unit
 ) : BaseComponent<LoginState, LoginEvents>(componentContext, LoginState()), LoginComponent {
 
     private var countdownJob: Job? = null
@@ -32,7 +31,6 @@ class DefaultLoginComponent(
                     email = "", name = "", emailError = null, nameError = null
                 )
             }
-            LoginEvents.OpenAbout       -> emitEffect(LoginEffect.NavigateToAbout)
         }
     }
 
