@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- App -->
+  <string name="app_tagline">Joue. Apprends. Change.</string>
+  <string name="app_university">UNIVERSITÉ EUROPÉENNE</string>
+
+  <!-- Splash -->
+  <string name="splash_loading">Chargement…</string>
+
+  <!-- Auth -->
+  <string name="login_welcome">Bienvenue</string>
+  <string name="login_subtitle">Connectez-vous pour continuer votre parcours d\'apprentissage</string>
+  <string name="login_email_label">Adresse e-mail</string>
+  <string name="login_email_error_invalid">Veuillez saisir une adresse e-mail valide</string>
+  <string name="login_cta">Continuer</string>
+  <string name="login_link_sent_title">Vérifiez votre boîte de réception</string>
+  <string name="login_link_sent_body">Nous avons envoyé un lien de connexion à %1$s</string>
+  <string name="login_link_expires">Le lien expire dans 10 minutes</string>
+  <string name="login_resend">Renvoyer le lien</string>
+  <string name="login_resend_countdown">Renvoyer le lien (%1$ds)</string>
+
+  <!-- Home -->
+  <string name="home_greeting">Bonjour, %1$s !</string>
+  <string name="home_this_week">Cette Semaine</string>
+  <string name="home_todays_challenge">Défi du Jour</string>
+  <string name="home_start_challenge">Commencer le Défi →</string>
+  <string name="home_completed_today">Terminé pour aujourd\'hui ! À demain.</string>
+  <string name="home_no_task">Aucune tâche disponible aujourd\'hui. Revenez demain.</string>
+  <string name="home_pts_suffix">pts</string>
+  <string name="home_roadmap">Votre Parcours</string>
+
+  <!-- Task -->
+  <string name="task_question_label">Question</string>
+  <string name="task_show_hint">Afficher l\'indice</string>
+  <string name="task_hide_hint">Masquer l\'indice</string>
+  <string name="task_submit">Soumettre</string>
+  <string name="task_continue">Continuer →</string>
+  <string name="task_exit_title">Quitter la tâche ?</string>
+  <string name="task_exit_body">Votre progression sur cette question sera perdue.</string>
+  <string name="task_exit_confirm">Quitter</string>
+  <string name="task_exit_cancel">Continuer</string>
+  <string name="task_result_correct">Correct !</string>
+  <string name="task_result_wrong">Pas tout à fait — révisez l\'indice et réessayez demain.</string>
+
+  <!-- Profile -->
+  <string name="profile_title">Profil</string>
+  <string name="profile_streak_label">Série</string>
+  <string name="profile_points_label">Points</string>
+  <string name="profile_accuracy_label">Précision</string>
+  <string name="profile_level_label">Niveau %1$d</string>
+  <string name="profile_course_day">Jour %1$d sur %2$d</string>
+  <string name="profile_sign_out">Se déconnecter</string>
+  <string name="profile_sign_out_confirm_title">Se déconnecter ?</string>
+  <string name="profile_sign_out_confirm_body">Vous devrez vous reconnecter pour continuer.</string>
+
+  <!-- About -->
+  <string name="about_title">À propos</string>
+  <string name="about_project_title">Le Projet</string>
+  <string name="about_project_body">U!REKA Play4Change est un jeu sérieux multiplateforme où les joueurs reçoivent des défis quotidiens générés par IA alignés sur les thèmes de durabilité et d\'éducation numérique. Développé dans le cadre de la Licenciatura em Engenharia Informática e de Computadores à l\'ISEL.</string>
+  <string name="about_built_with">Développé Avec</string>
+  <string name="about_architecture_title">Architecture</string>
+  <string name="about_architecture_body">Architecture hexagonale avec pipeline IA Ports &amp; Adapters. La génération de contenu IA s\'exécute en traitement nocturne, éliminant la latence d\'inférence de l\'expérience utilisateur. Les branches adaptatives fournissent une remédiation personnalisée via la recherche de similarité sémantique avec pgvector.</string>
+  <string name="about_author_label">Auteur</string>
+  <string name="about_author_name">Radesh Ilesh Gamanbhai Govind</string>
+  <string name="about_student_number">51620</string>
+  <string name="about_institution">ISEL — Instituto Superior de Engenharia de Lisboa</string>
+  <string name="about_supervisors">Prof. Nuno Datia · Prof. António Serrador · Prof. Michel Vorenhout</string>
+  <string name="about_footer">Mars 2026 · U!REKA European University</string>
+
+  <!-- Branding -->
+  <string name="app_play4change">PLAY4CHANGE</string>
+
+  <!-- Auth — Social + Register -->
+  <string name="auth_continue_google">Continuer avec Google</string>
+  <string name="auth_continue_facebook">Continuer avec Facebook</string>
+  <string name="auth_no_account">Vous n\'avez pas de compte ?</string>
+  <string name="auth_register">S\'inscrire</string>
+  <string name="auth_have_account">Vous avez déjà un compte ?</string>
+  <string name="auth_sign_in">Se connecter</string>
+  <string name="auth_name_label">Nom complet</string>
+  <string name="auth_name_error">Veuillez saisir votre nom</string>
+  <string name="auth_register_cta">Créer un compte</string>
+  <string name="auth_or_divider">ou</string>
+
+  <!-- Explore -->
+  <string name="explore_title">Explorer les Sujets</string>
+  <string name="explore_subtitle">Choisissez un sujet sur lequel vous concentrer. Vous ne pouvez être inscrit qu\'à un seul à la fois.</string>
+  <string name="explore_join">Rejoindre le sujet</string>
+  <string name="explore_active">Actif</string>
+  <string name="explore_switch_confirm_title">Changer de sujet ?</string>
+  <string name="explore_switch_confirm_body">Vous quitterez votre cours actuel. Votre progression sera sauvegardée mais mise en pause.</string>
+  <string name="explore_switch_confirm">Changer</string>
+  <string name="explore_topics_loading">Chargement des sujets…</string>
+  <string name="explore_joined">Inscrit !</string>
+
+  <!-- Badges -->
+  <string name="badges_title">Badges</string>
+  <string name="badge_locked">Verrouillé</string>
+  <string name="badge_first_task">Premier Pas</string>
+  <string name="badge_first_task_desc">Terminez votre première tâche</string>
+  <string name="badge_streak_3">En Feu</string>
+  <string name="badge_streak_3_desc">Maintenez une série de 3 jours</string>
+  <string name="badge_streak_7">Guerrier de la Semaine</string>
+  <string name="badge_streak_7_desc">Maintenez une série de 7 jours</string>
+  <string name="badge_perfect_quiz">Score Parfait</string>
+  <string name="badge_perfect_quiz_desc">Répondez correctement aux 5 questions</string>
+  <string name="badge_first_photo">Témoin Oculaire</string>
+  <string name="badge_first_photo_desc">Soumettez votre première tâche photo</string>
+  <string name="badge_explorer">Explorateur</string>
+  <string name="badge_explorer_desc">Passez à un nouveau sujet</string>
+
+  <!-- Task — Skip / review / auto-advance -->
+  <string name="task_skip_question">Passer</string>
+  <string name="task_skipped_label">Passée</string>
+  <string name="task_review_skipped">Répondre aux questions passées</string>
+  <string name="task_exit_blocked">Terminez ou passez toutes les questions pour quitter</string>
+  <string name="task_hint_title">Indice</string>
+  <!-- Task — Multi-step -->
+  <string name="task_question_of">Question %1$d sur %2$d</string>
+  <string name="task_step_of">Étape %1$d sur %2$d</string>
+  <string name="task_next_question">Suivant</string>
+  <string name="task_take_photo">Prendre une photo</string>
+  <string name="task_retake_photo">Reprendre</string>
+  <string name="task_photo_instruction">Prenez une photo pour compléter cette étape</string>
+  <string name="task_submit_quiz">Soumettre le quiz</string>
+  <string name="task_submit_task">Soumettre la tâche</string>
+  <string name="task_quiz_label">Quiz</string>
+  <string name="task_steps_label">Défi</string>
+  <string name="task_score">Score : %1$d/%2$d</string>
+
+  <!-- Profile additions -->
+  <string name="profile_about">À propos de U!REKA</string>
+  <string name="profile_sign_out_label">Se déconnecter</string>
+
+  <!-- Navigation Drawer -->
+  <string name="nav_drawer_menu">Menu</string>
+  <string name="nav_drawer_close">Fermer le menu</string>
+  <string name="nav_profile">Profil</string>
+  <string name="nav_about">À propos</string>
+  <string name="nav_log_out">Se déconnecter</string>
+  <string name="nav_log_out_confirm_title">Se déconnecter ?</string>
+  <string name="nav_log_out_confirm_body">Vous serez déconnecté de votre compte.</string>
+
+  <!-- Common -->
+  <string name="ok">OK</string>
+  <string name="cancel">Annuler</string>
+  <string name="error_unexpected">Une erreur inattendue s\'est produite.</string>
+  <string name="error_network">Impossible de se connecter. Vérifiez votre connexion internet.</string>
+  <string name="error_auth_required">Authentification requise. Veuillez vous connecter.</string>
+  <string name="error_service_unavailable">Service temporairement indisponible. Veuillez réessayer plus tard.</string>
+  <string name="error_not_found">La ressource demandée est introuvable.</string>
+  <string name="loading">Chargement…</string>
+</resources>

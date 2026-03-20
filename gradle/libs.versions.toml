@@ -1,5 +1,5 @@
 [versions]
-agp = "8.11.2"
+agp = "8.13.2"
 androidx-activity = "1.12.2"
 androidx-appcompat = "1.7.1"
 androidx-core = "1.17.0"
@@ -161,7 +161,6 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 kotest-runner = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 kotest-assertions-arrow = { module = "io.kotest.extensions:kotest-assertions-arrow", version = "1.4.0" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
-
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
