@@ -14,7 +14,6 @@
 [![ISEL](https://img.shields.io/badge/ISEL-Engenharia%20Informática-red)](https://www.isel.pt)
 
 > *Serious games that make sustainability and digital literacy measurable, engaging, and scalable — powered by AI-generated daily challenges.*
-![Screenshot 2026-03-25 at 07.38.04.png](../../../../../Desktop/Screenshot%202026-03-25%20at%2007.38.04.png)
 </div>
 
 ---
@@ -25,14 +24,8 @@ U!REKA Play4Change is a **multiplatform serious game** in which players receive 
 
 The platform is designed to be **fully configurable**: subject domains, difficulty levels, and audience profiles are driven by configuration rather than code, making the system reusable across the entire U!REKA institution network and beyond.
 
-### Core Engineering Goals
+<img width="1512" height="982" alt="Screenshot 2026-03-25 at 07 38 04" src="https://github.com/user-attachments/assets/aaeb2261-483f-45a3-858e-c6d09a6e95a7" />
 
-| Goal | Approach |
-|------|----------|
-| 📱 Multiplatform delivery | Kotlin Multiplatform + Compose Multiplatform (Android & iOS) |
-| 🤖 Adaptive AI content | LangChain4j + Mistral API (EU-hosted, GDPR-compliant) |
-| 🎮 Sustained engagement | Server-side scoring engine with rewards & penalties |
-| ⚡ Zero inference latency | Nightly batch pre-generation + offline-first client sync |
 
 ---
 
