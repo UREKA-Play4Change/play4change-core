@@ -14,7 +14,7 @@
 [![ISEL](https://img.shields.io/badge/ISEL-Engenharia%20Informática-red)](https://www.isel.pt)
 
 > *Serious games that make sustainability and digital literacy measurable, engaging, and scalable — powered by AI-generated daily challenges.*
-
+![Screenshot 2026-03-25 at 07.38.04.png](../../../../../Desktop/Screenshot%202026-03-25%20at%2007.38.04.png)
 </div>
 
 ---
