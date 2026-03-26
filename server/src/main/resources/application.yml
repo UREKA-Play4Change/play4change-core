@@ -62,3 +62,23 @@ resilience4j:
         wait-duration: 2s
         enable-exponential-backoff: true
         exponential-backoff-multiplier: 2
+
+jwt:
+  secret: ${JWT_SECRET:local-dev-secret-change-in-production-must-be-32-chars-minimum}
+  access-ttl-minutes: 15
+  refresh-ttl-days: 7
+
+app:
+  base-url: ${APP_BASE_URL:http://localhost:8080}
+
+spring:
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: 587
+    username: ${MAIL_USERNAME:noreply@ureka.dev}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: true
