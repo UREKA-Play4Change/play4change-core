@@ -4,9 +4,11 @@ import com.ureka.play4change.auth.domain.model.AuthProvider
 import com.ureka.play4change.auth.domain.model.OAuthClaims
 import com.ureka.play4change.auth.port.outbound.OAuthVerifierPort
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
 
 @Component
+@Primary
 class OAuthVerifierRegistry(
     @Qualifier("googleOAuthAdapter") private val google: OAuthVerifierPort,
     @Qualifier("facebookOAuthAdapter") private val facebook: OAuthVerifierPort

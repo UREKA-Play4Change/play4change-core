@@ -71,14 +71,3 @@ jwt:
 app:
   base-url: ${APP_BASE_URL:http://localhost:8080}
 
-spring:
-  mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
-    port: 587
-    username: ${MAIL_USERNAME:noreply@ureka.dev}
-    password: ${MAIL_PASSWORD:}
-    properties:
-      mail:
-        smtp:
-          starttls:
-            enable: true

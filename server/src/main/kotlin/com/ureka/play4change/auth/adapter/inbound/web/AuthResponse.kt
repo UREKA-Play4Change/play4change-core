@@ -6,4 +6,4 @@ data class TokenResponse(
     val expiresIn: Long
 )
 
-data class MessageResponse(val message: String)
+data class MessageResponse(val message: String= "")
