@@ -6,7 +6,13 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
 import org.springframework.scheduling.annotation.EnableScheduling
 
-@SpringBootApplication(scanBasePackages = ["com.ureka.play4change"])
+@SpringBootApplication(
+    scanBasePackages = [
+        "com.ureka.play4change.auth",
+        "com.ureka.play4change.infra",
+        "com.ureka.play4change"
+    ]
+)
 @EnableScheduling
 @EnableConfigurationProperties(JwtProperties::class)
 class Application

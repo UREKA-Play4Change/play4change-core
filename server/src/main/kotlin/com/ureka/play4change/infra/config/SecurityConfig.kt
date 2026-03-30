@@ -22,6 +22,7 @@ class SecurityConfig(private val jwtAuthFilter: JwtAuthFilter) {
                 auth
                     .requestMatchers(
                         "/auth/**",
+                        "/error",
                         "/actuator/health",
                         "/actuator/prometheus"
                     ).permitAll()

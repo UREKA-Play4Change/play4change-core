@@ -8,13 +8,6 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
-import com.ureka.play4change.features.about.presentation.DefaultAboutComponent
-import com.ureka.play4change.features.auth.presentation.DefaultLoginComponent
-import com.ureka.play4change.features.explore.presentation.DefaultExploreComponent
-import com.ureka.play4change.features.home.presentation.DefaultHomeComponent
-import com.ureka.play4change.features.profile.presentation.DefaultProfileComponent
-import com.ureka.play4change.features.splash.presentation.DefaultSplashComponent
-import com.ureka.play4change.features.task.presentation.DefaultTaskComponent
 import kotlinx.serialization.Serializable
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
