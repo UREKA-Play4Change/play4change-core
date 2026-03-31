@@ -1,3 +1,0 @@
--- V4__create_struggle_and_branches.sql
--- Placeholder — adaptive branching tables will be added in a future migration
--- when the struggle detection feature is implemented
