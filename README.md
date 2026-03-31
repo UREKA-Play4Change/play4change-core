@@ -24,8 +24,7 @@ U!REKA Play4Change is a **multiplatform serious game** in which players receive 
 
 The platform is designed to be **fully configurable**: subject domains, difficulty levels, and audience profiles are driven by configuration rather than code, making the system reusable across the entire U!REKA institution network and beyond.
 
-<img width="1512" height="982" alt="Screenshot 2026-03-25 at 07 38 04" src="https://github.com/user-attachments/assets/aaeb2261-483f-45a3-858e-c6d09a6e95a7" />
-
+<img width="1512" height="982" alt="Screenshot 2026-03-30 at 20 31 43" src="https://github.com/user-attachments/assets/77e3d725-92ff-4e88-8b32-a84ec9522631" />
 
 ---
 
