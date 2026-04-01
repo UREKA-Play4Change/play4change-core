@@ -16,6 +16,12 @@ class TopicRepositoryAdapter(
     override fun findAllActive(): List<Topic> =
         jpa.findAllByStatus("ACTIVE").map { it.toDomain() }
 
+    override fun findAll(): List<Topic> =
+        jpa.findAll().map { it.toDomain() }
+
+    override fun findByStatus(status: TopicStatus): List<Topic> =
+        jpa.findAllByStatus(status.name).map { it.toDomain() }
+
     override fun save(topic: Topic): Topic =
         jpa.save(topic.toEntity()).toDomain()
 

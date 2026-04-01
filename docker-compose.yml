@@ -1,8 +1,6 @@
   services:
 
     # ── PostgreSQL + pgvector ──────────────────────────────────────────────────
-    # pgvector/pgvector image ships PostgreSQL 16 with the pgvector extension
-    # pre-installed. No manual extension setup needed.
     postgres:
       image: pgvector/pgvector:pg16
       container_name: play4change-postgres
@@ -21,6 +19,25 @@
         timeout: 5s
         retries: 5
 
+    # ── MinIO (S3-compatible object storage) ──────────────────────────────────
+    minio:
+      image: minio/minio:latest
+      container_name: play4change-minio
+      environment:
+        MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+        MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      ports:
+        - "9000:9000"
+        - "9001:9001"
+      volumes:
+        - minio_data:/data
+      command: server /data --console-address ":9001"
+      healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+
     # ── Spring Boot server ─────────────────────────────────────────────────────
     server:
       build:
@@ -33,10 +50,16 @@
         DB_PASS: play4change
         SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/play4change
         MISTRAL_API_KEY: ${MISTRAL_API_KEY}
+        MINIO_ENDPOINT: http://minio:9000
+        MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+        MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+        MINIO_BUCKET: play4change
       ports:
         - "8080:8080"
       depends_on:
         postgres:
+          condition: service_healthy
+        minio:
           condition: service_healthy
       healthcheck:
         test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
@@ -76,4 +99,5 @@
 
   volumes:
     postgres_data:
+    minio_data:
     grafana_data:
