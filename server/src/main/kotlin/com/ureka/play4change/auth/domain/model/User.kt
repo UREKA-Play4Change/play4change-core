@@ -8,5 +8,6 @@ data class User(
     val name: String?,
     val provider: AuthProvider,
     val providerId: String?,
-    val createdAt: OffsetDateTime
+    val createdAt: OffsetDateTime,
+    val role: String = "USER"
 )

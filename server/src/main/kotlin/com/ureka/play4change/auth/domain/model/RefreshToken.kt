@@ -9,7 +9,8 @@ data class RefreshToken(
     val familyId: String,
     val expiresAt: OffsetDateTime,
     val used: Boolean,
-    val createdAt: OffsetDateTime
+    val createdAt: OffsetDateTime,
+    val role: String = "USER"
 ) {
     fun isExpired(): Boolean = OffsetDateTime.now().isAfter(expiresAt)
     fun isValid(): Boolean = !used && !isExpired()
