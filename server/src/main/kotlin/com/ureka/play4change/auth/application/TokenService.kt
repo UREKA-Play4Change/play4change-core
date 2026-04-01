@@ -14,6 +14,8 @@ import java.time.OffsetDateTime
 import java.util.Date
 import java.util.UUID
 
+data class AccessTokenClaims(val userId: String, val role: String)
+
 @Service
 class TokenService(
     private val refreshTokenRepository: RefreshTokenRepository,
@@ -25,11 +27,12 @@ class TokenService(
     }
 
     /** Called by MagicLinkService and OAuthService after user is resolved. */
-    fun issue(userId: String, email: String): TokenPair {
+    fun issue(userId: String, email: String, role: String): TokenPair {
         val accessExpirySeconds = jwtProperties.accessTtlMinutes * 60
         val accessToken = Jwts.builder()
             .subject(userId)
             .claim("email", email)
+            .claim("role", role)
             .issuedAt(Date())
             .expiration(Date(System.currentTimeMillis() + accessExpirySeconds * 1000L))
             .signWith(signingKey)
@@ -47,7 +50,8 @@ class TokenService(
                 familyId = familyId,
                 expiresAt = OffsetDateTime.now().plusDays(jwtProperties.refreshTtlDays),
                 used = false,
-                createdAt = OffsetDateTime.now()
+                createdAt = OffsetDateTime.now(),
+                role = role
             )
         )
         return TokenPair(accessToken, rawRefresh, accessExpirySeconds)
@@ -73,6 +77,7 @@ class TokenService(
         val accessExpirySeconds = jwtProperties.accessTtlMinutes * 60
         val accessToken = Jwts.builder()
             .subject(stored.userId)
+            .claim("role", stored.role)
             .issuedAt(Date())
             .expiration(Date(System.currentTimeMillis() + accessExpirySeconds * 1000L))
             .signWith(signingKey)
@@ -89,7 +94,8 @@ class TokenService(
                 familyId = stored.familyId,
                 expiresAt = OffsetDateTime.now().plusDays(jwtProperties.refreshTtlDays),
                 used = false,
-                createdAt = OffsetDateTime.now()
+                createdAt = OffsetDateTime.now(),
+                role = stored.role
             )
         )
         return TokenPair(accessToken, rawRefresh, accessExpirySeconds)
@@ -101,13 +107,17 @@ class TokenService(
         refreshTokenRepository.markUsed(stored.id)
     }
 
-    fun parseUserIdFromAccessToken(token: String): String =
-        Jwts.parser()
+    fun parseAccessToken(token: String): AccessTokenClaims {
+        val payload = Jwts.parser()
             .verifyWith(signingKey)
             .build()
             .parseSignedClaims(token)
             .payload
-            .subject
+        return AccessTokenClaims(
+            userId = payload.subject,
+            role = payload.get("role", String::class.java) ?: "USER"
+        )
+    }
 
     private fun generateSecureToken(): String {
         val bytes = ByteArray(32)

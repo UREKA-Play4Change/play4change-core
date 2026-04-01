@@ -22,12 +22,12 @@ class JwtAuthFilter(private val tokenService: TokenService) : OncePerRequestFilt
         if (header != null && header.startsWith("Bearer ")) {
             val token = header.removePrefix("Bearer ").trim()
             try {
-                val userId = tokenService.parseUserIdFromAccessToken(token)
+                val (userId, role) = tokenService.parseAccessToken(token)
                 SecurityContextHolder.getContext().authentication =
                     UsernamePasswordAuthenticationToken(
                         userId,
                         null,
-                        listOf(SimpleGrantedAuthority("ROLE_USER"))
+                        listOf(SimpleGrantedAuthority("ROLE_$role"))
                     )
             } catch (ex: Exception) {
                 SecurityContextHolder.clearContext()
