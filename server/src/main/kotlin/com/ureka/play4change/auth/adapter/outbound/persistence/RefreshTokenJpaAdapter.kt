@@ -24,12 +24,12 @@ class RefreshTokenJpaAdapter(private val jpa: RefreshTokenJpaRepository) : Refre
     private fun RefreshTokenEntity.toDomain() = RefreshToken(
         id = id, tokenHash = tokenHash, userId = userId,
         familyId = familyId, expiresAt = expiresAt,
-        used = used, createdAt = createdAt
+        used = used, createdAt = createdAt, role = role
     )
 
     private fun RefreshToken.toEntity() = RefreshTokenEntity(
         id = id, tokenHash = tokenHash, userId = userId,
         familyId = familyId, expiresAt = expiresAt,
-        used = used, createdAt = createdAt
+        used = used, createdAt = createdAt, role = role
     )
 }

@@ -25,12 +25,13 @@ class UserJpaAdapter(private val jpa: UserJpaRepository) : UserRepository {
     private fun UserEntity.toDomain() = User(
         id = id, email = email, name = name,
         provider = AuthProvider.valueOf(provider),
-        providerId = providerId, createdAt = createdAt
+        providerId = providerId, createdAt = createdAt,
+        role = role
     )
 
     private fun User.toEntity() = UserEntity(
         id = id, email = email, name = name,
         provider = provider.name, providerId = providerId,
-        createdAt = createdAt
+        createdAt = createdAt, role = role
     )
 }
