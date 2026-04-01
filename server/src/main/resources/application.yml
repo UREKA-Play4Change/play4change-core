@@ -71,3 +71,11 @@ jwt:
 app:
   base-url: ${APP_BASE_URL:http://localhost:8080}
 
+resend:
+  api-key: ${RESEND_API_KEY:}
+  from: ${RESEND_FROM:noreply@play4change.app}
+
+google:
+  oauth:
+    client-id: ${GOOGLE_CLIENT_ID:}
+
