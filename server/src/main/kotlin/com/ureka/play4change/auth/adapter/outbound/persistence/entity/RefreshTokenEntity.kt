@@ -14,5 +14,7 @@ class RefreshTokenEntity(
     @Column(name = "expires_at", nullable = false) val expiresAt: OffsetDateTime,
     @Column(nullable = false) var used: Boolean = false,
     @Column(name = "created_at", nullable = false)
-    val createdAt: OffsetDateTime = OffsetDateTime.now()
+    val createdAt: OffsetDateTime = OffsetDateTime.now(),
+    @Column(nullable = false, length = 10)
+    val role: String = "USER"
 )

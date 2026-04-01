@@ -33,6 +33,6 @@ class OAuthService(
                 )
             )
 
-        return tokenService.issue(user.id, user.email)
+        return tokenService.issue(user.id, user.email, user.role)
     }
 }
