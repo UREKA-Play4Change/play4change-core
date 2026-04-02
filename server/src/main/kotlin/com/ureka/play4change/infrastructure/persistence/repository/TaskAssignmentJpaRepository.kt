@@ -28,4 +28,6 @@ interface TaskAssignmentJpaRepository : JpaRepository<TaskAssignmentEntity, Stri
     ): List<TaskAssignmentEntity>
 
     fun findByUserIdAndStatus(userId: String, status: String): List<TaskAssignmentEntity>
+
+    fun findAllByEnrollmentId(enrollmentId: String): List<TaskAssignmentEntity>
 }

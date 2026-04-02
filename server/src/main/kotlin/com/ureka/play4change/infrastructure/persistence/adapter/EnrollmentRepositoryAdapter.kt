@@ -43,6 +43,9 @@ class EnrollmentRepositoryAdapter(
     ): TaskAssignment? =
         assignmentJpa.findByEnrollmentIdAndTaskTemplateId(enrollmentId, taskTemplateId)?.toDomain()
 
+    override fun findAssignmentsByEnrollmentId(enrollmentId: String): List<TaskAssignment> =
+        assignmentJpa.findAllByEnrollmentId(enrollmentId).map { it.toDomain() }
+
     override fun save(enrollment: Enrollment): Enrollment {
         val topicEntity = topicJpa.getReferenceById(enrollment.topicId)
         val moduleEntity = moduleJpa.getReferenceById(enrollment.topicModuleId)

@@ -22,6 +22,9 @@ class TaskTemplateRepositoryAdapter(
     override fun saveAll(templates: List<TaskTemplate>): List<TaskTemplate> =
         jpa.saveAll(templates.map { it.toEntity() }).map { it.toDomain() }
 
+    override fun findById(id: String): TaskTemplate? =
+        jpa.findById(id).orElse(null)?.toDomain()
+
     override fun findCurrentByModuleId(moduleId: String): List<TaskTemplate> =
         jpa.findCurrentByModuleId(moduleId).map { it.toDomain() }
 
