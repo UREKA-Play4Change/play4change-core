@@ -1,6 +1,10 @@
 spring:
   application:
     name: play4change-server
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://play4change-postgres:5432/play4change}
     username: play4change

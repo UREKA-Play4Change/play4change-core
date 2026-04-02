@@ -38,6 +38,18 @@
         timeout: 5s
         retries: 5
 
+    # ── Redis (cache) ─────────────────────────────────────────────────────────
+    redis:
+      image: redis:7-alpine
+      container_name: play4change-redis
+      ports:
+        - "6379:6379"
+      healthcheck:
+        test: ["CMD", "redis-cli", "ping"]
+        interval: 5s
+        timeout: 3s
+        retries: 5
+
     # ── Spring Boot server ─────────────────────────────────────────────────────
     server:
       build:
@@ -54,12 +66,16 @@
         MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
         MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
         MINIO_BUCKET: play4change
+        REDIS_HOST: redis
+        REDIS_PORT: 6379
       ports:
         - "8080:8080"
       depends_on:
         postgres:
           condition: service_healthy
         minio:
+          condition: service_healthy
+        redis:
           condition: service_healthy
       healthcheck:
         test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
@@ -101,3 +117,4 @@
     postgres_data:
     minio_data:
     grafana_data:
+    redis_data:
