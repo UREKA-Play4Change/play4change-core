@@ -1,5 +1,7 @@
 package com.ureka.play4change.infrastructure.persistence.adapter
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.ureka.play4change.domain.struggle.*
 import com.ureka.play4change.infrastructure.persistence.entity.AdaptiveTaskEntity
 import com.ureka.play4change.infrastructure.persistence.entity.StruggleSessionEntity
@@ -14,6 +16,8 @@ class StruggleRepositoryAdapter(
     private val enrollmentJpa: EnrollmentJpaRepository,
     private val assignmentJpa: TaskAssignmentJpaRepository
 ) : StruggleRepository {
+
+    private val mapper = jacksonObjectMapper()
 
     override fun findById(id: String): StruggleSession? =
         jpa.findById(id).orElse(null)?.toDomain()
@@ -47,7 +51,12 @@ class StruggleRepositoryAdapter(
                     pointsReward = task.pointsReward,
                     orderIndex = task.orderIndex,
                     completedAt = task.completedAt,
-                    isCorrect = task.isCorrect
+                    isCorrect = task.isCorrect,
+                    options = task.options?.let { runCatching { mapper.writeValueAsString(it) }.getOrNull() },
+                    correctAnswer = task.correctAnswer,
+                    selectedOption = task.selectedOption,
+                    optionOrder = task.optionOrder.takeIf { it.isNotEmpty() }
+                        ?.let { runCatching { mapper.writeValueAsString(it) }.getOrNull() }
                 )
             )
         }
@@ -76,6 +85,10 @@ class StruggleRepositoryAdapter(
         pointsReward = pointsReward,
         orderIndex = orderIndex,
         completedAt = completedAt,
-        isCorrect = isCorrect
+        isCorrect = isCorrect,
+        options = options?.let { runCatching { mapper.readValue<List<String>>(it) }.getOrNull() },
+        correctAnswer = correctAnswer,
+        selectedOption = selectedOption,
+        optionOrder = optionOrder?.let { runCatching { mapper.readValue<List<Int>>(it) }.getOrNull() } ?: emptyList()
     )
 }

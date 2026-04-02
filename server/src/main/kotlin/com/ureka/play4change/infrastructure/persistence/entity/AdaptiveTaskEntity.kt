@@ -1,6 +1,8 @@
 package com.ureka.play4change.infrastructure.persistence.entity
 
 import jakarta.persistence.*
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -33,5 +35,19 @@ class AdaptiveTaskEntity(
     var completedAt: OffsetDateTime? = null,
 
     @Column(name = "is_correct")
-    var isCorrect: Boolean? = null
+    var isCorrect: Boolean? = null,
+
+    @Column(columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    val options: String? = null,
+
+    @Column(name = "correct_answer")
+    val correctAnswer: Int? = null,
+
+    @Column(name = "selected_option")
+    var selectedOption: Int? = null,
+
+    @Column(name = "option_order", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    var optionOrder: String? = null
 )
