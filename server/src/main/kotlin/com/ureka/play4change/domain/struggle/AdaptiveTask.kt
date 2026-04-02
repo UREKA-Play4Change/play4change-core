@@ -11,5 +11,9 @@ data class AdaptiveTask(
     val pointsReward: Int,
     val orderIndex: Int,
     val completedAt: OffsetDateTime?,
-    val isCorrect: Boolean?
+    val isCorrect: Boolean?,
+    val options: List<String>?,
+    val correctAnswer: Int?,
+    val selectedOption: Int?,
+    val optionOrder: List<Int>
 )
