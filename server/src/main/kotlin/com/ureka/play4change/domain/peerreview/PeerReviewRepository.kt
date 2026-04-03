@@ -1,6 +1,7 @@
 package com.ureka.play4change.domain.peerreview
 
 interface PeerReviewRepository {
+    fun findById(id: String): PeerReview?
     fun findBySubmissionAssignmentId(submissionAssignmentId: String): List<PeerReview>
     fun findPendingByReviewerUserId(reviewerUserId: String): List<PeerReview>
     fun countBySubmissionAssignmentId(submissionAssignmentId: String): Int
