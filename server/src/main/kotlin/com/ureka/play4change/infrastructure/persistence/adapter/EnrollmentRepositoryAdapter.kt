@@ -46,6 +46,14 @@ class EnrollmentRepositoryAdapter(
     override fun findAssignmentsByEnrollmentId(enrollmentId: String): List<TaskAssignment> =
         assignmentJpa.findAllByEnrollmentId(enrollmentId).map { it.toDomain() }
 
+    override fun findPendingReviewSubmissionsForTopic(topicId: String, excludeUserId: String): List<TaskAssignment> =
+        assignmentJpa.findByTopicAndTypeAndStatusExcludingUser(
+            topicId = topicId,
+            taskType = "TODO_ACTION",
+            status = "PENDING_REVIEW",
+            excludeUserId = excludeUserId
+        ).map { it.toDomain() }
+
     override fun save(enrollment: Enrollment): Enrollment {
         val topicEntity = topicJpa.getReferenceById(enrollment.topicId)
         val moduleEntity = moduleJpa.getReferenceById(enrollment.topicModuleId)

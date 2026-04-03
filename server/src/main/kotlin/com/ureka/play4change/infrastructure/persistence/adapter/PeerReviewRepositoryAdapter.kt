@@ -12,6 +12,9 @@ class PeerReviewRepositoryAdapter(
     private val assignmentJpa: TaskAssignmentJpaRepository
 ) : PeerReviewRepository {
 
+    override fun findById(id: String): PeerReview? =
+        jpa.findById(id).orElse(null)?.toDomain()
+
     override fun findBySubmissionAssignmentId(submissionAssignmentId: String): List<PeerReview> =
         jpa.findBySubmissionAssignmentId(submissionAssignmentId).map { it.toDomain() }
 

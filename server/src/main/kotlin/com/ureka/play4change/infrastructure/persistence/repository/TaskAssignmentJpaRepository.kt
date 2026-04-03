@@ -30,4 +30,18 @@ interface TaskAssignmentJpaRepository : JpaRepository<TaskAssignmentEntity, Stri
     fun findByUserIdAndStatus(userId: String, status: String): List<TaskAssignmentEntity>
 
     fun findAllByEnrollmentId(enrollmentId: String): List<TaskAssignmentEntity>
+
+    @Query("""
+        SELECT a FROM TaskAssignmentEntity a
+        WHERE a.enrollment.topic.id = :topicId
+          AND a.taskType = :taskType
+          AND a.status = :status
+          AND a.userId != :excludeUserId
+    """)
+    fun findByTopicAndTypeAndStatusExcludingUser(
+        @Param("topicId") topicId: String,
+        @Param("taskType") taskType: String,
+        @Param("status") status: String,
+        @Param("excludeUserId") excludeUserId: String
+    ): List<TaskAssignmentEntity>
 }
