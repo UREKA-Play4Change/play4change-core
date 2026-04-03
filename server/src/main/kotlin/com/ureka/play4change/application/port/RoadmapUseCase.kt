@@ -4,7 +4,8 @@ import arrow.core.Either
 import com.ureka.play4change.error.AppError
 
 enum class RoadmapNodeStatus {
-    COMPLETED, LATE, SKIPPED, PENDING, LOCKED, ADAPTIVE_PENDING, ADAPTIVE_COMPLETED
+    COMPLETED, LATE, SKIPPED, PENDING, LOCKED, ADAPTIVE_PENDING, ADAPTIVE_COMPLETED,
+    PENDING_REVIEW, REVIEW_PENDING
 }
 
 data class RoadmapNode(

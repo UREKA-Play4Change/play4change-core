@@ -2,7 +2,20 @@ package com.ureka.play4change.application.port
 
 import arrow.core.Either
 import com.ureka.play4change.domain.enrollment.TaskAssignment
+import com.ureka.play4change.domain.peerreview.PeerReview
 import com.ureka.play4change.error.AppError
+
+data class SubmitPhotoCommand(
+    val userId: String,
+    val assignmentId: String,
+    val photoUrl: String
+)
+
+data class SubmitTodoResult(
+    val assignment: TaskAssignment,
+    val assignedReview: PeerReview?,
+    val assignedReviewPhotoUrl: String?
+)
 
 data class SubmitAnswerCommand(
     val userId: String,
@@ -23,4 +36,5 @@ data class SubmitResult(
 interface TaskUseCase {
     fun getTodayTask(userId: String, topicId: String, timezone: String?): Either<AppError, TaskAssignment>
     fun submitAnswer(command: SubmitAnswerCommand): Either<AppError, SubmitResult>
+    fun submitPhoto(command: SubmitPhotoCommand): Either<AppError, SubmitTodoResult>
 }
