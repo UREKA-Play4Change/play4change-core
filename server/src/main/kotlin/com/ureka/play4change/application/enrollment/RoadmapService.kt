@@ -8,6 +8,7 @@ import com.ureka.play4change.application.port.RoadmapNodeStatus
 import com.ureka.play4change.application.port.RoadmapUseCase
 import com.ureka.play4change.domain.enrollment.AssignmentStatus
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
+import com.ureka.play4change.domain.peerreview.PeerReviewRepository
 import com.ureka.play4change.domain.struggle.StruggleRepository
 import com.ureka.play4change.domain.struggle.StruggleStatus
 import com.ureka.play4change.domain.topic.TaskTemplateRepository
@@ -23,7 +24,8 @@ class RoadmapService(
     private val topicModuleRepository: TopicModuleRepository,
     private val taskTemplateRepository: TaskTemplateRepository,
     private val enrollmentRepository: EnrollmentRepository,
-    private val struggleRepository: StruggleRepository
+    private val struggleRepository: StruggleRepository,
+    private val peerReviewRepository: PeerReviewRepository
 ) : RoadmapUseCase {
 
     override fun getRoadmap(userId: String, topicId: String, timezone: String?): Either<AppError, List<RoadmapNode>> =
@@ -56,9 +58,13 @@ class RoadmapService(
                         AssignmentStatus.SUBMITTED -> RoadmapNodeStatus.COMPLETED
                         AssignmentStatus.LATE -> RoadmapNodeStatus.LATE
                         AssignmentStatus.SKIPPED -> RoadmapNodeStatus.SKIPPED
+                        AssignmentStatus.PENDING_REVIEW -> RoadmapNodeStatus.PENDING_REVIEW
                         else -> RoadmapNodeStatus.SKIPPED
                     }
-                    template.dayIndex == dayIndex -> RoadmapNodeStatus.PENDING
+                    template.dayIndex == dayIndex -> when (assignment?.status) {
+                        AssignmentStatus.PENDING_REVIEW -> RoadmapNodeStatus.PENDING_REVIEW
+                        else -> RoadmapNodeStatus.PENDING
+                    }
                     else -> RoadmapNodeStatus.LOCKED
                 }
                 nodes.add(
@@ -92,6 +98,26 @@ class RoadmapService(
                         )
                     }
                 }
+            }
+
+            // Append REVIEW_PENDING nodes for any outstanding peer review assignments
+            val pendingReviews = peerReviewRepository.findPendingByReviewerUserId(userId)
+                .filter { review ->
+                    val submission = enrollmentRepository.findAssignmentById(review.submissionAssignmentId)
+                    val subEnrollment = submission?.let { enrollmentRepository.findById(it.enrollmentId) }
+                    subEnrollment?.topicId == topicId
+                }
+            pendingReviews.forEach { review ->
+                nodes.add(
+                    RoadmapNode(
+                        dayIndex = -1,
+                        title = "Peer Review Pending",
+                        status = RoadmapNodeStatus.REVIEW_PENDING,
+                        isAdaptive = false,
+                        assignmentId = review.id,
+                        pointsAwarded = null
+                    )
+                )
             }
 
             nodes

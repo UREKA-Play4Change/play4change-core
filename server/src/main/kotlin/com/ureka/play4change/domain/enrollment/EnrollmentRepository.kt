@@ -7,6 +7,7 @@ interface EnrollmentRepository {
     fun findAssignmentById(id: String): TaskAssignment?
     fun findAssignmentByEnrollmentAndTemplate(enrollmentId: String, taskTemplateId: String): TaskAssignment?
     fun findAssignmentsByEnrollmentId(enrollmentId: String): List<TaskAssignment>
+    fun findPendingReviewSubmissionsForTopic(topicId: String, excludeUserId: String): List<TaskAssignment>
     fun save(enrollment: Enrollment): Enrollment
     fun saveAssignment(assignment: TaskAssignment): TaskAssignment
 }

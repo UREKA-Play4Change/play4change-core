@@ -4,5 +4,6 @@ enum class AssignmentStatus {
     PENDING,
     SUBMITTED,
     LATE,
-    SKIPPED
+    SKIPPED,
+    PENDING_REVIEW
 }

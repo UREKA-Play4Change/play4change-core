@@ -4,14 +4,18 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
+import com.ureka.play4change.application.port.PeerReviewUseCase
 import com.ureka.play4change.application.port.SubmitAnswerCommand
+import com.ureka.play4change.application.port.SubmitPhotoCommand
 import com.ureka.play4change.application.port.SubmitResult
+import com.ureka.play4change.application.port.SubmitTodoResult
 import com.ureka.play4change.application.port.TaskUseCase
 import com.ureka.play4change.application.struggle.ErrorPatternClassifier
 import com.ureka.play4change.application.struggle.HandleStruggleService
 import com.ureka.play4change.domain.enrollment.AssignmentStatus
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
 import com.ureka.play4change.domain.enrollment.TaskAssignment
+import com.ureka.play4change.domain.topic.TaskType
 import com.ureka.play4change.domain.topic.TaskTemplateRepository
 import com.ureka.play4change.domain.topic.TopicModuleRepository
 import com.ureka.play4change.domain.topic.TopicRepository
@@ -31,7 +35,8 @@ class TaskService(
     private val topicModuleRepository: TopicModuleRepository,
     private val taskTemplateRepository: TaskTemplateRepository,
     private val enrollmentRepository: EnrollmentRepository,
-    private val handleStruggleService: HandleStruggleService
+    private val handleStruggleService: HandleStruggleService,
+    private val peerReviewUseCase: PeerReviewUseCase
 ) : TaskUseCase {
 
     private val log = LoggerFactory.getLogger(TaskService::class.java)
@@ -178,6 +183,48 @@ class TaskService(
             totalPoints = savedEnrollment.totalPointsEarned,
             streakDays = savedEnrollment.streakDays,
             struggleTriggered = struggleTriggered
+        )
+    }
+
+    override fun submitPhoto(command: SubmitPhotoCommand): Either<AppError, SubmitTodoResult> = either {
+        val assignment = ensureNotNull(enrollmentRepository.findAssignmentById(command.assignmentId)) {
+            NotFound.ResourceNotFound("TaskAssignment", command.assignmentId)
+        }
+        ensure(assignment.userId == command.userId) {
+            ResourceOwnershipViolation("TaskAssignment")
+        }
+        ensure(assignment.status == AssignmentStatus.PENDING) {
+            Conflict.ConcurrentModification
+        }
+        ensure(assignment.taskType == TaskType.TODO_ACTION) {
+            BadRequest.InvalidField("assignmentId", "task is not a TODO_ACTION type")
+        }
+        ensure(command.photoUrl.isNotBlank()) {
+            BadRequest.InvalidField("photoUrl", "must not be blank")
+        }
+
+        val savedAssignment = enrollmentRepository.saveAssignment(
+            assignment.markPendingReview(command.photoUrl)
+        )
+
+        val enrollment = ensureNotNull(enrollmentRepository.findById(assignment.enrollmentId)) {
+            NotFound.ResourceNotFound("Enrollment", assignment.enrollmentId)
+        }
+
+        // Delegate review selection through the PeerReviewUseCase interface
+        val assignedReview = peerReviewUseCase.selectAndAssignReview(command.userId, enrollment.topicId)
+            .fold(ifLeft = { null }, ifRight = { it })
+
+        val assignedReviewPhotoUrl = assignedReview?.let { review ->
+            enrollmentRepository.findAssignmentById(review.submissionAssignmentId)?.photoUrl
+        }
+
+        log.info("User {} submitted photo for assignment {}", command.userId, command.assignmentId)
+
+        SubmitTodoResult(
+            assignment = savedAssignment,
+            assignedReview = assignedReview,
+            assignedReviewPhotoUrl = assignedReviewPhotoUrl
         )
     }
 }

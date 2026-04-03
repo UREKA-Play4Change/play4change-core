@@ -24,6 +24,13 @@ data class TaskAssignment(
     fun incrementWrongAttempts(): TaskAssignment =
         copy(wrongAttemptCount = wrongAttemptCount + 1)
 
+    fun markPendingReview(photoUrl: String): TaskAssignment =
+        copy(
+            submittedAt = OffsetDateTime.now(),
+            status = AssignmentStatus.PENDING_REVIEW,
+            photoUrl = photoUrl
+        )
+
     fun markSubmitted(
         isCorrect: Boolean,
         pointsAwarded: Int,
