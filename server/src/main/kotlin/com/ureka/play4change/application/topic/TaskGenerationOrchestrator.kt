@@ -18,6 +18,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Timer
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Async
@@ -33,12 +35,14 @@ class TaskGenerationOrchestrator(
     private val fileStoragePort: FileStoragePort,
     private val contentExtractorPort: ContentExtractorPort,
     private val taskGenerationPort: TaskGenerationPort,
+    private val registry: MeterRegistry,
     @Value("\${ai.mistral.timeout-seconds:60}") private val timeoutSeconds: Long
 ) {
     private val log = LoggerFactory.getLogger(TaskGenerationOrchestrator::class.java)
 
     @Async("generationExecutor")
     fun generateAsync(topicId: String) {
+        val sample = Timer.start(registry)
         try {
             topicRepository.updateStatus(topicId, TopicStatus.GENERATING)
 
@@ -91,6 +95,7 @@ class TaskGenerationOrchestrator(
             if (result == null) {
                 log.error("Task generation timed out ({}s) for topic {}", timeoutSeconds, topicId)
                 topicRepository.updateStatus(topicId, TopicStatus.FAILED)
+                sample.stop(registry.timer("task_generation_duration_seconds", "status", "timeout"))
                 return
             }
 
@@ -98,6 +103,7 @@ class TaskGenerationOrchestrator(
                 ifLeft = { error ->
                     log.error("Task generation returned error for topic {}: {}", topicId, error)
                     topicRepository.updateStatus(topicId, TopicStatus.FAILED)
+                    sample.stop(registry.timer("task_generation_duration_seconds", "status", "failed"))
                 },
                 ifRight = { generationResult ->
                     val templates = generationResult.tasks
@@ -129,11 +135,13 @@ class TaskGenerationOrchestrator(
                         "Topic {} generation complete — {} task(s) created",
                         topicId, templates.size
                     )
+                    sample.stop(registry.timer("task_generation_duration_seconds", "status", "success"))
                 }
             )
         } catch (ex: Exception) {
             log.error("Unexpected error during task generation for topic {}: {}", topicId, ex.message, ex)
             topicRepository.updateStatus(topicId, TopicStatus.FAILED)
+            sample.stop(registry.timer("task_generation_duration_seconds", "status", "failed"))
         }
     }
 
