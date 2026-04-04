@@ -20,6 +20,7 @@ import com.ureka.play4change.error.AppError
 import com.ureka.play4change.error.client.BadRequest
 import com.ureka.play4change.error.client.Conflict
 import com.ureka.play4change.error.client.NotFound
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
@@ -30,7 +31,8 @@ class EnrollmentService(
     private val topicRepository: TopicRepository,
     private val topicModuleRepository: TopicModuleRepository,
     private val taskTemplateRepository: TaskTemplateRepository,
-    private val enrollmentRepository: EnrollmentRepository
+    private val enrollmentRepository: EnrollmentRepository,
+    private val registry: MeterRegistry
 ) : EnrollmentUseCase {
 
     private val log = LoggerFactory.getLogger(EnrollmentService::class.java)
@@ -101,6 +103,7 @@ class EnrollmentService(
             )
         )
 
+        registry.counter("topic_enrollments_total").increment()
         log.info("User {} enrolled in topic {}", command.userId, command.topicId)
         enrollment
     }

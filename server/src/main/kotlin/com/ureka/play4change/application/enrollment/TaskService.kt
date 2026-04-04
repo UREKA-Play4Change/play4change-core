@@ -24,6 +24,7 @@ import com.ureka.play4change.error.client.BadRequest
 import com.ureka.play4change.error.client.Conflict
 import com.ureka.play4change.error.client.Forbidden.ResourceOwnershipViolation
 import com.ureka.play4change.error.client.NotFound
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
@@ -36,7 +37,8 @@ class TaskService(
     private val taskTemplateRepository: TaskTemplateRepository,
     private val enrollmentRepository: EnrollmentRepository,
     private val handleStruggleService: HandleStruggleService,
-    private val peerReviewUseCase: PeerReviewUseCase
+    private val peerReviewUseCase: PeerReviewUseCase,
+    private val registry: MeterRegistry
 ) : TaskUseCase {
 
     private val log = LoggerFactory.getLogger(TaskService::class.java)
@@ -176,6 +178,17 @@ class TaskService(
 
         val savedEnrollment = enrollmentRepository.save(updatedEnrollment)
 
+        val submissionOutcome = when {
+            isCorrect && isLate -> "late"
+            isCorrect -> "correct"
+            else -> "incorrect"
+        }
+        registry.counter(
+            "task_submissions_total",
+            "outcome", submissionOutcome,
+            "task_type", "multiple_choice"
+        ).increment()
+
         SubmitResult(
             assignment = savedAssignment,
             isCorrect = isCorrect,
@@ -219,6 +232,11 @@ class TaskService(
             enrollmentRepository.findAssignmentById(review.submissionAssignmentId)?.photoUrl
         }
 
+        registry.counter(
+            "task_submissions_total",
+            "outcome", "pending_review",
+            "task_type", "todo_action"
+        ).increment()
         log.info("User {} submitted photo for assignment {}", command.userId, command.assignmentId)
 
         SubmitTodoResult(
