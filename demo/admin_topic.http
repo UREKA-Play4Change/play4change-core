@@ -1,0 +1,194 @@
+### Play4Change — Admin Topic Creation Flow
+### JetBrains HTTP Client (.http)
+###
+### Flow order:
+###   0. Promote user to ADMIN (SQL — one-time setup)
+###   1. Admin login via magic link (same as auth.http)
+###   2. Create topic from URL   → topic starts in GENERATING status
+###   3. Create topic from PDF   → multipart upload
+###   4. Poll topic status       → wait for ACTIVE (or FAILED if no Mistral key)
+###   5. List all topics
+###   6. Regenerate tasks from stored content
+###
+### NOTE: There is no task-template edit endpoint in the current codebase.
+###       (VERIFY: PUT /admin/topics/{id}/tasks/{taskId} does not exist —
+###        check TopicController.kt and TopicUseCase.kt if this has been added.)
+
+@baseUrl = http://localhost:8080
+
+# Fill in after admin login (step 1):
+@adminToken = <paste admin accessToken here>
+
+# Fill in after topic creation (step 2 or 3):
+@topicId = <paste topic id here>
+
+###############################################################################
+
+### 0. Promote a user to ADMIN role (one-time DB setup — no seed endpoint exists)
+#
+# After the user has logged in at least once via magic link (which creates the
+# users row), run this SQL against the PostgreSQL container:
+#
+#   docker exec -it play4change-postgres psql -U play4change -d play4change -c \
+#     "UPDATE users SET role = 'ADMIN' WHERE email = 'admin@ example.com';"
+#
+# Verify:
+#   docker exec -it play4change-postgres psql -U play4change -d play4change -c \
+#     "SELECT id, email, role FROM users WHERE email = 'admin@ example.com';"
+#
+# The user must then log out and log back in — the role is embedded in the JWT
+# at issue time via TokenService. Existing tokens are NOT retroactively upgraded.
+
+###############################################################################
+
+### 1a. Request admin magic link
+POST {{baseUrl}}/auth/magic-link
+Content-Type: application/json
+
+{
+  "email": "admin@example.com"
+}
+
+###############################################################################
+
+### 1b. Verify magic link → get admin JWT
+# Paste the token from server logs:
+#   docker logs play4change-server --follow 2>&1 | grep -A3 "MAGIC LINK"
+# The response accessToken will carry role=ADMIN in the JWT claims.
+# Paste it into @ adminToken above.
+GET {{baseUrl}}/auth/verify?token=<paste-token-from-logs>
+Accept: application/json
+
+###############################################################################
+
+### 2. Create topic from URL
+# The server fetches and extracts the page content, then kicks off async AI
+# task generation. The topic is created immediately with status=GENERATING.
+# Poll GET /admin/topics/{id} until status=ACTIVE (or FAILED).
+#
+# audienceLevel values: BEGINNER | INTERMEDIATE | ADVANCED
+# language: BCP-47 tag, e.g. "en", "pt"
+# expiresAt: ISO-8601 with offset, e.g. "2026-12-31T23:59:59Z"
+# taskCount: number of daily tasks to generate (one per day)
+# subscriptionWindowDays: how many days users can enrol after topic creation
+#
+# Response: 201 Created — TopicResponse
+POST {{baseUrl}}/admin/topics
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "title": "Introduction to Circular Economy",
+  "description": "Learn the core principles of circular economy and sustainable resource use.",
+  "url": "https://en.wikipedia.org/wiki/Circular_economy",
+  "taskCount": 7,
+  "subscriptionWindowDays": 14,
+  "audienceLevel": "BEGINNER",
+  "language": "en",
+  "expiresAt": "2026-12-31T23:59:59Z"
+}
+
+###############################################################################
+
+### 3. Create topic from PDF (multipart/form-data)
+#
+# Place a real PDF at demo/sample-topic.pdf before running this request.
+# The server stores the PDF in MinIO, extracts text via PDFBox, then triggers
+# async AI generation exactly as the URL flow does.
+#
+# IMPORTANT: If MISTRAL_API_KEY is not set, NoOpTaskGenerationAdapter runs
+# instead of LangChain4jTaskGenerationAdapter. The topic will transition to
+# ACTIVE immediately with placeholder/empty tasks — no real generation occurs.
+# Set MISTRAL_API_KEY in your .env file for real generation.
+#
+# @RequestParam fields (form fields, NOT JSON):
+#   title, description, taskCount, subscriptionWindowDays,
+#   audienceLevel, language, expiresAt
+# @RequestPart field name: file
+#
+# Response: 201 Created — TopicResponse
+POST {{baseUrl}}/admin/topics/pdf
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary=DemoBoundary
+
+--DemoBoundary
+Content-Disposition: form-data; name="title"
+
+Sustainability in Urban Planning
+--DemoBoundary
+Content-Disposition: form-data; name="description"
+
+A challenge on integrating green infrastructure and sustainable design in cities.
+--DemoBoundary
+Content-Disposition: form-data; name="taskCount"
+
+5
+--DemoBoundary
+Content-Disposition: form-data; name="subscriptionWindowDays"
+
+10
+--DemoBoundary
+Content-Disposition: form-data; name="audienceLevel"
+
+INTERMEDIATE
+--DemoBoundary
+Content-Disposition: form-data; name="language"
+
+en
+--DemoBoundary
+Content-Disposition: form-data; name="expiresAt"
+
+2026-12-31T23:59:59Z
+--DemoBoundary
+Content-Disposition: form-data; name="file"; filename="sample-topic.pdf"
+Content-Type: application/pdf
+
+< ./sample-topic.pdf
+--DemoBoundary--
+
+###############################################################################
+
+### 4. Poll topic status
+# Copy the topic id from the 201 response into @ topicId above.
+# Poll until "status" is "ACTIVE".
+# If MISTRAL_API_KEY is not set → status will be "ACTIVE" instantly (NoOp adapter).
+# If MISTRAL_API_KEY is set → status transitions DRAFT → GENERATING → ACTIVE
+#                             (AI call takes up to 60 s; circuit breaker retries 3×).
+# If all AI retries fail  → status = "FAILED" (check server logs for cause).
+#
+# Response: 200 OK — TopicResponse
+GET {{baseUrl}}/admin/topics/{{topicId}}
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+###############################################################################
+
+### 5. List all topics (optional status filter)
+# status query param values: DRAFT | GENERATING | ACTIVE | EXPIRED | FAILED
+# Omit status to list all.
+#
+# Response: 200 OK — List<TopicResponse>
+GET {{baseUrl}}/admin/topics?status=ACTIVE
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+###############################################################################
+
+### 5b. List all topics (no filter)
+GET {{baseUrl}}/admin/topics
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+###############################################################################
+
+### 6. Regenerate tasks from stored content
+# Triggers a fresh async AI generation run using the raw_extracted_text already
+# stored in the database (no re-upload or re-fetch needed).
+# Sets topic status back to GENERATING; transitions to ACTIVE or FAILED on completion.
+# Requires MISTRAL_API_KEY to be set for real output.
+#
+# Response: 200 OK — TopicResponse (status = GENERATING)
+POST {{baseUrl}}/admin/topics/{{topicId}}/regenerate
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
