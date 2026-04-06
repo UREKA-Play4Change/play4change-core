@@ -24,7 +24,10 @@ class SecurityConfig(private val jwtAuthFilter: JwtAuthFilter) {
                         "/auth/**",
                         "/error",
                         "/actuator/health",
-                        "/actuator/prometheus"
+                        "/actuator/prometheus",
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**"
                     ).permitAll()
                     .requestMatchers("/admin/**").hasRole("ADMIN")
                     .anyRequest().authenticated()
