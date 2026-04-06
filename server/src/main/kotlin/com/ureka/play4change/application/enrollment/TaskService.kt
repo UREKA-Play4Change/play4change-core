@@ -10,6 +10,7 @@ import com.ureka.play4change.application.port.SubmitPhotoCommand
 import com.ureka.play4change.application.port.SubmitResult
 import com.ureka.play4change.application.port.SubmitTodoResult
 import com.ureka.play4change.application.port.TaskUseCase
+import com.ureka.play4change.application.port.TodayTaskResult
 import com.ureka.play4change.application.struggle.ErrorPatternClassifier
 import com.ureka.play4change.application.struggle.HandleStruggleService
 import com.ureka.play4change.domain.enrollment.AssignmentStatus
@@ -41,7 +42,7 @@ class TaskService(
 
     private val log = LoggerFactory.getLogger(TaskService::class.java)
 
-    override fun getTodayTask(userId: String, topicId: String, timezone: String?): Either<AppError, TaskAssignment> =
+    override fun getTodayTask(userId: String, topicId: String, timezone: String?): Either<AppError, TodayTaskResult> =
         either {
             val enrollment = ensureNotNull(enrollmentRepository.findByUserIdAndTopicId(userId, topicId)) {
                 NotFound.ResourceNotFound("Enrollment", "$userId/$topicId")
@@ -51,11 +52,11 @@ class TaskService(
 
             // Existing assignment for today?
             val assignments = enrollmentRepository.findAssignmentsByEnrollmentId(enrollment.id)
-            val existing = assignments.firstOrNull { a ->
+            val existingPair = assignments.firstNotNullOfOrNull { a ->
                 val template = taskTemplateRepository.findById(a.taskTemplateId)
-                template?.dayIndex == dayIndex
+                if (template?.dayIndex == dayIndex) Pair(a, template) else null
             }
-            if (existing != null) return@either existing
+            if (existingPair != null) return@either TodayTaskResult(existingPair.first, existingPair.second)
 
             // Create new assignment for today
             val modules = topicModuleRepository.findByTopicId(topicId)
@@ -71,7 +72,7 @@ class TaskService(
                 .also { it.shuffle() }
             val now = OffsetDateTime.now()
 
-            enrollmentRepository.saveAssignment(
+            val savedAssignment = enrollmentRepository.saveAssignment(
                 TaskAssignment(
                     id = UUID.randomUUID().toString(),
                     enrollmentId = enrollment.id,
@@ -91,6 +92,7 @@ class TaskService(
                     photoUrl = null
                 )
             )
+            TodayTaskResult(savedAssignment, template)
         }
 
     override fun submitAnswer(command: SubmitAnswerCommand): Either<AppError, SubmitResult> = either {
