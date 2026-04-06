@@ -33,6 +33,9 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test)
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
+    testImplementation(libs.mockk)
 
     implementation(libs.spring.boot.starter.security)
     implementation(libs.kotlinx.serialization.json)
@@ -57,4 +60,8 @@ dependencies {
 
 kotlin {
     jvmToolchain(21)
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
