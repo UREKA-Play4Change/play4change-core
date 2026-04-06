@@ -3,7 +3,6 @@ package com.ureka.play4change.web.user
 import com.ureka.play4change.application.port.SubmitAnswerCommand
 import com.ureka.play4change.application.port.SubmitPhotoCommand
 import com.ureka.play4change.application.port.TaskUseCase
-import com.ureka.play4change.domain.topic.TaskTemplateRepository
 import com.ureka.play4change.error.AppError
 import com.ureka.play4change.web.user.dto.SubmitAnswerRequest
 import com.ureka.play4change.web.user.dto.SubmitPhotoRequest
@@ -17,8 +16,7 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/tasks")
 class TaskController(
-    private val taskUseCase: TaskUseCase,
-    private val taskTemplateRepository: TaskTemplateRepository
+    private val taskUseCase: TaskUseCase
 ) {
 
     @GetMapping("/today")
@@ -29,11 +27,7 @@ class TaskController(
     ): ResponseEntity<TaskResponse> =
         taskUseCase.getTodayTask(userId, topicId, timezone).fold(
             ifLeft = { it.toErrorResponse() },
-            ifRight = { assignment ->
-                val template = taskTemplateRepository.findById(assignment.taskTemplateId)
-                    ?: return ResponseEntity.status(500).build()
-                ResponseEntity.ok(TaskResponse.from(assignment, template))
-            }
+            ifRight = { ResponseEntity.ok(TaskResponse.from(it.assignment, it.template)) }
         )
 
     @PostMapping("/{assignmentId}/submit")
