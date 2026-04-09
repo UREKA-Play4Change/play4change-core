@@ -1,14 +1,8 @@
-global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
+apiVersion: 1
 
-scrape_configs:
-  - job_name: "play4change-server"
-    metrics_path: "/actuator/prometheus"
-    static_configs:
-      - targets: ["server:8080"]
-    # Labels added to every metric from this job
-    # Visible in Grafana for filtering
-    relabel_configs:
-      - target_label: application
-        replacement: play4change
+datasources:
+  - name: Prometheus
+    type: prometheus
+    url: http://prometheus:9090
+    isDefault: true
+    access: proxy
