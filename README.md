@@ -36,7 +36,7 @@ The backend follows Clean Architecture with Domain-Driven Design. All business r
 | File Storage | MinIO (S3-compatible, AWS SDK) |
 | Auth | Magic link (Resend) + Google OAuth (JWKS) + Facebook OAuth |
 | Observability | Micrometer + Prometheus + Grafana |
-| Migrations | Flyway (V1–V9) |
+| Migrations | Flyway (V1–V10) |
 | Containerisation | Docker Compose (6 services) |
 
 ---
@@ -115,7 +115,7 @@ All endpoints are documented interactively at **http://localhost:8080/swagger-ui
 
 ## 6. Key Architectural Decisions
 
-All decisions are documented in [`docs/adr/`](docs/adr/) (ADR-001 through ADR-015).
+All decisions are documented in [`docs/adr/`](docs/adr/) (ADR-001 through ADR-016).
 
 | ADR | Decision |
 |---|---|
@@ -134,6 +134,7 @@ All decisions are documented in [`docs/adr/`](docs/adr/) (ADR-001 through ADR-01
 | ADR-013 | Learning Flow: Day Progression, Struggle Detection, and Caching Strategy |
 | ADR-014 | Peer Review: Cost-Free Assessment Through Collective Correction |
 | ADR-015 | Observability Strategy: Custom Metrics, Prometheus, and Grafana |
+| ADR-016 | Authentication Hardening: Security Audit and Remediation |
 
 ---
 
@@ -147,15 +148,30 @@ The [`demo/`](demo/) directory contains runnable JetBrains HTTP Client files cov
 
 ---
 
-## 8. Tests
+## 8. First admin user
 
-22 unit tests across 3 test classes. No Spring context required — all tests run as pure JVM.
+There is no seeded admin account. Promote a user to `ADMIN` manually after they have
+signed in at least once (so a `users` row exists):
+
+```sql
+UPDATE users SET role = 'ADMIN' WHERE email = 'your@email.com';
+```
+
+Run this directly against the live database (e.g. `psql` or a DB client connected to
+the Docker Compose container). The change takes effect on the user's next login.
+
+---
+
+## 9. Tests
+
+24 unit tests across 4 test classes. No Spring context required — all tests run as pure JVM.
 
 | Class | Tests | Coverage |
 |---|---|---|
 | `ErrorPatternClassifierTest` | 8 | Struggle pattern classification rules and priority ordering |
 | `DayIndexCalculatorTest` | 7 | Day progression, timezone boundary cases, clock-skew guard |
-| `MagicLinkServiceTest` | 7 | Auth service with MockK — happy path, expired/used/missing tokens |
+| `MagicLinkServiceTest` | 7 | Auth service with MockK — hash storage, atomic claim, concurrency path |
+| `TokenServiceTest` | 2 | Token revocation — full family invalidation and no-op on unknown token |
 
 ```bash
 ./gradlew :server:test

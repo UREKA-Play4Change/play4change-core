@@ -21,6 +21,8 @@ dependencies {
     implementation(libs.spring.boot.starter.actuator)
 
     runtimeOnly(libs.postgresql)
+    implementation("org.flywaydb:flyway-core")
+
 
 
     // LangChain4j — core + Mistral provider

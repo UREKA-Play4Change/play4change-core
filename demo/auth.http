@@ -3,24 +3,31 @@
 ###
 ### Flow order:
 ###   0. Health check
-###   1. Request magic link  →  token printed to server logs
+###   1. Request magic link  →  token arrives via email (or server logs in dev mode)
 ###   2. Verify magic link   →  fills @accessToken and @refreshToken
-###   3. Refresh token       →  new token pair
-###   4. Logout              →  revokes refresh token
+###   3. Refresh token       →  new token pair (rotation — old token invalidated)
+###   3b. Reuse detection   →  re-submit the OLD refresh token → 401 (ADR-011)
+###   4. Logout              →  revokes refresh token + entire family
+###   4b. Family revocation  →  try refresh with revoked token → 401
 ###   5. OAuth login (Google or Facebook)
+###   6. Error scenarios     →  403 insufficient role, 400 malformed body
 ###
-### To find the magic link token:
+### To find the magic link token in dev mode (no RESEND_API_KEY):
 ###   docker logs play4change-server --follow 2>&1 | grep -A3 "MAGIC LINK"
 ###   Copy the 64-char hex token from the "Link:" log line.
+### When RESEND_API_KEY IS set, the token is delivered by email — check your inbox.
 
 @baseUrl = http://localhost:8080
 
 # Fill these in after step 2 (copy from the response body):
-@accessToken = <paste accessToken here>
-@refreshToken = <paste refreshToken here>
+@accessToken = eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJiYjE0ZWU4My04ZGQ2LTRhMzktYTFhYy0zMjFkZmFjNWQwYjkiLCJlbWFpbCI6ImRlbW8yQGV4YW1wbGUuY29tIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3NzYwODk2MzUsImV4cCI6MTc3NjA5MDUzNX0.ueriW3-dDmx4qswIIqhjQkvYWQUsXC0YgulKXs0P3RSrtsc61h-M9KVlBT1FCP4u
+@refreshToken = db97f5890ea56157669b40d8ffc7172f2ff9a232f6cf887e761b257343e4012f
 
-# Fill this in from the server logs after step 1:
-@magic_link_token = <paste 64-char hex token here>
+# Before running step 3, copy @refreshToken here so you can use it in step 3b:
+@oldRefreshToken = db97f5890ea56157669b40d8ffc7172f2ff9a232f6cf887e761b257343e4012f
+
+# Fill this in from the server logs after step 1 (or from your email if RESEND_API_KEY is set):
+@magic_link_token = 47c31336601a829960f267c84b76a35d0d4837d950b4c7738f75f97622139bd9
 
 ###############################################################################
 
@@ -31,23 +38,28 @@ Accept: application/json
 ###############################################################################
 
 ### 1. Request magic link
-# Server sends (or logs) a link to the supplied email.
+# Server sends a magic link to the supplied email.
 # Response: 202 Accepted { "message": "Magic link sent. Check your email." }
-# In local dev (no RESEND_API_KEY), check server logs:
+#
+# When RESEND_API_KEY is NOT set (local dev): token is printed to server logs.
 #   docker logs play4change-server --follow 2>&1 | grep -A3 "MAGIC LINK"
+# When RESEND_API_KEY IS set: email is delivered via Resend — check your inbox.
+#   The token is stored as a SHA-256 hash in the database — the raw token travels
+#   only in the email link and in the single verify request; it is never persisted.
 POST {{baseUrl}}/auth/magic-link
 Content-Type: application/json
 
 {
-  "email": "demo@example.com"
+  "email": "demo2@example.com"
 }
 
 ###############################################################################
 
 ### 2. Verify magic link
-# Paste the token from the "Link:" log line into @magic_link_token above.
+# Paste the token from the "Link:" log line (or email) into @magic_link_token above.
 # Response: 200 OK { "accessToken": "...", "refreshToken": "...", "expiresIn": 900 }
 # Copy accessToken and refreshToken into the variables at the top of this file.
+# Also copy refreshToken into @oldRefreshToken BEFORE running step 3.
 GET {{baseUrl}}/auth/verify?token={{magic_link_token}}
 Accept: application/json
 
@@ -58,6 +70,8 @@ Accept: application/json
 # The server implements refresh token rotation with family-based revocation:
 # each call issues a new pair and invalidates the old refreshToken.
 # Response: 200 OK { "accessToken": "...", "refreshToken": "...", "expiresIn": 900 }
+# After this call, update @accessToken and @refreshToken with the new values.
+# Leave @oldRefreshToken pointing at the token you submitted here (now invalidated).
 POST {{baseUrl}}/auth/refresh
 Content-Type: application/json
 
@@ -67,10 +81,44 @@ Content-Type: application/json
 
 ###############################################################################
 
-### 4. Logout — revoke refresh token
-# Invalidates the refresh token (and its entire family).
+### 3b. Reuse detection — theft-detection mechanism (ADR-011)
+# Re-submit the OLD refresh token (the one consumed in step 3, now marked as used).
+# The server detects that a used token is being replayed — a signal of possible theft.
+# Response: 401 Unauthorized { "message": "Refresh token reused — family revoked." }
+#
+# When reuse is detected the server immediately revokes the ENTIRE token family:
+# all refresh tokens derived from the same login (including the new one from step 3)
+# are invalidated. Both the legitimate user and any potential attacker are forced to
+# re-authenticate. This is the industry-standard defence against refresh token theft
+# (RFC 6819 §5.2.2). Note: running this step will also invalidate @refreshToken, so
+# you will need to log in again before running step 4.
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{oldRefreshToken}}"
+}
+
+###############################################################################
+
+### 4. Logout — revoke refresh token and full family
+# Invalidates the submitted refresh token and every other token in the same family.
+# This terminates all sessions derived from the same login event (multi-device logout).
 # Response: 204 No Content
 DELETE {{baseUrl}}/auth/logout
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+###############################################################################
+
+### 4b. Confirm full family revocation after logout
+# Try to refresh using the token that was valid before logout.
+# Because logout revoked the entire family, this token is now invalid too.
+# Response: 401 Unauthorized { "message": "Refresh token not found or already revoked." }
+POST {{baseUrl}}/auth/refresh
 Content-Type: application/json
 
 {
@@ -82,6 +130,8 @@ Content-Type: application/json
 ### 5a. OAuth login — Google
 # idToken: the Google ID token received by the client after the user signs in
 #          with Google (from Google Sign-In SDK / One Tap).
+# The server verifies the token against Google's JWKS (local verification, no
+# network call per login). Requires GOOGLE_CLIENT_ID to be set in .env.
 # provider values: GOOGLE | FACEBOOK | MAGIC_LINK
 # Response: 200 OK { "accessToken": "...", "refreshToken": "...", "expiresIn": 900 }
 POST {{baseUrl}}/auth/oauth
@@ -97,6 +147,9 @@ Content-Type: application/json
 ### 5b. OAuth login — Facebook
 # idToken: the access token returned by the Facebook Login SDK.
 # The server calls graph.facebook.com/me to verify it.
+# Requires FACEBOOK_APP_ID and FACEBOOK_APP_SECRET to be set in .env.
+# Facebook OAuth hardening is deferred — these env vars are not yet configured
+# in the default setup. The endpoint exists but will return an error if unconfigured.
 # Response: 200 OK { "accessToken": "...", "refreshToken": "...", "expiresIn": 900 }
 POST {{baseUrl}}/auth/oauth
 Content-Type: application/json
@@ -105,3 +158,23 @@ Content-Type: application/json
   "provider": "FACEBOOK",
   "idToken": "<facebook-access-token-from-client>"
 }
+
+###############################################################################
+
+### 6a. Error scenario — 403 Insufficient role
+# Attempt to access an admin endpoint with a USER-role access token.
+# The role is embedded in the JWT — the server rejects without a DB lookup.
+# Response: 403 Forbidden { "message": "Insufficient role" }
+GET {{baseUrl}}/admin/topics
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+###############################################################################
+
+### 6b. Error scenario — 400 Malformed request body
+# Submit invalid JSON to a POST endpoint that expects a JSON body.
+# Response: 400 Bad Request { "message": "Malformed request body" }
+POST {{baseUrl}}/auth/magic-link
+Content-Type: application/json
+
+{this is not valid json}

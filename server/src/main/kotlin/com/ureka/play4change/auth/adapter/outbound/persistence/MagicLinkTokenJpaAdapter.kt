@@ -17,6 +17,8 @@ class MagicLinkTokenJpaAdapter(private val jpa: MagicLinkTokenJpaRepository) : M
 
     override fun markUsed(id: String) = jpa.markUsed(id)
 
+    override fun claimToken(tokenHash: String): String? = jpa.claimToken(tokenHash)
+
     private fun MagicLinkTokenEntity.toDomain() = MagicLinkToken(
         id = id, token = token, email = email,
         expiresAt = expiresAt, used = used, createdAt = createdAt

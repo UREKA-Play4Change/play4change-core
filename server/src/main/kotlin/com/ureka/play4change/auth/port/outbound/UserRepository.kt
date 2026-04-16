@@ -4,6 +4,7 @@ import com.ureka.play4change.auth.domain.model.AuthProvider
 import com.ureka.play4change.auth.domain.model.User
 
 interface UserRepository {
+    fun findById(id: String): User?
     fun findByEmail(email: String): User?
     fun findByProviderAndProviderId(provider: AuthProvider, providerId: String): User?
     fun save(user: User): User

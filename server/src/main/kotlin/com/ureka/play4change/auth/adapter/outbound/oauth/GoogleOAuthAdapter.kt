@@ -6,6 +6,8 @@ import com.ureka.play4change.auth.domain.model.AuthProvider
 import com.ureka.play4change.auth.domain.model.OAuthClaims
 import com.ureka.play4change.auth.port.outbound.OAuthVerifierPort
 import io.jsonwebtoken.Jwts
+import jakarta.annotation.PostConstruct
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
 import java.math.BigInteger
@@ -26,8 +28,16 @@ class GoogleOAuthAdapter(
     private val jwksCacheTtlMs = 3_600_000L  // 1 hour
 
     companion object {
+        private val log = LoggerFactory.getLogger(GoogleOAuthAdapter::class.java)
         private const val JWKS_URL = "https://www.googleapis.com/oauth2/v3/certs"
         private val VALID_ISSUERS = setOf("https://accounts.google.com", "accounts.google.com")
+    }
+
+    @PostConstruct
+    fun logConfigWarnings() {
+        if (googleProperties.clientId.isBlank()) {
+            log.warn("GoogleOAuthAdapter: GOOGLE_CLIENT_ID is blank — Google OAuth is disabled; all tokens will be rejected")
+        }
     }
 
     override fun verify(provider: AuthProvider, idToken: String): OAuthClaims {
@@ -50,10 +60,11 @@ class GoogleOAuthAdapter(
             "Invalid Google token issuer: ${claims.issuer}"
         }
 
-        if (googleProperties.clientId.isNotBlank()) {
-            require(claims.audience.contains(googleProperties.clientId)) {
-                "Google token audience does not match configured client ID"
-            }
+        if (googleProperties.clientId.isBlank()) {
+            throw IllegalArgumentException("Google OAuth not configured")
+        }
+        require(claims.audience.contains(googleProperties.clientId)) {
+            "Google token audience does not match configured client ID"
         }
 
         // JJWT validates exp automatically; reaching here means token is not expired

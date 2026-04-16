@@ -21,10 +21,10 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
-
-    messages:
-      basename: i18n/messages
-      encoding: UTF-8
+    baseline-version: 0
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
 
 # ── AI — only activates when api-key is set to a real value ──────────────────
 # Leave as 'not-set-yet' to run without Mistral
@@ -76,7 +76,6 @@ app:
   base-url: ${APP_BASE_URL:http://localhost:8080}
 
 resend:
-  api-key: ${RESEND_API_KEY:}
   from: ${RESEND_FROM:noreply@play4change.app}
 
 google:
