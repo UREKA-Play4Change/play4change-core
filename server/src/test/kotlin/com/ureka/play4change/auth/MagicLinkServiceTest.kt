@@ -14,10 +14,13 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.springframework.security.crypto.codec.Hex
+import java.security.MessageDigest
 import java.time.OffsetDateTime
 
 class MagicLinkServiceTest {
@@ -64,20 +67,20 @@ class MagicLinkServiceTest {
     @Test
     fun `requestMagicLink saves a token and calls EmailPort with the correct link`() {
         val tokenSlot = slot<MagicLinkToken>()
+        val emailUrlSlot = slot<String>()
         every { magicLinkTokenRepository.save(capture(tokenSlot)) } answers { firstArg() }
+        every { emailPort.sendMagicLink(any(), capture(emailUrlSlot)) } returns Unit
 
         service.requestMagicLink("demo@example.com")
 
         val savedToken = tokenSlot.captured
         assertEquals("demo@example.com", savedToken.email)
-        assertNotNull(savedToken.token)
+        assertTrue(emailUrlSlot.captured.startsWith("$baseUrl/auth/verify?token="))
 
-        verify(exactly = 1) {
-            emailPort.sendMagicLink(
-                "demo@example.com",
-                match { it.startsWith("$baseUrl/auth/verify?token=") }
-            )
-        }
+        // The DB must store the SHA-256 hash, never the raw token that was emailed
+        val rawTokenInEmail = emailUrlSlot.captured.substringAfter("?token=")
+        assertEquals(sha256(rawTokenInEmail), savedToken.token, "DB column must store SHA-256 hash, not raw token")
+        assertNotEquals(rawTokenInEmail, savedToken.token, "Raw token must NOT be stored in DB")
     }
 
     @Test
@@ -95,30 +98,27 @@ class MagicLinkServiceTest {
 
     @Test
     fun `verifyMagicLink with valid token and existing user returns a TokenPair`() {
-        val token = validToken(email = "demo@example.com")
-        every { magicLinkTokenRepository.findByToken("abc123") } returns token
-        every { magicLinkTokenRepository.markUsed(token.id) } returns Unit
+        val rawToken = "abc123"
+        every { magicLinkTokenRepository.claimToken(sha256(rawToken)) } returns "demo@example.com"
         every { userRepository.findByEmail("demo@example.com") } returns existingUser
         every { tokenService.issue(existingUser.id, existingUser.email, existingUser.role) } returns tokenPair
 
-        val result = service.verifyMagicLink("abc123")
+        val result = service.verifyMagicLink(rawToken)
 
         assertEquals(tokenPair, result)
-        verify(exactly = 1) { magicLinkTokenRepository.markUsed(token.id) }
     }
 
     @Test
     fun `verifyMagicLink creates a new user when email is not yet registered`() {
-        val token = validToken(email = "new@example.com")
+        val rawToken = "abc123"
         val newUser = existingUser.copy(id = "user-new", email = "new@example.com")
 
-        every { magicLinkTokenRepository.findByToken("abc123") } returns token
-        every { magicLinkTokenRepository.markUsed(token.id) } returns Unit
+        every { magicLinkTokenRepository.claimToken(sha256(rawToken)) } returns "new@example.com"
         every { userRepository.findByEmail("new@example.com") } returns null
         every { userRepository.save(any()) } returns newUser
         every { tokenService.issue(newUser.id, newUser.email, newUser.role) } returns tokenPair
 
-        val result = service.verifyMagicLink("abc123")
+        val result = service.verifyMagicLink(rawToken)
 
         assertEquals(tokenPair, result)
         verify(exactly = 1) { userRepository.save(any()) }
@@ -127,52 +127,36 @@ class MagicLinkServiceTest {
     // ── verifyMagicLink — failure paths ──────────────────────────────────────
 
     @Test
-    fun `verifyMagicLink throws IllegalArgumentException when token is not found`() {
-        every { magicLinkTokenRepository.findByToken("unknown") } returns null
+    fun `verifyMagicLink throws when token is not found`() {
+        every { magicLinkTokenRepository.claimToken(sha256("unknown")) } returns null
 
-        val ex = assertThrows<IllegalArgumentException> {
-            service.verifyMagicLink("unknown")
-        }
+        val ex = assertThrows<IllegalArgumentException> { service.verifyMagicLink("unknown") }
         assertEquals("Invalid magic link token", ex.message)
     }
 
     @Test
-    fun `verifyMagicLink throws IllegalArgumentException when token is expired`() {
-        val expiredToken = MagicLinkToken(
-            id = "tok-1",
-            token = "abc123",
-            email = "demo@example.com",
-            expiresAt = OffsetDateTime.now().minusMinutes(1),   // already past
-            used = false,
-            createdAt = OffsetDateTime.now().minusMinutes(20)
-        )
-        every { magicLinkTokenRepository.findByToken("abc123") } returns expiredToken
+    fun `verifyMagicLink throws when token is expired or already used`() {
+        // The atomic DB UPDATE filters both cases; service sees null either way
+        every { magicLinkTokenRepository.claimToken(sha256("abc123")) } returns null
 
-        val ex = assertThrows<IllegalArgumentException> {
-            service.verifyMagicLink("abc123")
-        }
-        assertEquals("Magic link expired or already used", ex.message)
+        val ex = assertThrows<IllegalArgumentException> { service.verifyMagicLink("abc123") }
+        assertEquals("Invalid magic link token", ex.message)
     }
 
     @Test
-    fun `verifyMagicLink throws IllegalArgumentException when token has already been used`() {
-        val usedToken = validToken().copy(used = true)
-        every { magicLinkTokenRepository.findByToken("abc123") } returns usedToken
+    fun `verifyMagicLink concurrent second claim is rejected - simulated race condition`() {
+        // The atomic UPDATE ensures only one caller's row-level lock wins.
+        // The losing concurrent request sees no rows returned (null) and gets the same error.
+        every { magicLinkTokenRepository.claimToken(sha256("abc123")) } returns null
 
-        val ex = assertThrows<IllegalArgumentException> {
-            service.verifyMagicLink("abc123")
-        }
-        assertEquals("Magic link expired or already used", ex.message)
+        val ex = assertThrows<IllegalArgumentException> { service.verifyMagicLink("abc123") }
+        assertEquals("Invalid magic link token", ex.message)
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────
 
-    private fun validToken(email: String = "demo@example.com") = MagicLinkToken(
-        id = "tok-1",
-        token = "abc123",
-        email = email,
-        expiresAt = OffsetDateTime.now().plusMinutes(14),
-        used = false,
-        createdAt = OffsetDateTime.now().minusMinutes(1)
-    )
+    private fun sha256(input: String): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        return String(Hex.encode(digest.digest(input.toByteArray())))
+    }
 }

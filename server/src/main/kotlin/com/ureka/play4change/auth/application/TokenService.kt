@@ -4,6 +4,7 @@ import com.ureka.play4change.auth.domain.model.RefreshToken
 import com.ureka.play4change.auth.domain.model.TokenPair
 import com.ureka.play4change.auth.port.inbound.TokenUseCase
 import com.ureka.play4change.auth.port.outbound.RefreshTokenRepository
+import com.ureka.play4change.auth.port.outbound.UserRepository
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import org.springframework.security.crypto.codec.Hex
@@ -19,6 +20,8 @@ data class AccessTokenClaims(val userId: String, val role: String)
 @Service
 class TokenService(
     private val refreshTokenRepository: RefreshTokenRepository,
+    // Needed to fetch email for rotated access tokens; keeps refresh_tokens narrow (no email column)
+    private val userRepository: UserRepository,
     private val jwtProperties: JwtProperties
 ) : TokenUseCase {
 
@@ -74,9 +77,14 @@ class TokenService(
 
         refreshTokenRepository.markUsed(stored.id)
 
+        // Load user by primary key (one indexed lookup) to include email in the rotated access token
+        val user = userRepository.findById(stored.userId)
+            ?: throw IllegalArgumentException("User not found")
+
         val accessExpirySeconds = jwtProperties.accessTtlMinutes * 60
         val accessToken = Jwts.builder()
             .subject(stored.userId)
+            .claim("email", user.email)
             .claim("role", stored.role)
             .issuedAt(Date())
             .expiration(Date(System.currentTimeMillis() + accessExpirySeconds * 1000L))
@@ -104,7 +112,8 @@ class TokenService(
     override fun revoke(rawRefreshToken: String) {
         val hash = sha256(rawRefreshToken)
         val stored = refreshTokenRepository.findByTokenHash(hash) ?: return
-        refreshTokenRepository.markUsed(stored.id)
+        // Revoke all tokens in the family so stolen tokens from the same session are also invalidated
+        refreshTokenRepository.revokeAllByFamilyId(stored.familyId)
     }
 
     fun parseAccessToken(token: String): AccessTokenClaims {

@@ -10,6 +10,9 @@ import org.springframework.stereotype.Component
 @Component
 class UserJpaAdapter(private val jpa: UserJpaRepository) : UserRepository {
 
+    override fun findById(id: String): User? =
+        jpa.findById(id).orElse(null)?.toDomain()
+
     override fun findByEmail(email: String): User? =
         jpa.findByEmail(email)?.toDomain()
 
