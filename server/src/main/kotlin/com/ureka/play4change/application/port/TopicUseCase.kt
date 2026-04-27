@@ -10,6 +10,7 @@ import java.time.OffsetDateTime
 data class CreateUrlTopicCommand(
     val title: String,
     val description: String,
+    val category: String,
     val url: String,
     val taskCount: Int,
     val subscriptionWindowDays: Int,
@@ -21,6 +22,7 @@ data class CreateUrlTopicCommand(
 data class CreatePdfTopicCommand(
     val title: String,
     val description: String,
+    val category: String,
     val pdfBytes: ByteArray,
     val fileName: String,
     val taskCount: Int,
@@ -33,8 +35,8 @@ data class CreatePdfTopicCommand(
         if (this === other) return true
         if (other !is CreatePdfTopicCommand) return false
         return title == other.title && description == other.description &&
-            fileName == other.fileName && taskCount == other.taskCount &&
-            subscriptionWindowDays == other.subscriptionWindowDays &&
+            category == other.category && fileName == other.fileName &&
+            taskCount == other.taskCount && subscriptionWindowDays == other.subscriptionWindowDays &&
             audienceLevel == other.audienceLevel && language == other.language &&
             expiresAt == other.expiresAt && pdfBytes.contentEquals(other.pdfBytes)
     }

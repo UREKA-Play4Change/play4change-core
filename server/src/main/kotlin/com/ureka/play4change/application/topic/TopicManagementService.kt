@@ -34,8 +34,8 @@ class TopicManagementService(
     private val log = LoggerFactory.getLogger(TopicManagementService::class.java)
 
     override fun createFromUrl(command: CreateUrlTopicCommand, adminId: String): Either<AppError, Topic> = either {
-        ensure(command.subscriptionWindowDays >= 7) {
-            BadRequest.InvalidField("subscriptionWindowDays", "must be at least 7")
+        ensure(command.subscriptionWindowDays >= 3) {
+            BadRequest.InvalidField("subscriptionWindowDays", "must be at least 3")
         }
         ensure(command.taskCount > 0) {
             BadRequest.InvalidField("taskCount", "must be greater than 0")
@@ -66,6 +66,7 @@ class TopicManagementService(
                 id = topicId,
                 title = command.title,
                 description = command.description,
+                category = command.category,
                 contentSourceType = ContentSourceType.URL,
                 contentSourceRef = contentRef,
                 rawExtractedText = rawText,
@@ -86,8 +87,8 @@ class TopicManagementService(
     }
 
     override fun createFromPdf(command: CreatePdfTopicCommand, adminId: String): Either<AppError, Topic> = either {
-        ensure(command.subscriptionWindowDays >= 7) {
-            BadRequest.InvalidField("subscriptionWindowDays", "must be at least 7")
+        ensure(command.subscriptionWindowDays >= 3) {
+            BadRequest.InvalidField("subscriptionWindowDays", "must be at least 3")
         }
         ensure(command.taskCount > 0) {
             BadRequest.InvalidField("taskCount", "must be greater than 0")
@@ -121,6 +122,7 @@ class TopicManagementService(
                 id = topicId,
                 title = command.title,
                 description = command.description,
+                category = command.category,
                 contentSourceType = ContentSourceType.PDF,
                 contentSourceRef = contentRef,
                 rawExtractedText = rawText,
