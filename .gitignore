@@ -18,3 +18,5 @@ captures
 **/xcshareddata/WorkspaceSettings.xcsettings
 node_modules/
 .env
+IMPLEMENTATION.md
+2026-*.json
