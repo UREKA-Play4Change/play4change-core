@@ -20,13 +20,19 @@ class AuthController(
         return ResponseEntity.accepted().body(MessageResponse("Magic link sent. Check your email."))
     }
 
+    /** Original redirect target — email link lands here as GET with token query param. */
     @GetMapping("/verify")
     fun verifyMagicLink(@RequestParam token: String): ResponseEntity<TokenResponse> =
         ResponseEntity.ok(authUseCase.verifyMagicLink(token).toResponse())
 
+    /** Web frontend variant — POST body `{ "token": "..." }`. */
+    @PostMapping("/magic-link/verify")
+    fun verifyMagicLinkPost(@RequestBody body: MagicLinkVerifyRequest): ResponseEntity<TokenResponse> =
+        ResponseEntity.ok(authUseCase.verifyMagicLink(body.token).toResponse())
+
     @PostMapping("/oauth")
     fun oauthLogin(@RequestBody request: OAuthRequest): ResponseEntity<TokenResponse> =
-        ResponseEntity.ok(oAuthUseCase.loginOrRegister(request.provider, request.idToken).toResponse())
+        ResponseEntity.ok(oAuthUseCase.loginOrRegister(request.provider, request.resolvedToken()).toResponse())
 
     @PostMapping("/refresh")
     fun refresh(@RequestBody request: RefreshRequest): ResponseEntity<TokenResponse> =
@@ -34,6 +40,13 @@ class AuthController(
 
     @DeleteMapping("/logout")
     fun logout(@RequestBody request: RefreshRequest): ResponseEntity<Void> {
+        tokenUseCase.revoke(request.refreshToken)
+        return ResponseEntity.noContent().build()
+    }
+
+    /** Web frontend sends POST; DELETE is kept for demo/CLI clients. */
+    @PostMapping("/logout")
+    fun logoutPost(@RequestBody request: RefreshRequest): ResponseEntity<Void> {
         tokenUseCase.revoke(request.refreshToken)
         return ResponseEntity.noContent().build()
     }

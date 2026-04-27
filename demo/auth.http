@@ -50,7 +50,7 @@ POST {{baseUrl}}/auth/magic-link
 Content-Type: application/json
 
 {
-  "email": "demo2@example.com"
+  "email": "radesh.govind@gmail.com"
 }
 
 ###############################################################################
