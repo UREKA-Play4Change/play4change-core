@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository
 interface TopicJpaRepository : JpaRepository<TopicEntity, String> {
     fun findAllByStatus(status: String): List<TopicEntity>
     fun findAllByCreatedBy(createdBy: String): List<TopicEntity>
+    fun countByStatus(status: String): Long
 }

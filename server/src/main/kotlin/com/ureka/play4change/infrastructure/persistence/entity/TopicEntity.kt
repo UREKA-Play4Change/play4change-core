@@ -16,6 +16,9 @@ class TopicEntity(
     @Column(nullable = false, columnDefinition = "TEXT")
     val description: String,
 
+    @Column(nullable = false, length = 100)
+    val category: String = "",
+
     @Column(name = "content_source_type", nullable = false, length = 10)
     val contentSourceType: String,
 

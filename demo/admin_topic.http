@@ -13,6 +13,8 @@
 ### NOTE: There is no task-template edit endpoint in the current codebase.
 ###       (VERIFY: PUT /admin/topics/{id}/tasks/{taskId} does not exist —
 ###        check TopicController.kt and TopicUseCase.kt if this has been added.)
+###docker exec -it play4change-postgres psql -U play4change -d play4change -c "UPDATE users SET role = 'ADMIN' WHERE email =
+###'your@email.com';"
 
 @baseUrl = http://localhost:8080
 
