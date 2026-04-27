@@ -24,6 +24,9 @@ RUN ./gradlew :server:bootJar --no-daemon -x test
 FROM eclipse-temurin:21-jre-alpine AS runtime
 WORKDIR /app
 
+# Install curl for Docker healthcheck
+RUN apk add --no-cache curl
+
 # Non-root user — never run your app as root
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
