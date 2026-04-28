@@ -51,7 +51,7 @@ class MinioFileStorageAdapter(private val props: MinioProperties) : FileStorageP
             RequestBody.fromBytes(bytes)
         )
         log.debug("Uploaded {} bytes to {}/{}", bytes.size, props.bucket, key)
-        return "${props.endpoint}/${props.bucket}/$key"
+        return key
     }
 
     override fun downloadFile(key: String): ByteArray {
