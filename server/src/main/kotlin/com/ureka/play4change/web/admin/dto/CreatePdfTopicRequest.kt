@@ -2,12 +2,11 @@ package com.ureka.play4change.web.admin.dto
 
 import java.time.OffsetDateTime
 
-data class CreateUrlTopicRequest(
-    val title: String,
-    val description: String,
+data class CreatePdfTopicRequest(
+    val title: String = "",
+    val description: String = "",
     val category: String = "",
-    val urls: List<String>,
-    val durationDays: Int,
+    val durationDays: Int = 5,
     val difficulty: String = "BEGINNER",
     val language: String = "en",
     val taskCount: Int? = null,

@@ -2,6 +2,7 @@ package com.ureka.play4change.application.port
 
 import arrow.core.Either
 import com.ureka.play4change.domain.topic.AudienceLevel
+import com.ureka.play4change.domain.topic.PageResult
 import com.ureka.play4change.domain.topic.Topic
 import com.ureka.play4change.domain.topic.TopicStatus
 import com.ureka.play4change.error.AppError
@@ -48,6 +49,6 @@ interface TopicUseCase {
     fun createFromUrl(command: CreateUrlTopicCommand, adminId: String): Either<AppError, Topic>
     fun createFromPdf(command: CreatePdfTopicCommand, adminId: String): Either<AppError, Topic>
     fun getById(topicId: String): Either<AppError, Topic>
-    fun listAll(status: TopicStatus?): Either<AppError, List<Topic>>
+    fun listAll(statusFilter: String?, page: Int, size: Int): PageResult<Topic>
     fun regenerate(topicId: String, adminId: String): Either<AppError, Topic>
 }
