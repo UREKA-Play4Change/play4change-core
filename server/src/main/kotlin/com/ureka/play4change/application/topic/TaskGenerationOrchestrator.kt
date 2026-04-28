@@ -72,8 +72,15 @@ class TaskGenerationOrchestrator(
                 )
             )
 
+            if (rawText.length > 8000) {
+                log.warn("Topic $topicId: content truncated from ${rawText.length} to 8000 chars")
+            }
+            if (topic.description.length > 500) {
+                log.warn("Topic $topicId: module objective truncated from ${topic.description.length} to 500 chars")
+            }
+
             val request = GenerationRequest(
-                courseId = topicId,
+                topicId = topicId,
                 moduleId = module.id,
                 subjectDomain = rawText.take(8000),
                 audienceLevel = com.ureka.play4change.domain.AudienceLevel.valueOf(topic.audienceLevel.name),

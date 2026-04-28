@@ -6,7 +6,7 @@ data class StruggleContext(
     val userId: String,
     val taskId: String,
     val moduleId: String,
-    val courseId: String,
+    val topicId: String,
     val subjectDomain: String,
     val audienceLevel: AudienceLevel,
     val language: String,

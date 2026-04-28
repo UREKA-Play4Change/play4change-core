@@ -77,7 +77,7 @@ class HandleStruggleService(
                 userId = userId,
                 taskId = template.id,
                 moduleId = module.id,
-                courseId = enrollment.topicId,
+                topicId = enrollment.topicId,
                 subjectDomain = template.description.take(2000),
                 audienceLevel = com.ureka.play4change.domain.AudienceLevel.valueOf(topic.audienceLevel.name),
                 language = topic.language,

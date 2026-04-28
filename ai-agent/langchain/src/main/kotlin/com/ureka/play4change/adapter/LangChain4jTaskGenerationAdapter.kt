@@ -114,6 +114,9 @@ class LangChain4jTaskGenerationAdapter(
             // 1. Embed the struggle context for similarity search
             val struggleText = "${context.errorPattern} ${context.taskDescription} ${context.subjectDomain}"
             val struggleEmbedding = embeddingModel.embed(struggleText).content().vector()
+            require(struggleEmbedding.size == 1024) {
+                "Expected 1024-dimensional embedding from Mistral, got ${struggleEmbedding.size}"
+            }
 
             // 2. Find similar past struggles
             val match = deduplicationService.findSimilarStruggle(struggleEmbedding)
@@ -162,7 +165,7 @@ class LangChain4jTaskGenerationAdapter(
     private fun loadExistingBranch(branchId: String, strategy: ReuseStrategy): AdaptiveBranch {
         val tasks = jdbc.queryForList(
             """
-            SELECT id, title, description, hint, points_reward 
+            SELECT id, title, description, hint, points_reward
             FROM adaptive_tasks WHERE branch_id = ? ORDER BY order_index
             """.trimIndent(),
             branchId
@@ -240,6 +243,9 @@ class LangChain4jTaskGenerationAdapter(
 
                 // Embed for deduplication check
                 val embedding = embeddingModel.embed("$title $description").content().vector()
+                require(embedding.size == 1024) {
+                    "Expected 1024-dimensional embedding from Mistral, got ${embedding.size}"
+                }
 
                 val isDuplicate = deduplicationService.isDuplicate(embedding, moduleId)
 
