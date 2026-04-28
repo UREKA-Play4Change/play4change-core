@@ -3,7 +3,7 @@ package com.ureka.play4change.model
 import com.ureka.play4change.domain.AudienceLevel
 
 data class GenerationRequest(
-    val courseId: String,
+    val topicId: String,
     val moduleId: String,
     val subjectDomain: String,       // e.g. "sustainability", "digital_literacy"
     val audienceLevel: AudienceLevel,
