@@ -17,7 +17,9 @@ data class Topic(
     val language: String,
     val status: TopicStatus,
     val createdBy: String,
-    val createdAt: OffsetDateTime
+    val createdAt: OffsetDateTime,
+    val version: Long = 0,
+    val statusUpdatedAt: OffsetDateTime = OffsetDateTime.now()
 ) {
     fun canEnroll(): Boolean = status == TopicStatus.ACTIVE && !isExpired()
 
