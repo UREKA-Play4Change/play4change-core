@@ -10,14 +10,15 @@ import java.util.concurrent.Executor
 @Configuration
 @EnableAsync
 class AsyncConfig(
-    @Value("\${ai.generation.pool-size:3}") private val poolSize: Int
+    @Value("\${ai.generation.pool-size:3}") private val poolSize: Int,
+    @Value("\${ai.generation.queue-capacity:25}") private val queueCapacity: Int
 ) {
 
     @Bean("generationExecutor")
     fun generationExecutor(): Executor = ThreadPoolTaskExecutor().apply {
         corePoolSize = poolSize
         maxPoolSize = poolSize
-        queueCapacity = 25
+        setQueueCapacity(this@AsyncConfig.queueCapacity)
         setThreadNamePrefix("gen-")
         initialize()
     }
