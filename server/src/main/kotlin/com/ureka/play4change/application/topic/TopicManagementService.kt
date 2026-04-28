@@ -10,6 +10,7 @@ import com.ureka.play4change.application.port.CreateUrlTopicCommand
 import com.ureka.play4change.application.port.FileStoragePort
 import com.ureka.play4change.application.port.TopicUseCase
 import com.ureka.play4change.domain.topic.ContentSourceType
+import com.ureka.play4change.domain.topic.PageResult
 import com.ureka.play4change.domain.topic.Topic
 import com.ureka.play4change.domain.topic.TopicRepository
 import com.ureka.play4change.domain.topic.TopicStatus
@@ -75,7 +76,7 @@ class TopicManagementService(
                 expiresAt = command.expiresAt,
                 audienceLevel = command.audienceLevel,
                 language = command.language,
-                status = TopicStatus.DRAFT,
+                status = TopicStatus.PENDING,
                 createdBy = adminId,
                 createdAt = OffsetDateTime.now()
             )
@@ -131,7 +132,7 @@ class TopicManagementService(
                 expiresAt = command.expiresAt,
                 audienceLevel = command.audienceLevel,
                 language = command.language,
-                status = TopicStatus.DRAFT,
+                status = TopicStatus.PENDING,
                 createdBy = adminId,
                 createdAt = OffsetDateTime.now()
             )
@@ -148,9 +149,13 @@ class TopicManagementService(
         }
     }
 
-    override fun listAll(status: TopicStatus?): Either<AppError, List<Topic>> = either {
-        if (status != null) topicRepository.findByStatus(status)
-        else topicRepository.findAll()
+    override fun listAll(statusFilter: String?, page: Int, size: Int): PageResult<Topic> {
+        return if (statusFilter != null) {
+            val status = TopicStatus.valueOf(statusFilter.uppercase())
+            topicRepository.findByStatus(status, page, size)
+        } else {
+            topicRepository.findAll(page, size)
+        }
     }
 
     override fun regenerate(topicId: String, adminId: String): Either<AppError, Topic> = either {

@@ -4,9 +4,10 @@ import com.ureka.play4change.application.port.CreatePdfTopicCommand
 import com.ureka.play4change.application.port.CreateUrlTopicCommand
 import com.ureka.play4change.application.port.TopicUseCase
 import com.ureka.play4change.domain.topic.AudienceLevel
-import com.ureka.play4change.domain.topic.TopicStatus
 import com.ureka.play4change.error.AppError
+import com.ureka.play4change.web.admin.dto.CreatePdfTopicRequest
 import com.ureka.play4change.web.admin.dto.CreateUrlTopicRequest
+import com.ureka.play4change.web.admin.dto.PageResponse
 import com.ureka.play4change.web.admin.dto.TopicResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -24,72 +25,70 @@ class TopicController(private val topicUseCase: TopicUseCase) {
         @RequestBody request: CreateUrlTopicRequest,
         @AuthenticationPrincipal adminId: String
     ): ResponseEntity<TopicResponse> {
+        val url = request.urls.first()
+        val duration = request.durationDays
+        val taskCount = request.taskCount ?: (request.durationDays * 3)
+        val expiresAt = request.expiresAt ?: OffsetDateTime.now().plusDays((request.durationDays + 30).toLong())
+        val audience = runCatching { AudienceLevel.valueOf(request.difficulty.uppercase()) }
+            .getOrDefault(AudienceLevel.BEGINNER)
+
         val command = CreateUrlTopicCommand(
             title = request.title,
             description = request.description,
             category = request.category,
-            url = request.resolvedUrl(),
-            taskCount = request.resolvedTaskCount(),
-            subscriptionWindowDays = request.resolvedDurationDays(),
-            audienceLevel = request.resolvedAudienceLevel(),
+            url = url,
+            taskCount = taskCount,
+            subscriptionWindowDays = duration,
+            audienceLevel = audience,
             language = request.language,
-            expiresAt = request.resolvedExpiresAt()
+            expiresAt = expiresAt
         )
         return topicUseCase.createFromUrl(command, adminId).toResponse(HttpStatus.CREATED)
     }
 
-    /**
-     * Accepts the web frontend multipart shape:
-     *   title, description, category, durationDays, difficulty, file
-     *
-     * Legacy CLI params (taskCount, subscriptionWindowDays, audienceLevel, language, expiresAt)
-     * are optional with computed defaults so existing demo scripts continue to work.
-     */
     @PostMapping("/pdf", consumes = ["multipart/form-data"])
     fun createFromPdf(
-        @RequestParam title: String,
-        @RequestParam description: String,
-        @RequestParam(required = false, defaultValue = "") category: String,
-        @RequestParam(required = false) durationDays: Int?,
-        @RequestParam(required = false) subscriptionWindowDays: Int?,
-        @RequestParam(required = false) difficulty: String?,
-        @RequestParam(required = false) audienceLevel: AudienceLevel?,
-        @RequestParam(required = false, defaultValue = "en") language: String,
-        @RequestParam(required = false) taskCount: Int?,
-        @RequestParam(required = false) expiresAt: OffsetDateTime?,
+        @ModelAttribute request: CreatePdfTopicRequest,
         @RequestPart file: MultipartFile,
         @AuthenticationPrincipal adminId: String
     ): ResponseEntity<TopicResponse> {
-        val resolvedDuration = subscriptionWindowDays ?: durationDays ?: 5
-        val resolvedAudience = audienceLevel
-            ?: difficulty?.let { runCatching { AudienceLevel.valueOf(it) }.getOrNull() }
-            ?: AudienceLevel.BEGINNER
-        val resolvedTaskCount = taskCount ?: (resolvedDuration * 3)
-        val resolvedExpiresAt = expiresAt ?: OffsetDateTime.now().plusDays(resolvedDuration.toLong() + 30)
+        val taskCount = request.taskCount ?: (request.durationDays * 3)
+        val expiresAt = request.expiresAt ?: OffsetDateTime.now().plusDays((request.durationDays + 30).toLong())
+        val audience = runCatching { AudienceLevel.valueOf(request.difficulty.uppercase()) }
+            .getOrDefault(AudienceLevel.BEGINNER)
 
         val command = CreatePdfTopicCommand(
-            title = title,
-            description = description,
-            category = category,
+            title = request.title,
+            description = request.description,
+            category = request.category,
             pdfBytes = file.bytes,
             fileName = file.originalFilename ?: "upload.pdf",
-            taskCount = resolvedTaskCount,
-            subscriptionWindowDays = resolvedDuration,
-            audienceLevel = resolvedAudience,
-            language = language,
-            expiresAt = resolvedExpiresAt
+            taskCount = taskCount,
+            subscriptionWindowDays = request.durationDays,
+            audienceLevel = audience,
+            language = request.language,
+            expiresAt = expiresAt
         )
         return topicUseCase.createFromPdf(command, adminId).toResponse(HttpStatus.CREATED)
     }
 
     @GetMapping
     fun listAll(
-        @RequestParam(required = false) status: TopicStatus?
-    ): ResponseEntity<List<TopicResponse>> =
-        topicUseCase.listAll(status).fold(
-            ifLeft = { it.toErrorResponse() },
-            ifRight = { ResponseEntity.ok(it.map(TopicResponse::from)) }
+        @RequestParam status: String? = null,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int
+    ): ResponseEntity<PageResponse<TopicResponse>> {
+        val result = topicUseCase.listAll(status, page, size)
+        return ResponseEntity.ok(
+            PageResponse(
+                content = result.content.map { TopicResponse.from(it) },
+                page = result.page,
+                size = result.size,
+                totalElements = result.totalElements,
+                totalPages = result.totalPages
+            )
         )
+    }
 
     @GetMapping("/{id}")
     fun getById(@PathVariable id: String): ResponseEntity<TopicResponse> =

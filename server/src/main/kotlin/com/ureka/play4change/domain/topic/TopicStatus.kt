@@ -1,7 +1,7 @@
 package com.ureka.play4change.domain.topic
 
 enum class TopicStatus {
-    DRAFT,
+    PENDING,
     GENERATING,
     ACTIVE,
     EXPIRED,

@@ -1,19 +1,8 @@
 package com.ureka.play4change.web.admin.dto
 
 import com.ureka.play4change.domain.topic.Topic
-import com.ureka.play4change.domain.topic.TopicStatus
 import java.time.OffsetDateTime
 
-/**
- * Unified topic response understood by both the web admin frontend and legacy CLI/demo clients.
- *
- * Web frontend field mapping:
- *   difficulty   ← audienceLevel.name
- *   durationDays ← subscriptionWindowDays
- *   category     ← category
- *   status       ← DRAFT is exposed as "PENDING" to match the frontend's four-state model
- *   stats        ← zeroed stub; wire to real enrollment queries in a future phase
- */
 data class TopicResponse(
     val id: String,
     val title: String,
@@ -35,7 +24,8 @@ data class TopicResponse(
     val expiresAt: OffsetDateTime,
     val createdBy: String,
 
-    val stats: TopicStats = TopicStats()
+    val stats: TopicStats? = null,
+    val contentTruncated: Boolean
 ) {
     companion object {
         fun from(topic: Topic) = TopicResponse(
@@ -43,8 +33,7 @@ data class TopicResponse(
             title = topic.title,
             description = topic.description,
             category = topic.category,
-            // DRAFT is the internal initial state; the web frontend calls it PENDING.
-            status = if (topic.status == TopicStatus.DRAFT) "PENDING" else topic.status.name,
+            status = topic.status.name,
             createdAt = topic.createdAt,
             durationDays = topic.subscriptionWindowDays,
             difficulty = topic.audienceLevel.name,
@@ -54,7 +43,9 @@ data class TopicResponse(
             audienceLevel = topic.audienceLevel.name,
             language = topic.language,
             expiresAt = topic.expiresAt,
-            createdBy = topic.createdBy
+            createdBy = topic.createdBy,
+            stats = null,
+            contentTruncated = topic.rawExtractedText != null && topic.rawExtractedText.length >= 8000
         )
     }
 }

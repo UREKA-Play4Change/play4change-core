@@ -3,6 +3,7 @@ package com.ureka.play4change.auth.adapter.inbound.web
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.orm.ObjectOptimisticLockingFailureException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
@@ -29,4 +30,9 @@ class AuthExceptionHandler {
     fun handleMalformedBody(ex: HttpMessageNotReadableException): ResponseEntity<MessageResponse> =
         ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(MessageResponse("Malformed request body"))
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException::class)
+    fun handleOptimisticLock(ex: ObjectOptimisticLockingFailureException): ResponseEntity<Map<String, String>> =
+        ResponseEntity.status(HttpStatus.CONFLICT)
+            .body(mapOf("error" to "ConcurrentModification"))
 }

@@ -38,6 +38,7 @@ ai:
   generation:
     pool-size: 3
     subtask-count: 3
+    queue-capacity: 25
   dedup:
     full-reuse-threshold: 0.90
     partial-reuse-threshold: 0.65
@@ -89,6 +90,13 @@ minio:
   access-key: ${MINIO_ACCESS_KEY:minioadmin}
   secret-key: ${MINIO_SECRET_KEY:minioadmin}
   bucket: ${MINIO_BUCKET:play4change}
+
+scheduler:
+  expiration:
+    rate-ms: 60000
+  watchdog:
+    rate-ms: 120000
+    stuck-threshold-minutes: 5
 
 springdoc:
   swagger-ui:

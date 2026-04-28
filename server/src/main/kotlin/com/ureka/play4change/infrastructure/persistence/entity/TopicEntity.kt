@@ -44,11 +44,18 @@ class TopicEntity(
     val language: String = "en",
 
     @Column(nullable = false, length = 15)
-    var status: String = "DRAFT",
+    var status: String = "PENDING",
 
     @Column(name = "created_by", nullable = false, length = 36)
     val createdBy: String,
 
     @Column(name = "created_at", nullable = false)
-    val createdAt: OffsetDateTime = OffsetDateTime.now()
+    val createdAt: OffsetDateTime = OffsetDateTime.now(),
+
+    @Version
+    @Column(nullable = false)
+    var version: Long = 0,
+
+    @Column(name = "status_updated_at", nullable = false)
+    var statusUpdatedAt: OffsetDateTime = OffsetDateTime.now()
 )
