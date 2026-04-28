@@ -1,6 +1,6 @@
 package com.ureka.play4change.web.admin
 
-import com.ureka.play4change.auth.port.outbound.UserRepository
+import com.ureka.play4change.application.admin.GetAdminProfileUseCase
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
@@ -15,18 +15,21 @@ data class AdminProfileResponse(
 
 @RestController
 @RequestMapping("/admin")
-class AdminProfileController(private val userRepository: UserRepository) {
+class AdminProfileController(private val getAdminProfileUseCase: GetAdminProfileUseCase) {
 
     @GetMapping("/me")
     fun me(@AuthenticationPrincipal adminId: String): ResponseEntity<AdminProfileResponse> {
-        val user = userRepository.findById(adminId)
-            ?: return ResponseEntity.notFound().build()
-        return ResponseEntity.ok(
-            AdminProfileResponse(
-                id = user.id,
-                email = user.email,
-                name = user.name ?: user.email
-            )
+        return getAdminProfileUseCase.execute(adminId).fold(
+            ifLeft = { ResponseEntity.notFound().build() },
+            ifRight = { profile ->
+                ResponseEntity.ok(
+                    AdminProfileResponse(
+                        id = profile.id,
+                        email = profile.email,
+                        name = profile.name ?: profile.email
+                    )
+                )
+            }
         )
     }
 }
