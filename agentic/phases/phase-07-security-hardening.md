@@ -199,6 +199,37 @@ rate limiting on `/auth/**`, Swagger gated in prod, actuator prometheus internal
 - **Exit criteria:** ZAP scan completes without errors. All findings are recorded in
       DAST-REPORT.md with severity, URL, and remediation status.
 
+#### Task 7.6 extension — Authenticated ZAP scan (ADR-018 G2)
+- [ ] **What:** After the baseline scan completes, run a second ZAP scan with
+      authentication context to cover the full application surface (ADR-018 G2,
+      THREAT-LOG.md R13).
+- **Design constraints:**
+  - Generate two JWTs before the scan using the seeded admin account and a
+    seeded learner account. Store them as environment variables for the scan session.
+  - Use ZAP's `replacer` rules to inject the Authorization header:
+    ```bash
+    docker run --network host ghcr.io/zaproxy/zaproxy:stable \
+      zap-baseline.py -t http://localhost:8080 \
+      -z "-config replacer.full_list(0).description=auth \
+          -config replacer.full_list(0).enabled=true \
+          -config replacer.full_list(0).matchtype=REQ_HEADER \
+          -config replacer.full_list(0).matchstr=Authorization \
+          -config replacer.full_list(0).replacement=Bearer\ ${ADMIN_JWT}" \
+      -r zap-auth-report.html -J zap-auth-report.json
+    ```
+  - Run the scan twice: once with `ADMIN_JWT` targeting `/admin/**` routes,
+    once with `LEARNER_JWT` targeting `/enrollment/**`, `/tasks/**`, `/struggle/**`.
+  - Document all authenticated findings in a new section
+    `DAST-REPORT-AUTHENTICATED.md` in `agentic/security/`. Use the same
+    format as `DAST-REPORT.md`.
+  - Critical and High findings from the authenticated scan are subject to the
+    same remediation rules as the baseline scan (Task 7.7).
+- **Tests required:** None — tooling and documentation task.
+- **Security log requirement:** Update THREAT-LOG.md R13: mark as FIXED.
+      Add: "Authenticated ZAP scan run. Findings in DAST-REPORT-AUTHENTICATED.md."
+- **Exit criteria:** Both authenticated scans complete. `DAST-REPORT-AUTHENTICATED.md`
+      exists with all findings. Zero Critical or unaddressed High findings.
+
 ---
 
 ### Task 7.7 — Remediate all Critical and High ZAP findings
@@ -228,6 +259,137 @@ rate limiting on `/auth/**`, Swagger gated in prod, actuator prometheus internal
 - **Exit criteria:** Zero Critical findings in DAST-REPORT.md without a fix. Zero High
       findings without a fix or documented false-positive justification.
 
+#### Task 7.7 extension — Full security header set (ADR-018 G4)
+- [ ] **What:** Extend the Nginx header additions to include the three headers
+      identified as missing in ADR-018 (G4, THREAT-LOG.md R14):
+      `Content-Security-Policy`, `Strict-Transport-Security`, and `Referrer-Policy`.
+- **Design constraints:**
+  - `Content-Security-Policy` — apply to the admin SPA location block only
+    (not to the API routes, which return JSON):
+    ```nginx
+    # Admin SPA location block only
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none';" always;
+    ```
+    The `'unsafe-inline'` in `style-src` is a temporary concession for the
+    Vite/React build. It is an accepted residual risk per ADR-018. Document it
+    in DAST-REPORT.md under "Accepted Medium risks — CSP unsafe-inline".
+  - `Strict-Transport-Security` — apply to all locations:
+    ```nginx
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
+    ```
+    Note: HSTS has no effect over HTTP. It activates when the admin SPA is
+    served over HTTPS in production. In local Docker Compose (HTTP only), this
+    header is present but inert — this is correct behaviour.
+  - `Referrer-Policy` — apply to all locations:
+    ```nginx
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    ```
+  - Document each header, its scope, and its rationale in DAST-REPORT.md under
+    a new section "Security headers added by ADR-018".
+- **Tests required:** After Nginx config changes, re-run `./gradlew :server:test`
+      to confirm no regressions. Run `curl -I http://localhost:8080/` and confirm
+      all five headers are present in the response.
+- **Security log requirement:** Update THREAT-LOG.md R14: mark as FIXED.
+      Note the `'unsafe-inline'` residual risk acceptance.
+- **Exit criteria:** All five security headers present in Nginx responses.
+      DAST-REPORT.md updated with header scope table.
+      `./gradlew :server:test` green after Nginx changes.
+
+---
+
+### Task 7.9 — SpotBugs + FindSecBugs security SAST (ADR-018 G3)
+- [ ] **What:** Add SpotBugs with the FindSecBugs plugin to the server Gradle build
+      to detect security anti-patterns not caught by Detekt (ADR-018 G3,
+      THREAT-LOG.md R11).
+- **Design constraints:**
+  - Add to `server/build.gradle.kts`:
+    ```kotlin
+    plugins {
+        id("com.github.spotbugs") version "6.x.x" // use latest stable
+    }
+    spotbugs {
+        toolVersion.set("4.x.x")
+        effort.set(com.github.spotbugs.snom.Effort.MAX)
+        reportLevel.set(com.github.spotbugs.snom.Confidence.HIGH)
+        excludeFilter.set(file("spotbugs-exclude.xml"))
+    }
+    dependencies {
+        spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:1.13.0")
+    }
+    ```
+  - Run `spotbugsMain` as a CI step after `detektMain` in `.github/workflows/ci.yml`.
+  - The build fails on any FindSecBugs finding with confidence HIGH and
+    rank SCARY (rank ≤ 14) or SCARIEST (rank ≤ 4).
+  - Create `server/spotbugs-exclude.xml` for false positives. Every suppressed
+    finding requires a `<Bug>` element with a `<BugPattern>` specifying the exact
+    bug pattern code and a comment in the XML explaining why it is a false positive.
+    Format:
+    ```xml
+    <FindBugsFilter>
+      <!-- FALSE POSITIVE: Spring Security ensures auth before this method is reached.
+           SpotBugs cannot see the filter chain. -->
+      <Match>
+        <Class name="com.play4change.auth.adapter.inbound.web.AuthController"/>
+        <Bug pattern="SPRING_CSRF_PROTECTION_DISABLED"/>
+      </Match>
+    </FindBugsFilter>
+    ```
+  - On first run, triage every finding:
+    - If a real vulnerability: fix it. Log in THREAT-LOG.md as FIXED.
+    - If a false positive: suppress in `spotbugs-exclude.xml` with justification.
+    - If a real risk but not feasible to fix immediately: log in THREAT-LOG.md
+      as OPEN with planned phase, suppress with a dated comment.
+  - The triage result (count of real findings, false positives, deferred) is
+    documented in ISSUES.md under "Phase 07 SpotBugs triage".
+- **Tests required:** None — tooling task. Run `./gradlew :server:spotbugsMain`
+      and confirm it exits 0 after triage is complete.
+- **Security log requirement:** Update THREAT-LOG.md R11: mark as FIXED.
+      Add the triage summary counts.
+- **ADR trigger:** No — implementation choice is in ADR-018.
+- **Exit criteria:** `./gradlew :server:spotbugsMain` exits 0. `spotbugs-exclude.xml`
+      exists with all suppressions documented. ISSUES.md has the triage summary.
+      CI step `SpotBugs` exists in `ci.yml` after `Detekt`.
+
+---
+
+### Task 7.10 — Extend OWASP dependency-check to mobile modules (ADR-018 G5)
+- [ ] **What:** Extend CVE scanning to the `composeApp` and `common` KMP modules,
+      which currently have no dependency-check coverage (ADR-018 G5, THREAT-LOG.md R12).
+- **Design constraints:**
+  - Apply the `org.owasp.dependencycheck` plugin to `composeApp/build.gradle.kts`
+    and `common/build.gradle.kts` with the same configuration as the server module:
+    `failBuildOnCVSS = 7.0f`.
+  - Update `.github/workflows/dependency-check.yml` to add the mobile scan step:
+    ```yaml
+    - name: OWASP dependency-check (mobile modules)
+      run: ./gradlew :composeApp:dependencyCheckAnalyze :common:dependencyCheckAnalyze
+    - name: Upload mobile dependency-check reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: dependency-check-mobile-reports
+        path: |
+          composeApp/build/reports/dependency-check-report.html
+          common/build/reports/dependency-check-report.html
+    ```
+  - The mobile scan runs on the same weekly schedule (`cron: '0 6 * * 1'`) as
+    the server scan, in the same workflow job.
+  - Suppression for mobile false positives goes in
+    `composeApp/dependency-check-suppression.xml` and
+    `common/dependency-check-suppression.xml` respectively. Separate files —
+    do not reuse the server suppression file.
+  - If any CVE ≥ 7.0 is found in the initial run, log it immediately in
+    THREAT-LOG.md as a new HIGH entry with planned remediation phase before
+    adding any suppression.
+- **Tests required:** Run `./gradlew :composeApp:dependencyCheckAnalyze` locally.
+      Confirm an HTML report is produced in `composeApp/build/reports/`.
+      Same for `:common:dependencyCheckAnalyze`.
+- **Security log requirement:** Update THREAT-LOG.md R12: mark as FIXED.
+      Log any CVEs ≥ 7.0 found as new HIGH entries before marking FIXED.
+- **ADR trigger:** No — implementation choice is in ADR-018.
+- **Exit criteria:** Both `dependencyCheckAnalyze` tasks produce HTML reports.
+      CI workflow includes the mobile scan step. THREAT-LOG.md R12 is FIXED.
+      Any CVEs ≥ 7.0 found are logged and addressed.
+
 ---
 
 ### Task 7.8 — Manual test recipe for Phase 07
@@ -244,7 +406,7 @@ rate limiting on `/auth/**`, Swagger gated in prod, actuator prometheus internal
 
 ## Exit Criteria (Phase Level)
 
-All 8 tasks are checked off. The following is true:
+All 11 tasks are checked off. The following is true:
 - Rate limiting on `/auth/**` is in place and tested.
 - Swagger requires ADMIN JWT in the `prod` profile.
 - `/actuator/prometheus` is not reachable on the public port.
@@ -252,6 +414,10 @@ All 8 tasks are checked off. The following is true:
 - All `@RequestBody` DTOs have field-level validation.
 - ZAP scan has zero Critical or unaddressed High findings.
 - DAST-REPORT.md is complete with all findings documented.
+- Authenticated ZAP scan complete. DAST-REPORT-AUTHENTICATED.md has zero unaddressed Critical/High findings.
+- SpotBugs + FindSecBugs exits 0. All findings triaged. ISSUES.md has the triage summary.
+- OWASP dep-check runs on composeApp and common. No CVE ≥ 7.0 unaddressed.
+- Full security header set (CSP, HSTS, Referrer-Policy, X-Content-Type-Options, X-Frame-Options) present in Nginx responses.
 
 ---
 
@@ -292,5 +458,25 @@ Expected: Prometheus metric lines.
 Open `DAST-REPORT.md`. Confirm:
 - Column "Critical" has 0 open findings.
 - Column "High" has 0 open findings (or 0 non-false-positive findings).
+
+**5. Security headers:**
+```bash
+curl -I http://localhost:8080/ | grep -E "Content-Security|Strict-Transport|Referrer-Policy|X-Content-Type|X-Frame"
+```
+Expected: all five headers present.
+
+**6. SpotBugs:**
+```bash
+./gradlew :server:spotbugsMain
+```
+Expected: exits 0.
+
+**7. Mobile dependency-check:**
+```bash
+./gradlew :composeApp:dependencyCheckAnalyze :common:dependencyCheckAnalyze
+ls composeApp/build/reports/dependency-check-report.html
+ls common/build/reports/dependency-check-report.html
+```
+Expected: both report files exist.
 
 If any check fails, Phase 07 is not done.
