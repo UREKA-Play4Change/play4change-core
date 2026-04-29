@@ -68,7 +68,7 @@ attack surface, a STRIDE analysis is added as a subsection.
 | R12 | A06 Vulnerable Components | Mobile SCA gap — composeApp and common modules have no CVE scanning | High | OPEN | Phase 07 Task 7.10 | OWASP dep-check to be extended to KMP modules per ADR-018. |
 | R13 | A07 Auth Failures | Authenticated DAST gap — ZAP baseline covers unauthenticated surface only | Medium | OPEN | Phase 07 Task 7.6 extension | Authenticated ZAP scan with learner + admin JWT required per ADR-018. |
 | R14 | A05 Security Misconfiguration | Missing CSP, HSTS, and Referrer-Policy headers in Nginx config | Medium | OPEN | Phase 07 Task 7.7 extension | Full header set defined in ADR-018. CSP unsafe-inline accepted as residual risk pending nonce migration. |
-| R15 | A04 Insecure Design | No OWASP Threat Dragon model — trust boundaries documented in prose only | Low | OPEN | Phase 07 | threat-model.td to be created in agentic/security/ per ADR-018. |
+| R15 | A04 Insecure Design | No OWASP Threat Dragon model — trust boundaries documented in prose only | Low | FIXED | Phase 07 | threat-model.td created in agentic/security/. All Phase 01 and Phase 02 STRIDE threats pre-populated. Maintenance guide in THREAT-DRAGON-MAINTENANCE.md. |
 
 ---
 
