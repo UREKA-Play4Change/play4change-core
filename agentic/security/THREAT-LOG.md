@@ -63,6 +63,12 @@ attack surface, a STRIDE analysis is added as a subsection.
 | R07 | A08 Software & Data Integrity | AI-generated content not validated before persistence | High | OPEN | Phase 02 | Mistral output is inserted into the database as-is. Malformed or injected content could reach learners. Fix: jsoup sanitisation + schema validation. |
 | R08 | A04 Insecure Design | `RestTemplate` no timeout on JWKS endpoint fetch | Low | OPEN | Phase 07 | A slow or hung JWKS server could block auth threads. Default `RestTemplate` has no timeout. Fix: set connection and read timeouts. |
 | R09 | A07 Auth Failures | Facebook OAuth token not app-verified (audience not checked) | Medium | DEFERRED | Not scheduled | Facebook access tokens accepted from any app. Full hardening requires `FACEBOOK_APP_ID` + `FACEBOOK_APP_SECRET`. Deferred per ADR-016 G4. |
+| R10 | A09 Logging Failures | No secret scanning in CI — committed secrets enter git history permanently | High | OPEN | Phase 01 extension | gitleaks to be added to GitHub Actions as pre-build step per ADR-018. |
+| R11 | A03 Injection | No security-specific SAST — Detekt does not detect Spring/JWT security anti-patterns | High | OPEN | Phase 07 Task 7.9 | SpotBugs + FindSecBugs to be added to server Gradle build per ADR-018. |
+| R12 | A06 Vulnerable Components | Mobile SCA gap — composeApp and common modules have no CVE scanning | High | OPEN | Phase 07 Task 7.10 | OWASP dep-check to be extended to KMP modules per ADR-018. |
+| R13 | A07 Auth Failures | Authenticated DAST gap — ZAP baseline covers unauthenticated surface only | Medium | OPEN | Phase 07 Task 7.6 extension | Authenticated ZAP scan with learner + admin JWT required per ADR-018. |
+| R14 | A05 Security Misconfiguration | Missing CSP, HSTS, and Referrer-Policy headers in Nginx config | Medium | OPEN | Phase 07 Task 7.7 extension | Full header set defined in ADR-018. CSP unsafe-inline accepted as residual risk pending nonce migration. |
+| R15 | A04 Insecure Design | No OWASP Threat Dragon model — trust boundaries documented in prose only | Low | OPEN | Phase 07 | threat-model.td to be created in agentic/security/ per ADR-018. |
 
 ---
 
@@ -108,3 +114,21 @@ attack surface, a STRIDE analysis is added as a subsection.
 | Risk ID | Fixed in Phase | Commit | Summary |
 |---------|--------------|--------|---------|
 | R04 | Phase 01, Task 1.4 | — | Name.kt implements validation with Arrow Either. Password.kt deleted (unused). |
+
+---
+
+## ADR-018 Gap Register (documented April 2026)
+
+Six toolchain gaps were identified by a full security posture review and recorded
+in ADR-018. Each gap maps to a KNOWN RISK row above and a concrete phase task.
+
+| Gap ID | Description | THREAT-LOG row | Phase task |
+|--------|-------------|---------------|------------|
+| G1 | No Threat Dragon model | R15 | Phase 07 |
+| G2 | Authenticated DAST missing | R13 | Phase 07 Task 7.6 extension |
+| G3 | Security SAST (FindSecBugs) missing | R11 | Phase 07 Task 7.9 |
+| G4 | CSP / HSTS / Referrer-Policy missing | R14 | Phase 07 Task 7.7 extension |
+| G5 | Mobile SCA (composeApp/common) missing | R12 | Phase 07 Task 7.10 |
+| G6 | Secret scanning (gitleaks) missing | R10 | Phase 01 extension |
+
+See ADR-018 for alternatives considered and residual risks accepted.
