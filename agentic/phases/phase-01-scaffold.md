@@ -130,9 +130,50 @@ fix Name/Password value object stubs, document initial security posture, add OWA
 
 ---
 
+### Task 1.7 — Add gitleaks secret scanning to CI (ADR-018 G6)
+- [ ] **What:** Add `gitleaks` to the GitHub Actions CI pipeline to prevent
+      secrets from being committed to the repository. This closes the gap identified
+      in ADR-018 (G6) and THREAT-LOG.md R10.
+- **Design constraints:**
+  - Use the official `gitleaks-action` in `.github/workflows/ci.yml`:
+    ```yaml
+    - name: Secret scanning (gitleaks)
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    ```
+  - This step runs BEFORE the Gradle build step so a committed secret fails
+    fast without wasting build minutes.
+  - Create `.gitleaks.toml` at the repository root. Any suppressed finding must
+    have a comment field explaining why it is a false positive. Example format:
+    ```toml
+    [[allowlist]]
+    description = "Test fixture — not a real credential"
+    regexes = ["FAKE_SECRET_FOR_TESTING"]
+    ```
+  - On first run, `gitleaks` scans the full commit history. If any historical
+    secrets are found, they must be assessed: if real, rotate the credential
+    immediately and document the rotation in THREAT-LOG.md before the suppression
+    is added. If confirmed fake/test data, suppress with justification.
+  - `zap-report.html` and `zap-report.json` (Phase 07 artifacts) are already
+    `.gitignore`d — confirm they remain excluded.
+- **Tests required:** None — this is a CI tooling task.
+      Manual verification: push a branch with a fake secret string matching a
+      gitleaks pattern (e.g. `AKIA` prefix for a fake AWS key in a comment).
+      Confirm the CI step fails. Remove the fake string and confirm CI passes.
+- **Security log requirement:** Update THREAT-LOG.md R10: change status from
+      OPEN to FIXED. Add: "gitleaks-action@v2 added to CI pre-build step. Full
+      history scan clean. Suppressions in .gitleaks.toml."
+- **ADR trigger:** No — implementation choice is documented in ADR-018.
+- **Exit criteria:** `.github/workflows/ci.yml` includes the gitleaks step before
+      the Gradle build. `.gitleaks.toml` exists at the repository root. CI pipeline
+      passes on a clean branch. THREAT-LOG.md R10 is marked FIXED.
+
+---
+
 ## Exit Criteria (Phase Level)
 
-All 6 tasks are checked off. The following is true:
+All 7 tasks are checked off. The following is true:
 - `find agentic/ -type f | sort` matches the spec.
 - `./gradlew :server:test` is green.
 - `./gradlew :server:detektMain` exits 0.
@@ -140,6 +181,7 @@ All 6 tasks are checked off. The following is true:
 - Name.kt rejects invalid input in unit tests.
 - THREAT-LOG.md initial posture is documented.
 - CI YAML specifies JDK 21.
+- Gitleaks CI step passes on a clean branch. `.gitleaks.toml` exists. THREAT-LOG.md R10 is FIXED.
 
 ---
 
