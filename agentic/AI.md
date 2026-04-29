@@ -206,10 +206,11 @@ Test names are plain English sentences describing the scenario. No abbreviations
 | A03 | Injection | All `@RequestBody`, AI output inserted to DB | Bean Validation on every DTO; parameterised queries only (JPA); sanitise AI output with jsoup before persistence |
 | A04 | Insecure Design | Auth flow, CSRF, session management | Stateless JWT; CSRF disabled intentionally (stateless, documented); no session cookies |
 | A05 | Security Misconfiguration | Swagger, actuator, CORS | Swagger gated in prod; `/actuator/prometheus` internal only; CORS from env var |
-| A06 | Vulnerable Components | All Gradle dependencies | OWASP dependency-check plugin; weekly CI run; CVE ≥7.0 is a blocker |
+| A06 | Vulnerable Components | All Gradle dependencies (server, composeApp, common) | OWASP dependency-check plugin on all modules; weekly CI run; CVE ≥7.0 is a blocker |
 | A07 | Auth Failures | `/auth/**` endpoints | Rate limiting (phase 07); magic link single-use; refresh token rotation with theft detection |
 | A08 | Software + Data Integrity | AI-generated content | Validate AI output against schema before persistence; never inject unvalidated AI text into SQL |
 | A09 | Logging Failures | All services | Log security events (login, logout, token reuse); never log PII (email in log = bug); use structured logging |
+| A09 | Logging Failures | Secret management | Secret scanning via gitleaks in CI; never commit credentials; all secrets via env vars (ADR-018) |
 | A10 | SSRF | URL ingestion in `/admin/topics` | Validate URL scheme (https only); block RFC 1918 / localhost before HTTP fetch |
 
 ### When to Write to THREAT-LOG.md
@@ -226,6 +227,8 @@ Write a THREAT-LOG entry when:
 - Never store raw tokens — always hash before persistence
 - Never make HTTP requests to user-supplied URLs without SSRF mitigation
 - Never disable auth on a protected endpoint "temporarily"
+- Never commit real credentials, API keys, or secrets — gitleaks will fail the build
+- Never suppress a SpotBugs/FindSecBugs finding without a comment in spotbugs-exclude.xml explaining why
 
 ---
 
@@ -419,6 +422,8 @@ Only after all 9 steps are complete: begin the task.
 ./gradlew :server:detektMain              # run Detekt linter
 ./gradlew :server:bootRun                 # run server locally (no Docker)
 ./gradlew :server:dependencyCheckAnalyze  # OWASP CVE scan
+./gradlew :server:spotbugsMain                # SpotBugs + FindSecBugs security SAST
+./gradlew :composeApp:dependencyCheckAnalyze  # mobile CVE scan
 ./gradlew :server:build                   # full build + test
 ```
 
