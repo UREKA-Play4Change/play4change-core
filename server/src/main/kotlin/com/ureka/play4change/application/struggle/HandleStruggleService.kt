@@ -17,6 +17,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Async
@@ -31,6 +32,7 @@ class HandleStruggleService(
     private val topicRepository: TopicRepository,
     private val topicModuleRepository: TopicModuleRepository,
     private val taskGenerationPort: TaskGenerationPort,
+    private val registry: MeterRegistry,
     @Value("\${ai.mistral.timeout-seconds:60}") private val timeoutSeconds: Long
 ) {
 
@@ -72,6 +74,14 @@ class HandleStruggleService(
                     adaptiveTasks = emptyList()
                 )
             )
+
+            val errorPatternTag = when (errorPattern) {
+                ErrorPattern.WRONG_CONCEPT -> "wrong_concept"
+                ErrorPattern.PARTIAL_UNDERSTANDING -> "partial_understanding"
+                ErrorPattern.READING_ERROR -> "reading_error"
+                ErrorPattern.TIME_PRESSURE -> "time_pressure"
+            }
+            registry.counter("struggle_sessions_total", "error_pattern", errorPatternTag).increment()
 
             val context = StruggleContext(
                 userId = userId,

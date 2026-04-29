@@ -19,6 +19,7 @@ import com.ureka.play4change.error.AppError
 import com.ureka.play4change.error.client.Conflict
 import com.ureka.play4change.error.client.Forbidden.ResourceOwnershipViolation
 import com.ureka.play4change.error.client.NotFound
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
@@ -28,7 +29,8 @@ import java.util.UUID
 class PeerReviewService(
     private val peerReviewRepository: PeerReviewRepository,
     private val enrollmentRepository: EnrollmentRepository,
-    private val taskTemplateRepository: TaskTemplateRepository
+    private val taskTemplateRepository: TaskTemplateRepository,
+    private val registry: MeterRegistry
 ) : PeerReviewUseCase {
 
     private val log = LoggerFactory.getLogger(PeerReviewService::class.java)
@@ -99,7 +101,13 @@ class PeerReviewService(
             total = completed.size
         )
 
-        if (completed.size < VERDICTS_REQUIRED) {
+        val willFinalize = completed.size >= VERDICTS_REQUIRED
+        registry.counter(
+            "peer_reviews_completed_total",
+            "finalized", willFinalize.toString()
+        ).increment()
+
+        if (!willFinalize) {
             return@either VerdictResult(
                 peerReview = updatedReview,
                 verdictSummary = summary,
