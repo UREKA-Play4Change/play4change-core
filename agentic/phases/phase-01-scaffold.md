@@ -92,7 +92,7 @@ fix Name/Password value object stubs, document initial security posture, add OWA
 ---
 
 ### Task 1.5 — Document initial security posture in THREAT-LOG.md
-- [ ] **What:** Write the full initial security posture audit in `agentic/security/THREAT-LOG.md`.
+- [x] **What:** Write the full initial security posture audit in `agentic/security/THREAT-LOG.md`.
       This is a read-only analysis task — no code changes.
       Record what is already implemented, what is a known risk, and the planned remediation phase.
 - **Design constraints:**
