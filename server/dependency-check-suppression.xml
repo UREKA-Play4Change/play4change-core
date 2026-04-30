@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!--
+        Add false-positive suppressions here.
+        Each suppression MUST include a 'notes' element explaining why it is a false positive.
+        Do NOT suppress a real CVE without rotating the affected dependency or accepting the risk
+        in THREAT-LOG.md with written justification.
+
+        Template:
+        <suppress>
+            <notes>False positive: [explain why this CVE does not apply to this dependency
+            in this project's context]</notes>
+            <cve>CVE-YYYY-NNNNN</cve>
+        </suppress>
+    -->
+</suppressions>

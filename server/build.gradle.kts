@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlinJpa)
     alias(libs.plugins.kotlinSerialization)
     id("dev.detekt") version "2.0.0-alpha.2"
+    id("org.owasp.dependencycheck") version "9.0.10"
 }
 
 group = "com.ureka.play4change"
@@ -72,4 +73,10 @@ tasks.withType<Test> {
 detekt {
     config.setFrom("$projectDir/detekt.yml")
     buildUponDefaultConfig = true
+}
+
+dependencyCheck {
+    failBuildOnCVSS = 7.0f
+    suppressionFile = "$projectDir/dependency-check-suppression.xml"
+    nvd.apiKey = System.getenv("NVD_API_KEY") ?: ""
 }
