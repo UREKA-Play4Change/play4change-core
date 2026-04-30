@@ -25,7 +25,7 @@ fix Name/Password value object stubs, document initial security posture, add OWA
 ---
 
 ### Task 1.2 — Fix CI JDK mismatch
-- [ ] **What:** Change `.github/workflows/ci.yml` Java version from 17 to 21.
+- [x] **What:** Change `.github/workflows/ci.yml` Java version from 17 to 21.
       The server module targets JVM 21 (`jvmToolchain(21)` in `build.gradle.kts`).
       Running CI on JDK 17 produces silent compatibility warnings and may cause
       test failures on language features only available in 21.

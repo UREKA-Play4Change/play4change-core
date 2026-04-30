@@ -22,7 +22,7 @@ FIXED with the phase and commit reference. Do not delete fixed entries.
 
 ---
 
-## H01 [OPEN] — CI JDK version mismatch (17 vs 21)
+## H01 [FIXED] — CI JDK version mismatch (17 vs 21)
 
 **Location:** `.github/workflows/ci.yml:14` (the `java-version` field in `setup-java` step)
 
@@ -39,7 +39,7 @@ Use `distribution: 'temurin'`.
 
 **Fix in:** Phase 01, Task 1.2
 
-**Fixed:** *(to be filled when task is complete)*
+**Fixed:** Phase 01, Task 1.2 — changed `java-version` from `'17'` to `'21'` in `.github/workflows/ci.yml`.
 
 ---
 
