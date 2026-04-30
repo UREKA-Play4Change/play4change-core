@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlinJpa)
     alias(libs.plugins.kotlinSerialization)
     id("dev.detekt") version "2.0.0-alpha.2"
-    id("org.owasp.dependencycheck") version "9.0.10"
+    id("org.owasp.dependencycheck") version "10.0.4"
 }
 
 group = "com.ureka.play4change"
@@ -75,8 +75,20 @@ detekt {
     buildUponDefaultConfig = true
 }
 
+// NOTE: dep-check 10.0.4 has a Jackson version mismatch bug — compiled against 2.17+ but its
+// plugin classpath resolves to 2.14.2 via Gradle's isolated plugin classloader.
+// Project-level resolutionStrategy cannot reach the plugin classloader, so the Gradle task
+// './gradlew :server:dependencyCheckAnalyze' currently fails locally.
+// CI uses the dep-check CLI via GitHub Actions (see .github/workflows/dependency-check.yml)
+// which does not use Gradle's plugin mechanism and is not affected.
+// See HACKS.md H04. Remove this comment when dep-check ships a fixed Jackson dependency.
 dependencyCheck {
     failBuildOnCVSS = 7.0f
     suppressionFile = "$projectDir/dependency-check-suppression.xml"
-    nvd.apiKey = System.getenv("NVD_API_KEY") ?: ""
+}
+
+// Copies all runtime JARs to build/dependencies for the CI dep-check CLI scan.
+tasks.register<Copy>("copyRuntimeDependencies") {
+    from(configurations.runtimeClasspath)
+    into(layout.buildDirectory.dir("dependencies"))
 }
