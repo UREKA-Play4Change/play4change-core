@@ -26,3 +26,6 @@ jobs:
 
     - name: Build and run tests with Gradle
       run: ./gradlew build
+
+    - name: Detekt
+      run: ./gradlew :server:detektMain
