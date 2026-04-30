@@ -57,7 +57,7 @@ attack surface, a STRIDE analysis is added as a subsection.
 | R01 | A04 Insecure Design | CSRF disabled — acceptable for stateless JWT API | Low | ACCEPTED | Phase 01 | Documented. Stateless JWT means CSRF tokens add no security benefit. The accept decision is intentional, not oversight. |
 | R02 | A05 Security Misconfiguration | Swagger UI publicly accessible without auth | Medium | OPEN | Phase 07 | Any user can browse the API schema. Low risk for a POC; must be gated before any public deployment. |
 | R03 | A05 Security Misconfiguration | `/actuator/prometheus` reachable via public Nginx proxy | Medium | OPEN | Phase 07 | Prometheus metrics expose internal timing and count data. Not a critical risk but should not be public. |
-| R04 | A03 Injection | `Name.kt` and `Password.kt` value object stubs — accept any string | High | OPEN | Phase 01 | Invalid names can propagate through the domain. Fix: proper validation with Arrow Either. |
+| R04 | A03 Injection | `Name.kt` and `Password.kt` value object stubs — accept any string | High | FIXED (Phase 01, Task 1.4) | Phase 01 | Name.kt now validates: non-null, non-blank, 2–100 chars, no control characters. Password.kt deleted (unused). Fixed 2026-04-30. |
 | R05 | A07 Auth Failures | No rate limiting on `/auth/**` endpoints | High | OPEN | Phase 07 | `/auth/magic-link` can be used to spam any email address. `/auth/oauth` accepts any number of verification attempts. |
 | R06 | A10 Server-Side Request Forgery | SSRF on `/admin/topics` URL ingestion — no IP range validation | High | OPEN | Phase 07 | Admin can submit internal network URLs. Mistral fetcher may reach internal services. Fix: validate and block RFC 1918 ranges before fetch. |
 | R07 | A08 Software & Data Integrity | AI-generated content not validated before persistence | High | OPEN | Phase 02 | Mistral output is inserted into the database as-is. Malformed or injected content could reach learners. Fix: jsoup sanitisation + schema validation. |
@@ -113,7 +113,7 @@ attack surface, a STRIDE analysis is added as a subsection.
 
 | Risk ID | Fixed in Phase | Commit | Summary |
 |---------|--------------|--------|---------|
-| R04 | Phase 01, Task 1.4 | — | Name.kt implements validation with Arrow Either. Password.kt deleted (unused). |
+| R04 | Phase 01, Task 1.4 | cc798c4 | Name.kt validates non-null/blank/2–100 chars/no control chars. Password.kt deleted (unused). |
 
 ---
 
