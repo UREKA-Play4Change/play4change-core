@@ -108,6 +108,19 @@ attack surface, a STRIDE analysis is added as a subsection.
 
 ---
 
+## OWASP Dependency-Check State (Phase 01, Task 1.6)
+
+| Status | Notes |
+|--------|-------|
+| Plugin added | `id("org.owasp.dependencycheck") version "9.0.10"` in `server/build.gradle.kts` |
+| CI workflow | `.github/workflows/dependency-check.yml` — weekly Monday 6 AM UTC + `workflow_dispatch` |
+| Suppression file | `server/dependency-check-suppression.xml` — no suppressions yet; first real scan may add false-positives |
+| CVE threshold | `failBuildOnCVSS = 7.0f` — CVE ≥7.0 blocks the build |
+| Local scan status | **Requires NVD_API_KEY** — NVD API v2 rate-limits unauthenticated bulk downloads (see HACKS.md H04). CI workflow supplies the key via GitHub secret `NVD_API_KEY`. |
+| Current dependency CVE state | Not yet assessed — full scan requires seeded NVD database. No suppressions or known HIGH CVEs have been accepted. First CI run will establish baseline. |
+
+---
+
 ## Remediation Log
 
 *(Populated as KNOWN RISKS are fixed)*
