@@ -69,6 +69,7 @@ attack surface, a STRIDE analysis is added as a subsection.
 | R13 | A07 Auth Failures | Authenticated DAST gap — ZAP baseline covers unauthenticated surface only | Medium | OPEN | Phase 07 Task 7.6 extension | Authenticated ZAP scan with learner + admin JWT required per ADR-018. |
 | R14 | A05 Security Misconfiguration | Missing CSP, HSTS, and Referrer-Policy headers in Nginx config | Medium | OPEN | Phase 07 Task 7.7 extension | Full header set defined in ADR-018. CSP unsafe-inline accepted as residual risk pending nonce migration. |
 | R15 | A04 Insecure Design | No OWASP Threat Dragon model — trust boundaries documented in prose only | Low | FIXED | Phase 07 | threat-model.td created in agentic/security/. All Phase 01 and Phase 02 STRIDE threats pre-populated. Maintenance guide in THREAT-DRAGON-MAINTENANCE.md. |
+| R16 | A03 Injection | No `@Valid` on `AuthController` `@RequestBody` params; `requestMagicLink` normalises but never validates email format — empty string or non-email string passes through to the DB and email port | Medium | OPEN | Phase 07 | Fix: add `@field:Email @field:NotBlank` to `MagicLinkRequest.email`; add `@Valid` to all `AuthController` `@RequestBody` parameters. Discovered Phase 01 Task 1.5 code review (2026-04-30). |
 
 ---
 

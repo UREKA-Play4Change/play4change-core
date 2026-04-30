@@ -43,7 +43,7 @@ Use `distribution: 'temurin'`.
 
 ---
 
-## H02 [OPEN] — Name.kt and Password.kt value object stubs
+## H02 [FIXED] — Name.kt and Password.kt value object stubs
 
 **Location:** `server/src/main/kotlin/*/domain/model/Name.kt`,
 `server/src/main/kotlin/*/domain/model/Password.kt` (exact paths may vary — search for these files)
@@ -64,7 +64,7 @@ and were never completed before the auth system was added on top.
 
 **Fix in:** Phase 01, Task 1.4
 
-**Fixed:** *(to be filled when task is complete)*
+**Fixed:** Phase 01, Task 1.4, commit cc798c4 — Name.kt validates non-blank, 2–100 chars, no control characters. Password.kt deleted (unused).
 
 ---
 
