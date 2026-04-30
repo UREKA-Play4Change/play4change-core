@@ -68,6 +68,36 @@ and were never completed before the auth system was added on top.
 
 ---
 
+## H04 [OPEN] — dep-check Gradle plugin unusable locally; CI uses CLI action instead
+
+**Location:** `server/build.gradle.kts` (plugin declaration), `.github/workflows/dependency-check.yml` (CI workaround)
+
+**What it is:** `org.owasp.dependencycheck:10.0.4` Gradle plugin has a Jackson version mismatch bug.
+The plugin was compiled against `jackson-annotations:2.17+` (which has `JsonFormat.Feature.READ_DATE_TIMESTAMPS_AS_NANOSECONDS`)
+but its own Gradle plugin classpath resolves `jackson-annotations:2.14.2` via Gradle's isolated
+plugin classloader. The result is a `NoSuchFieldError` at task execution time.
+
+`configurations.all.resolutionStrategy.force()` cannot fix this — it applies to project configurations,
+not Gradle's plugin classloader (which is separately isolated). Changing JDK from 24 → 21 does not
+help either; the isolation is independent of JDK version.
+
+**Why it exists:** dep-check 10.0.4 was released with an incorrect dependency declaration in its POM
+(declared 2.14.2, compiled against 2.17). Older versions (8.x) use deprecated NVD legacy feeds that
+now return 403 Forbidden. No current dep-check Gradle plugin version works without this conflict on
+this project setup (Spring BOM + LangChain4j BOM + Gradle 8.14.3).
+
+**Fix:** Wait for OWASP dep-check to release a version with aligned Jackson dependency declarations
+(compiled version == declared version ≥ 2.17). When that version is released, update
+`server/build.gradle.kts` plugin version and remove the `copyRuntimeDependencies` task.
+
+**Fix in:** Unscheduled — depends on upstream dep-check release.
+
+**Workaround in CI:** `.github/workflows/dependency-check.yml` uses `dependency-check/Dependency-Check_Action@main`
+which runs dep-check CLI directly (no Gradle plugin mechanism, no classloader conflict). The CLI
+scans JARs copied by the `copyRuntimeDependencies` Gradle task.
+
+---
+
 ## H03 [OPEN] — All mobile repositories mocked (Ktor not wired)
 
 **Location:** `composeApp/src/commonMain/kotlin/*/data/` — all `Mock*Repository.kt` files
