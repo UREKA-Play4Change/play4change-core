@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlinSpring)
     alias(libs.plugins.kotlinJpa)
     alias(libs.plugins.kotlinSerialization)
+    id("dev.detekt") version "2.0.0-alpha.2"
 }
 
 group = "com.ureka.play4change"
@@ -66,4 +67,9 @@ kotlin {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+detekt {
+    config.setFrom("$projectDir/detekt.yml")
+    buildUponDefaultConfig = true
 }

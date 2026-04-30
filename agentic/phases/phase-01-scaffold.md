@@ -44,7 +44,7 @@ fix Name/Password value object stubs, document initial security posture, add OWA
 ---
 
 ### Task 1.3 — Add Detekt
-- [ ] **What:** Add the Detekt static analysis plugin to the `server` module.
+- [x] **What:** Add the Detekt static analysis plugin to the `server` module.
       Create a `detekt.yml` configuration file. Wire Detekt to the CI check step.
       Generate a baseline for all existing violations so CI does not fail on pre-existing issues.
 - **Design constraints:**
