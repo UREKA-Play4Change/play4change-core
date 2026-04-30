@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!--
+        Add suppressions here for confirmed false positives only.
+        Every suppression MUST include a notes element explaining why it is a false positive.
+        Format:
+            <suppress>
+                <notes>Reason this is a false positive — CVE-XXXX-XXXXX does not affect this
+                       artifact because [specific reason].</notes>
+                <cve>CVE-XXXX-XXXXX</cve>
+            </suppress>
+    -->
+</suppressions>

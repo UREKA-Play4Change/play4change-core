@@ -1,0 +1,51 @@
+name: OWASP Dependency Check
+
+on:
+  schedule:
+    # Every Monday at 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  dependency-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Copy server runtime dependencies
+        # Copies all resolved runtime JARs to server/build/dependencies for dep-check to scan.
+        # This avoids the Gradle plugin classloader / Jackson version mismatch in dep-check 10.x.
+        # See HACKS.md H04 for full explanation.
+        run: ./gradlew :server:copyRuntimeDependencies --no-configuration-cache
+
+      - name: OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'play4change-server'
+          path: 'server/build/dependencies'
+          format: 'HTML'
+          args: >
+            --failOnCVSS 7
+            --suppression server/dependency-check-suppression.xml
+            --nvdApiKey ${{ secrets.NVD_API_KEY }}
+        continue-on-error: false
+
+      - name: Upload dependency-check report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: reports/
+          retention-days: 30
