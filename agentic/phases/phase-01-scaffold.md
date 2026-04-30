@@ -64,7 +64,7 @@ fix Name/Password value object stubs, document initial security posture, add OWA
 ---
 
 ### Task 1.4 — Fix Name.kt and Password.kt value object stubs
-- [ ] **What:** Implement real validation logic in the `Name` and `Password` value objects.
+- [x] **What:** Implement real validation logic in the `Name` and `Password` value objects.
       Currently they are stubs that accept any string. This allows invalid domain state to
       persist through the system (OWASP A03 — Injection via untrusted input reaching domain).
 - **Design constraints:**
