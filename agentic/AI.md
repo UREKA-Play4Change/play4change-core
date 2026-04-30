@@ -63,6 +63,8 @@ git checkout -b feat/phase-XX-<short-description>
 # Example: git checkout -b feat/phase-02-multilang
 ```
 Never work on `main`. If already on a branch, verify it is the right one.
+All commits for this task go on this branch. No commit ever lands on `main` directly.
+`main` is only updated by a merged PR approved by the human.
 
 ### Step 3 — Red test
 Write a failing test that proves the feature does not exist yet.
@@ -104,7 +106,8 @@ Phase: 02  Task: 2.2
 gh pr create --title "<type>(<scope>): <subject>" --body "..."
 ```
 The PR body must include: what changed, why, phase+task reference, test evidence.
-Do not merge. Do not approve.
+Do not merge. Do not approve. Do not push to `main`.
+The human reviews, approves, and merges via GitHub. This is the only way `main` advances.
 
 ### Step 10 — STOP
 Report to the human: PR URL, what was done, any blockers or concerns.
@@ -354,12 +357,16 @@ Stop immediately and report to the human when any of the following occurs:
 7. **Compilation error not resolved in 2 attempts** — report the error, do not loop.
 8. **Architectural ambiguity** — two reasonable approaches exist and the choice matters.
    Write a DECISIONS.md entry with both options and ask the human to choose.
+9. **Committed directly to `main`** — if you realise you have committed on `main` instead
+   of a feature branch, stop immediately. Create the branch from current HEAD
+   (`git checkout -b feat/phase-XX-...`), switch back to `main`, and reset it to
+   `origin/main` (`git reset --hard origin/main`). Report to the human before continuing.
 
 ---
 
 ## §9 What You Never Do
 
-- Push to `main` directly
+- Commit or push to `main` directly — branch first, always (§1 Step 2)
 - Merge your own PR
 - Commit secrets, tokens, or credentials (not even in tests)
 - Skip writing tests before implementation (no exceptions)
@@ -382,9 +389,13 @@ Run these steps at the start of every session, in this order:
 pwd
 # expect: .../play4change
 
-# 2 — check git state
+# 2 — check git state; confirm you are NOT on main
 git status
 git log --oneline -5
+# If output shows "On branch main": STOP.
+# Create or switch to the task branch before doing anything else:
+#   git checkout -b feat/phase-XX-<short-description>
+# main is never a working branch. See §1 Step 2 and §8 item 9.
 
 # 3 — read the current phase
 # (determine from ROADMAP.md which phase is IN PROGRESS)

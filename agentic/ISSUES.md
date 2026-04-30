@@ -23,7 +23,7 @@ When an issue is fixed, mark it FIXED with the phase, task, and commit. Do not d
 
 ---
 
-## I01 [OPEN] Severity:Medium — CI JDK version mismatch (17 vs 21)
+## I01 [FIXED] Severity:Medium — CI JDK version mismatch (17 vs 21)
 
 **Discovered:** Phase 01
 
@@ -43,7 +43,7 @@ but the gap is real.
 
 **Fix plan:** Phase 01, Task 1.2 — update CI YAML to `java-version: '21'` (Temurin distribution).
 
-**Fixed:** *(to be filled when Task 1.2 is complete)*
+**Fixed:** Phase 01, Task 1.2 — updated `.github/workflows/ci.yml` `java-version` to `'21'` (temurin).
 
 ---
 
