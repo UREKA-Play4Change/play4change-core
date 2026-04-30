@@ -68,6 +68,49 @@ and were never completed before the auth system was added on top.
 
 ---
 
+## H04 [OPEN] — NVD API key required to seed OWASP dependency-check database
+
+**Location:** `server/build.gradle.kts` (`dependencyCheck {}` block), `.github/workflows/dependency-check.yml`
+
+**What it is:** The OWASP dependency-check plugin 9.x uses the NVD API v2 to download CVE data.
+The NVD API v2 rate-limits unauthenticated requests heavily enough that the bulk download
+immediately returns 403. The local H2 database (`~/.gradle/dependency-check-data/9.0/odc.mv.db`)
+cannot be seeded without an API key, so `./gradlew :server:dependencyCheckAnalyze` always fails
+locally unless `NVD_API_KEY` is set in the environment.
+
+**Why it exists:** The NVD deprecated its legacy data feeds in late 2023 and migrated to API v2.
+Unauthenticated API access is throttled to 5 requests per 30 seconds, which is insufficient for
+the bulk data download the OWASP tool needs. The NVD recommends all users register a free API key.
+
+**Fix:** Register a free NVD API key at https://nvd.nist.gov/developers/request-an-api-key
+and set `export NVD_API_KEY=<key>` before running the scan locally. The CI workflow already
+passes the key via the `NVD_API_KEY` GitHub repository secret.
+
+**Fix in:** Developer environment setup — not a code fix. Document in HOW_TO_RUN.md in Phase 08.
+
+---
+
+## H05 [OPEN] — Jackson classpath override in root build.gradle.kts for OWASP compatibility
+
+**Location:** `build.gradle.kts` (root project, `buildscript {}` block)
+
+**What it is:** `spring-boot-gradle-plugin:3.2.3` transitively loads `spring-boot-buildpack-platform`
+which bundles `jackson-databind:2.14.2` into the buildscript classloader. Due to JVM parent-first
+classloading, the OWASP dependency-check plugin's `jackson-module-blackbird` (compiled against
+Jackson 2.16.0) finds `NativeImageUtil` from 2.14.2, which lacks `isInNativeImage()`, causing a
+`NoSuchMethodError` at runtime. A `resolutionStrategy.eachDependency {}` override in the root
+`buildscript {}` block forces all `com.fasterxml.jackson.*` to 2.16.1 to resolve the conflict.
+
+**Why it exists:** Spring Boot 3.2 and OWASP dependency-check 9.x cannot coexist without this
+override because of the classloader hierarchy leak from the Spring Boot Gradle plugin.
+
+**Fix:** Upgrade to Spring Boot 3.3.x (which bundles Jackson 2.17.x in `spring-boot-buildpack-platform`)
+— the Jackson versions would then be consistent. Scheduled when the project upgrades Spring Boot.
+
+**Fix in:** Unscheduled — will be removed when Spring Boot is upgraded to 3.3.x or later.
+
+---
+
 ## H03 [OPEN] — All mobile repositories mocked (Ktor not wired)
 
 **Location:** `composeApp/src/commonMain/kotlin/*/data/` — all `Mock*Repository.kt` files

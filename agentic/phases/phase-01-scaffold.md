@@ -110,7 +110,7 @@ fix Name/Password value object stubs, document initial security posture, add OWA
 ---
 
 ### Task 1.6 — Add OWASP dependency-check Gradle plugin
-- [ ] **What:** Add the OWASP dependency-check Gradle plugin to the `server` module.
+- [x] **What:** Add the OWASP dependency-check Gradle plugin to the `server` module.
       Configure it to run as a weekly scheduled CI job. Log any CVEs with CVSS ≥7.0
       as HIGH entries in THREAT-LOG.md.
 - **Design constraints:**

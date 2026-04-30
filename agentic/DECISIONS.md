@@ -72,4 +72,27 @@ complete for the rules this project uses.
 
 ---
 
+## [2026-04-30] [ci] — OWASP dependency-check plugin version 9.0.10 (not 9.2.x or 10.x)
+
+**Context:** Phase 01 Task 1.6 spec says to use `id("org.owasp.dependencycheck") version "9.x.x"`.
+Version 9.2.x and 10.0.x both fail with Jackson classpath conflicts when combined with Spring Boot
+3.2 Gradle plugin (see HACKS.md H05 for root cause). Version 9.0.10 is the latest 9.x release that
+is stable with this project's toolchain combination (Gradle 8.14.3, Spring Boot 3.2.3).
+
+**Decision:** Use `id("org.owasp.dependencycheck") version "9.0.10"`.
+
+**Why not 9.2.x:** Version 9.2.x uses `jackson-module-blackbird` 2.16.x compiled against Jackson
+2.16.0 APIs (`NativeImageUtil.isInNativeImage()`). Spring Boot Gradle plugin 3.2.3 loads
+`jackson-databind:2.14.2` into the buildscript classloader; parent-first JVM delegation means
+`jackson-module-blackbird` finds 2.14.2's `NativeImageUtil` (no `isInNativeImage()`) and fails.
+Version 9.0.10 is affected by the same root cause — the fix is in `build.gradle.kts` root
+`buildscript {}` block (see H05), not in the plugin version.
+
+**Why not 10.0.4:** Uses Jackson 2.17.2 APIs (`JsonFormat.Feature.READ_DATE_TIMESTAMPS_AS_NANOSECONDS`
+added in 2.16.0) — same root cause, different field.
+
+**Phase:** 01, Task 1.6
+
+---
+
 *(New entries are prepended above this line — most recent first)*
