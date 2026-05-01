@@ -63,7 +63,7 @@ attack surface, a STRIDE analysis is added as a subsection.
 | R07 | A08 Software & Data Integrity | AI-generated content not validated before persistence | High | OPEN | Phase 02 | Mistral output is inserted into the database as-is. Malformed or injected content could reach learners. Fix: jsoup sanitisation + schema validation. |
 | R08 | A04 Insecure Design | `RestTemplate` no timeout on JWKS endpoint fetch | Low | OPEN | Phase 07 | A slow or hung JWKS server could block auth threads. Default `RestTemplate` has no timeout. Fix: set connection and read timeouts. |
 | R09 | A07 Auth Failures | Facebook OAuth token not app-verified (audience not checked) | Medium | DEFERRED | Not scheduled | Facebook access tokens accepted from any app. Full hardening requires `FACEBOOK_APP_ID` + `FACEBOOK_APP_SECRET`. Deferred per ADR-016 G4. |
-| R10 | A09 Logging Failures | No secret scanning in CI — committed secrets enter git history permanently | High | OPEN | Phase 01 extension | gitleaks to be added to GitHub Actions as pre-build step per ADR-018. |
+| R10 | A09 Logging Failures | No secret scanning in CI — committed secrets enter git history permanently | High | FIXED (Phase 01, Task 1.7) | Phase 01 extension | gitleaks-action@v2 added to CI pre-build step. Full history scan clean. Suppressions in .gitleaks.toml. |
 | R11 | A03 Injection | No security-specific SAST — Detekt does not detect Spring/JWT security anti-patterns | High | OPEN | Phase 07 Task 7.9 | SpotBugs + FindSecBugs to be added to server Gradle build per ADR-018. |
 | R12 | A06 Vulnerable Components | Mobile SCA gap — composeApp and common modules have no CVE scanning | High | OPEN | Phase 07 Task 7.10 | OWASP dep-check to be extended to KMP modules per ADR-018. |
 | R13 | A07 Auth Failures | Authenticated DAST gap — ZAP baseline covers unauthenticated surface only | Medium | OPEN | Phase 07 Task 7.6 extension | Authenticated ZAP scan with learner + admin JWT required per ADR-018. |
@@ -128,6 +128,7 @@ attack surface, a STRIDE analysis is added as a subsection.
 | Risk ID | Fixed in Phase | Commit | Summary |
 |---------|--------------|--------|---------|
 | R04 | Phase 01, Task 1.4 | cc798c4 | Name.kt validates non-null/blank/2–100 chars/no control chars. Password.kt deleted (unused). |
+| R10 | Phase 01, Task 1.7 | — | gitleaks-action@v2 added to CI pre-build step. fetch-depth: 0 enables full history scan. Suppressions in .gitleaks.toml. |
 
 ---
 
