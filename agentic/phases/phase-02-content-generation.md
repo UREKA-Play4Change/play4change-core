@@ -12,7 +12,7 @@ multilingual generation gated by subscriber language, dynamic micro-competence b
 ## Tasks
 
 ### Task 2.1 — STRIDE Threat Analysis (no code)
-- [ ] **What:** Before writing any implementation code for this phase, produce a STRIDE analysis
+- [x] **What:** Before writing any implementation code for this phase, produce a STRIDE analysis
       of the content generation pipeline and write it to THREAT-LOG.md.
       This is a read-only planning task. No code changes.
 - **Design constraints:**
@@ -32,7 +32,7 @@ multilingual generation gated by subscriber language, dynamic micro-competence b
 ---
 
 ### Task 2.2 — Anti-cheat: per-user task instances
-- [ ] **What:** Implement per-user option shuffling so each user receives a unique ordering
+- [x] **What:** Implement per-user option shuffling so each user receives a unique ordering
       of multiple-choice options. The shuffle is deterministic: given the same inputs,
       it always produces the same output for the same user.
       Seed = SHA-256(userId + taskId + enrollmentId).

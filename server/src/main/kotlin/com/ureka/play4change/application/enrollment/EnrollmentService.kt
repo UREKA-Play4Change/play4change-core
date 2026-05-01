@@ -11,6 +11,7 @@ import com.ureka.play4change.domain.enrollment.Enrollment
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
 import com.ureka.play4change.domain.enrollment.EnrollmentStatus
 import com.ureka.play4change.domain.enrollment.TaskAssignment
+import com.ureka.play4change.domain.enrollment.TaskShuffleSeed
 import com.ureka.play4change.domain.topic.TaskType
 import com.ureka.play4change.domain.topic.TaskTemplateRepository
 import com.ureka.play4change.domain.topic.TopicModuleRepository
@@ -79,8 +80,12 @@ class EnrollmentService(
 
         // Create the first task assignment (dayIndex = 0)
         val firstTemplate = templates.minByOrNull { it.dayIndex }!!
-        val shuffledOrder = (firstTemplate.options?.indices?.toMutableList() ?: mutableListOf())
-            .also { it.shuffle() }
+        val shuffledOrder = TaskShuffleSeed.shuffleOptions(
+            firstTemplate.options?.size ?: 0,
+            command.userId,
+            firstTemplate.id,
+            enrollment.id
+        )
 
         enrollmentRepository.saveAssignment(
             TaskAssignment(

@@ -75,8 +75,6 @@ attack surface, a STRIDE analysis is added as a subsection.
 
 ## Phase 02 STRIDE Analysis
 
-*(To be written at the start of Phase 02, Task 2.1)*
-
 ### Attack Surfaces in Scope
 - URL ingestion endpoint (`POST /admin/topics`)
 - Mistral API call (outbound)
@@ -105,6 +103,14 @@ attack surface, a STRIDE analysis is added as a subsection.
 | ✔ Mobile tokens in EncryptedSharedPreferences (Android) | A02 Cryptographic Failures | `EncryptedSharedPreferencesTokenStorage.kt` | AES256_SIV key + AES256_GCM value. Added Phase 04. |
 | ✔ Mobile tokens in Keychain (iOS) | A02 Cryptographic Failures | `KeychainTokenStorage.kt` | kSecAttrAccessibleAfterFirstUnlock. Added Phase 04. |
 | ✔ Device tokens revoked on user logout | A07 Auth Failures | `TokenService.logout()` — deletes all device_tokens for user | Added Phase 05. |
+
+---
+
+## Anti-Cheat Shuffle (Phase 02, Task 2.2)
+
+| Control | OWASP category | Location | Reference |
+|---------|---------------|----------|-----------|
+| ✔ Deterministic per-user option shuffle prevents answer-sharing between users | A04 Insecure Design | `TaskShuffleSeed.kt` — seed = SHA-256(userId+taskId+enrollmentId), first 8 bytes as Long for `java.util.Random` | Phase 02 Task 2.2 |
 
 ---
 
