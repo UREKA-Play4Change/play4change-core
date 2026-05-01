@@ -106,6 +106,14 @@ attack surface, a STRIDE analysis is added as a subsection.
 
 ---
 
+## Anti-Cheat Shuffle (Phase 02, Task 2.2)
+
+| Control | OWASP category | Location | Reference |
+|---------|---------------|----------|-----------|
+| ✔ Deterministic per-user option shuffle prevents answer-sharing between users | A04 Insecure Design | `TaskShuffleSeed.kt` — seed = SHA-256(userId+taskId+enrollmentId), first 8 bytes as Long for `java.util.Random` | Phase 02 Task 2.2 |
+
+---
+
 ## OWASP Dependency-Check State (Phase 01, Task 1.6)
 
 | Status | Notes |
