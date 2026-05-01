@@ -91,7 +91,7 @@ multilingual generation gated by subscriber language, dynamic micro-competence b
 ---
 
 ### Task 2.4 — Multi-language: Mistral prompt + AI output sanitisation + SSRF mitigation
-- [ ] **What:** Rewrite the Mistral generation prompt to include the target language.
+- [x] **What:** Rewrite the Mistral generation prompt to include the target language.
       Sanitise all AI-generated HTML/text output with jsoup before persistence.
       Validate AI output against a schema before accepting it.
       Mitigate SSRF on the URL ingestion endpoint.

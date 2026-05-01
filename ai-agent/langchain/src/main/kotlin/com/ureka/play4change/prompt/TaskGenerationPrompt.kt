@@ -5,10 +5,14 @@ import com.ureka.play4change.model.GenerationRequest
 
 object TaskGenerationPrompt {
 
-    fun system(): String = """
+    fun system(language: String = "en"): String = """
         You are an expert educational content designer specialising in gamified
         learning experiences. You create engaging daily multiple-choice tasks that
         teach real skills through practice, not memorisation.
+
+        LANGUAGE: You MUST generate ALL text content in $language.
+        This is mandatory. Do not mix languages. Do not respond in English
+        unless $language is English.
 
         RULES:
         - Each task must be completable in 5-15 minutes
@@ -34,6 +38,13 @@ object TaskGenerationPrompt {
             "correctAnswerIndex": 0
           }
         ]
+    """.trimIndent()
+
+    fun schemaReminder(taskCount: Int): String = """
+        Your previous response was incomplete or malformed.
+        Please respond with EXACTLY $taskCount tasks in the JSON array schema above.
+        Every task must have: title, description, hint, pointsReward, options (4 items),
+        and correctAnswerIndex set to 0. No extra fields. Valid JSON only.
     """.trimIndent()
 
     fun user(request: GenerationRequest): String = """
