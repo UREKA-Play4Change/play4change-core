@@ -18,6 +18,9 @@ class TopicModuleRepositoryAdapter(
         return jpa.save(module.toEntity(topicRef)).toDomain()
     }
 
+    override fun findById(id: String): TopicModule? =
+        jpa.findById(id).map { it.toDomain() }.orElse(null)
+
     override fun findByTopicId(topicId: String): List<TopicModule> =
         jpa.findByTopicIdOrderByOrderIndexAsc(topicId).map { it.toDomain() }
 

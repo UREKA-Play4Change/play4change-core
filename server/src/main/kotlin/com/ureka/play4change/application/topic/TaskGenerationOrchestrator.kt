@@ -121,17 +121,20 @@ class TaskGenerationOrchestrator(
                                 moduleId = module.id,
                                 dayIndex = idx,
                                 poolIndex = 0,
-                                title = task.title,
-                                description = task.description,
-                                hint = task.hint,
+                                title = AiOutputSanitiser.sanitise(task.title),
+                                description = AiOutputSanitiser.sanitise(task.description),
+                                hint = AiOutputSanitiser.sanitise(task.hint),
                                 taskType = TaskType.MULTIPLE_CHOICE,
                                 pointsReward = task.pointsReward,
-                                options = task.optionsJson?.let { parseOptionsJson(it) },
+                                options = task.optionsJson
+                                    ?.let { parseOptionsJson(it) }
+                                    ?.map { AiOutputSanitiser.sanitise(it) },
                                 correctAnswer = task.correctAnswerIndex,
                                 version = 1,
                                 isCurrent = true,
                                 supersededBy = null,
                                 embedding = task.embedding,
+                                language = request.language,
                                 createdAt = OffsetDateTime.now()
                             )
                         }

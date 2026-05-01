@@ -69,13 +69,34 @@ class LangChain4jTaskGenerationAdapter(
         log.info("Generating ${request.taskCount} tasks for domain=${request.subjectDomain} module=${request.moduleId}")
 
         return runCatching {
-            val response = chatModel.generate(
-                SystemMessage.from(TaskGenerationPrompt.system()),
-                UserMessage.from(TaskGenerationPrompt.user(request))
-            )
+            val systemMsg = SystemMessage.from(TaskGenerationPrompt.system(request.language))
+            val userMsg = UserMessage.from(TaskGenerationPrompt.user(request))
 
-            val rawJson = response.content().text()
-            val tasks = parseTasksFromJson(rawJson, request.moduleId)
+            var response = chatModel.generate(systemMsg, userMsg)
+            var tasks = parseTasksFromJson(response.content().text(), request.moduleId)
+            var tokensUsed = response.tokenUsage()?.totalTokenCount()?.toLong() ?: 0L
+
+            // Schema validation: retry once with a reminder if tasks are missing
+            if (tasks.count { it.status == GenerationStatus.SUCCESS } < request.taskCount) {
+                log.warn(
+                    "Schema validation failed for module {}: got {} valid tasks, expected {}. Retrying.",
+                    request.moduleId,
+                    tasks.count { it.status == GenerationStatus.SUCCESS },
+                    request.taskCount
+                )
+                val retryUserMsg = UserMessage.from(
+                    TaskGenerationPrompt.user(request) + "\n\n" +
+                        TaskGenerationPrompt.schemaReminder(request.taskCount)
+                )
+                response = chatModel.generate(systemMsg, retryUserMsg)
+                tasks = parseTasksFromJson(response.content().text(), request.moduleId)
+                tokensUsed += response.tokenUsage()?.totalTokenCount()?.toLong() ?: 0L
+            }
+
+            if (tasks.none { it.status == GenerationStatus.SUCCESS }) {
+                meterRegistry.counter("ai.generation.failures", "type", "schema_validation").increment()
+                return ServiceUnavailable.DependencyUnavailable("mistral-ai-schema").left()
+            }
 
             val durationMs = timer.stop(
                 meterRegistry.timer("ai.generation.duration", "type", "fixed_path")
@@ -87,7 +108,7 @@ class LangChain4jTaskGenerationAdapter(
                     tasksRequested = request.taskCount,
                     tasksGenerated = tasks.count { it.status == GenerationStatus.SUCCESS },
                     tasksDeduplicated = tasks.count { it.status == GenerationStatus.DUPLICATE },
-                    tokensUsed = response.tokenUsage()?.totalTokenCount()?.toLong() ?: 0L,
+                    tokensUsed = tokensUsed,
                     generationTimeMs = durationMs,
                     providerName = "mistral"
                 )
