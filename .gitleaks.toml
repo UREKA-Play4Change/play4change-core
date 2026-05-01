@@ -1,0 +1,11 @@
+title = "Play4Change Gitleaks Config"
+
+[extend]
+useDefault = true
+
+# Add [[allowlist]] entries below for confirmed false positives only.
+# Every suppressed finding MUST include a description field explaining why it is not a real credential.
+# Example:
+# [[allowlist]]
+# description = "Test fixture — not a real credential"
+# regexes = ["FAKE_SECRET_FOR_TESTING"]
