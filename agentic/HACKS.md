@@ -122,7 +122,7 @@ Keychain (iOS). Implement 401→refresh→retry logic.
 
 ---
 
-## H05 [OPEN] — LanguageGenerationPort is a no-op stub
+## H05 [FIXED] — LanguageGenerationPort is a no-op stub
 
 **Location:** `server/src/main/kotlin/com/ureka/play4change/infrastructure/language/NoOpLanguageGenerationAdapter.kt`
 
@@ -139,7 +139,9 @@ calls Mistral with the target language and persists the generated `TaskTemplate`
 
 **Fix in:** Phase 02, Task 2.4
 
-**Fixed:** *(to be filled when task is complete)*
+**Fixed:** Phase 02, Task 2.4 — `NoOpLanguageGenerationAdapter` deleted; replaced with
+`LanguageGenerationAdapter` which calls `TaskGenerationPort.generateTasks()` with `taskCount=1`
+and the requested language, then persists the result as a `TaskTemplate`.
 
 ---
 
