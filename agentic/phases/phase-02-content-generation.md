@@ -166,7 +166,7 @@ multilingual generation gated by subscriber language, dynamic micro-competence b
 ---
 
 ### Task 2.6 — Badges: MicroCompetence domain model and Badge issuance
-- [ ] **What:** Add the `MicroCompetence` domain entity and the `Badge` earned record.
+- [x] **What:** Add the `MicroCompetence` domain entity and the `Badge` earned record.
       Implement badge issuance: when a user completes all tasks in a topic, they earn
       the topic's micro-competence badge. Issuance is idempotent.
 - **Design constraints:**

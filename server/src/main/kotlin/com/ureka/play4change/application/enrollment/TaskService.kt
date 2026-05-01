@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
+import com.ureka.play4change.application.port.BadgeIssuancePort
 import com.ureka.play4change.application.port.PeerReviewUseCase
 import com.ureka.play4change.application.port.SubmitAnswerCommand
 import com.ureka.play4change.application.port.SubmitPhotoCommand
@@ -45,6 +46,7 @@ class TaskService(
     private val languageGatingService: LanguageGatingService,
     private val handleStruggleService: HandleStruggleService,
     private val peerReviewUseCase: PeerReviewUseCase,
+    private val badgeIssuancePort: BadgeIssuancePort,
     private val registry: MeterRegistry
 ) : TaskUseCase {
 
@@ -207,6 +209,8 @@ class TaskService(
 
         val savedEnrollment = enrollmentRepository.save(updatedEnrollment)
 
+        triggerBadgeIssuance(isCorrect, command.userId, savedEnrollment.topicId, savedEnrollment.id)
+
         val submissionOutcome = when {
             isCorrect && isLate -> "late"
             isCorrect -> "correct"
@@ -238,6 +242,10 @@ class TaskService(
             val seed = TaskShuffleSeed.computeSeed(userId, templateId, enrollmentId)
             it[Math.floorMod(seed, it.size.toLong()).toInt()]
         }
+
+    private fun triggerBadgeIssuance(isCorrect: Boolean, userId: String, topicId: String, enrollmentId: String) {
+        if (isCorrect) badgeIssuancePort.issueBadge(userId, topicId, enrollmentId)
+    }
 
     private fun resolveCorrectAnswer(instanceId: String?, templateId: String, fallback: Int?): Int? =
         instanceId
