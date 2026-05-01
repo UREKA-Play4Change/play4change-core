@@ -17,9 +17,12 @@ jobs:
         fetch-depth: 0
 
     - name: Secret scanning (gitleaks)
-      uses: gitleaks/gitleaks-action@v2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        GITLEAKS_VERSION="8.18.4"
+        ARCH=$(uname -m | sed 's/x86_64/x64/')
+        curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_darwin_${ARCH}.tar.gz" -o gitleaks.tar.gz
+        tar -xzf gitleaks.tar.gz gitleaks
+        ./gitleaks detect --source . -v
 
     - name: Set up JDK 21
       uses: actions/setup-java@v4
