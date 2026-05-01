@@ -12,7 +12,7 @@ multilingual generation gated by subscriber language, dynamic micro-competence b
 ## Tasks
 
 ### Task 2.1 — STRIDE Threat Analysis (no code)
-- [ ] **What:** Before writing any implementation code for this phase, produce a STRIDE analysis
+- [x] **What:** Before writing any implementation code for this phase, produce a STRIDE analysis
       of the content generation pipeline and write it to THREAT-LOG.md.
       This is a read-only planning task. No code changes.
 - **Design constraints:**

@@ -75,8 +75,6 @@ attack surface, a STRIDE analysis is added as a subsection.
 
 ## Phase 02 STRIDE Analysis
 
-*(To be written at the start of Phase 02, Task 2.1)*
-
 ### Attack Surfaces in Scope
 - URL ingestion endpoint (`POST /admin/topics`)
 - Mistral API call (outbound)
