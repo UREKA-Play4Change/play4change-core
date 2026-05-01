@@ -80,7 +80,7 @@ class LanguageGatingTest {
     }
 
     @Test
-    fun `given supported but not yet generated language when resolving template then triggers generation and returns pending`() {
+    fun `given supported language not yet generated when resolving then triggers generation and returns pending`() {
         every {
             taskTemplateRepository.findCurrentByModuleIdAndDayIndexAndLanguage("module-1", 0, "pt-PT")
         } returns null
