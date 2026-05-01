@@ -22,7 +22,7 @@
 
 ## Phase 01 — Scaffold & Operating System
 
-**Status:** `IN PROGRESS`
+**Status:** `DONE`
 **Phase file:** [phases/phase-01-scaffold.md](phases/phase-01-scaffold.md)
 
 **Goal:** Install the agentic/ operating system, fix CI JDK mismatch, add Detekt,
