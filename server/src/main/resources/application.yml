@@ -39,6 +39,9 @@ ai:
     pool-size: 3
     subtask-count: 3
     queue-capacity: 25
+
+task-generation:
+  instances-per-task: 5
   dedup:
     full-reuse-threshold: 0.90
     partial-reuse-threshold: 0.65

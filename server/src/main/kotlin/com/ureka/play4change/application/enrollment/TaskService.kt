@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
+import com.ureka.play4change.application.port.BadgeIssuancePort
 import com.ureka.play4change.application.port.PeerReviewUseCase
 import com.ureka.play4change.application.port.SubmitAnswerCommand
 import com.ureka.play4change.application.port.SubmitPhotoCommand
@@ -18,6 +19,7 @@ import com.ureka.play4change.domain.enrollment.AssignmentStatus
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
 import com.ureka.play4change.domain.enrollment.TaskAssignment
 import com.ureka.play4change.domain.enrollment.TaskShuffleSeed
+import com.ureka.play4change.domain.topic.TaskInstanceRepository
 import com.ureka.play4change.domain.topic.TaskType
 import com.ureka.play4change.domain.topic.TaskTemplateRepository
 import com.ureka.play4change.domain.topic.TopicModuleRepository
@@ -38,11 +40,13 @@ class TaskService(
     private val topicRepository: TopicRepository,
     private val topicModuleRepository: TopicModuleRepository,
     private val taskTemplateRepository: TaskTemplateRepository,
+    private val taskInstanceRepository: TaskInstanceRepository,
     private val enrollmentRepository: EnrollmentRepository,
     private val userRepository: UserRepository,
     private val languageGatingService: LanguageGatingService,
     private val handleStruggleService: HandleStruggleService,
     private val peerReviewUseCase: PeerReviewUseCase,
+    private val badgeIssuancePort: BadgeIssuancePort,
     private val registry: MeterRegistry
 ) : TaskUseCase {
 
@@ -88,12 +92,10 @@ class TaskService(
             }
 
             val template = (gatingResult as LanguageGatingResult.Available).template
-
+            val selectedInstance = selectTaskInstance(userId, template.id, enrollment.id)
+            val effectiveOptionCount = selectedInstance?.options?.size ?: template.options?.size ?: 0
             val shuffledOrder = TaskShuffleSeed.shuffleOptions(
-                template.options?.size ?: 0,
-                userId,
-                template.id,
-                enrollment.id
+                effectiveOptionCount, userId, template.id, enrollment.id
             )
             val now = OffsetDateTime.now()
 
@@ -114,7 +116,8 @@ class TaskService(
                     pointsAwarded = 0,
                     optionOrder = shuffledOrder,
                     wrongAttemptCount = 0,
-                    photoUrl = null
+                    photoUrl = null,
+                    taskInstanceId = selectedInstance?.id
                 )
             )
             TodayTaskResult.Available(savedAssignment, template)
@@ -143,7 +146,10 @@ class TaskService(
             BadRequest.InvalidField("selectedOption", "out of range")
         }
 
-        val isCorrect = originalIndex == template.correctAnswer
+        val canonicalAnswer = resolveCorrectAnswer(
+            assignment.taskInstanceId, assignment.taskTemplateId, template.correctAnswer
+        )
+        val isCorrect = originalIndex == canonicalAnswer
         val now = OffsetDateTime.now()
         val isLate = now.isAfter(assignment.dueAt)
 
@@ -203,6 +209,8 @@ class TaskService(
 
         val savedEnrollment = enrollmentRepository.save(updatedEnrollment)
 
+        triggerBadgeIssuance(isCorrect, command.userId, savedEnrollment.topicId, savedEnrollment.id)
+
         val submissionOutcome = when {
             isCorrect && isLate -> "late"
             isCorrect -> "correct"
@@ -223,6 +231,27 @@ class TaskService(
             struggleTriggered = struggleTriggered
         )
     }
+
+    private fun selectTaskInstance(
+        userId: String,
+        templateId: String,
+        enrollmentId: String
+    ) = taskInstanceRepository.findByTaskTemplateId(templateId)
+        .takeIf { it.isNotEmpty() }
+        ?.let {
+            val seed = TaskShuffleSeed.computeSeed(userId, templateId, enrollmentId)
+            it[Math.floorMod(seed, it.size.toLong()).toInt()]
+        }
+
+    private fun triggerBadgeIssuance(isCorrect: Boolean, userId: String, topicId: String, enrollmentId: String) {
+        if (isCorrect) badgeIssuancePort.issueBadge(userId, topicId, enrollmentId)
+    }
+
+    private fun resolveCorrectAnswer(instanceId: String?, templateId: String, fallback: Int?): Int? =
+        instanceId
+            ?.let { id -> taskInstanceRepository.findByTaskTemplateId(templateId).firstOrNull { it.id == id } }
+            ?.correctAnswer
+            ?: fallback
 
     override fun submitPhoto(command: SubmitPhotoCommand): Either<AppError, SubmitTodoResult> = either {
         val assignment = ensureNotNull(enrollmentRepository.findAssignmentById(command.assignmentId)) {

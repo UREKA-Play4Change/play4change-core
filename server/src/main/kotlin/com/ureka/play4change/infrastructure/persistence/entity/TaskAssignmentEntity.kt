@@ -58,5 +58,8 @@ class TaskAssignmentEntity(
     var wrongAttemptCount: Int = 0,
 
     @Column(name = "photo_url", columnDefinition = "TEXT")
-    var photoUrl: String? = null
+    var photoUrl: String? = null,
+
+    @Column(name = "task_instance_id", length = 36)
+    val taskInstanceId: String? = null
 )
