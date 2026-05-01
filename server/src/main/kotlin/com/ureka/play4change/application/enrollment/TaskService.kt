@@ -16,6 +16,7 @@ import com.ureka.play4change.application.struggle.HandleStruggleService
 import com.ureka.play4change.domain.enrollment.AssignmentStatus
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
 import com.ureka.play4change.domain.enrollment.TaskAssignment
+import com.ureka.play4change.domain.enrollment.TaskShuffleSeed
 import com.ureka.play4change.domain.topic.TaskType
 import com.ureka.play4change.domain.topic.TaskTemplateRepository
 import com.ureka.play4change.domain.topic.TopicModuleRepository
@@ -70,8 +71,12 @@ class TaskService(
                 NotFound.ResourceNotFound("TaskTemplate", "dayIndex=$dayIndex")
             }
 
-            val shuffledOrder = (template.options?.indices?.toMutableList() ?: mutableListOf())
-                .also { it.shuffle() }
+            val shuffledOrder = TaskShuffleSeed.shuffleOptions(
+                template.options?.size ?: 0,
+                userId,
+                template.id,
+                enrollment.id
+            )
             val now = OffsetDateTime.now()
 
             val savedAssignment = enrollmentRepository.saveAssignment(
