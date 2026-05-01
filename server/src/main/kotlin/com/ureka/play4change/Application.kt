@@ -3,6 +3,7 @@ package com.ureka.play4change
 import com.ureka.play4change.auth.application.GoogleProperties
 import com.ureka.play4change.auth.application.JwtProperties
 import com.ureka.play4change.auth.application.ResendProperties
+import com.ureka.play4change.config.LanguageProperties
 import com.ureka.play4change.infrastructure.storage.MinioProperties
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -17,7 +18,10 @@ import org.springframework.scheduling.annotation.EnableScheduling
     ]
 )
 @EnableScheduling
-@EnableConfigurationProperties(JwtProperties::class, ResendProperties::class, GoogleProperties::class, MinioProperties::class)
+@EnableConfigurationProperties(
+    JwtProperties::class, ResendProperties::class, GoogleProperties::class,
+    MinioProperties::class, LanguageProperties::class
+)
 class Application
 
 fun main(args: Array<String>) {

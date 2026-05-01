@@ -11,6 +11,7 @@ import com.ureka.play4change.application.port.SubmitResult
 import com.ureka.play4change.application.port.SubmitTodoResult
 import com.ureka.play4change.application.port.TaskUseCase
 import com.ureka.play4change.application.port.TodayTaskResult
+import com.ureka.play4change.domain.identity.UserRepository
 import com.ureka.play4change.application.struggle.ErrorPatternClassifier
 import com.ureka.play4change.application.struggle.HandleStruggleService
 import com.ureka.play4change.domain.enrollment.AssignmentStatus
@@ -38,6 +39,8 @@ class TaskService(
     private val topicModuleRepository: TopicModuleRepository,
     private val taskTemplateRepository: TaskTemplateRepository,
     private val enrollmentRepository: EnrollmentRepository,
+    private val userRepository: UserRepository,
+    private val languageGatingService: LanguageGatingService,
     private val handleStruggleService: HandleStruggleService,
     private val peerReviewUseCase: PeerReviewUseCase,
     private val registry: MeterRegistry
@@ -59,17 +62,32 @@ class TaskService(
                 val template = taskTemplateRepository.findById(a.taskTemplateId)
                 if (template?.dayIndex == dayIndex) Pair(a, template) else null
             }
-            if (existingPair != null) return@either TodayTaskResult(existingPair.first, existingPair.second)
+            if (existingPair != null) return@either TodayTaskResult.Available(existingPair.first, existingPair.second)
 
-            // Create new assignment for today
+            // Resolve which language variant to serve
+            val user = ensureNotNull(userRepository.findById(userId)) {
+                NotFound.ResourceNotFound("User", userId)
+            }
+            val topic = ensureNotNull(topicRepository.findById(topicId)) {
+                NotFound.ResourceNotFound("Topic", topicId)
+            }
             val modules = topicModuleRepository.findByTopicId(topicId)
             val module = ensureNotNull(modules.firstOrNull()) {
                 NotFound.ResourceNotFound("TopicModule", topicId)
             }
-            val templates = taskTemplateRepository.findCurrentByModuleId(module.id)
-            val template = ensureNotNull(templates.firstOrNull { it.dayIndex == dayIndex }) {
-                NotFound.ResourceNotFound("TaskTemplate", "dayIndex=$dayIndex")
+
+            val gatingResult = languageGatingService.resolveTemplate(
+                preferredLanguage = user.preferredLanguage,
+                topicSourceLanguage = topic.language,
+                moduleId = module.id,
+                dayIndex = dayIndex
+            )
+
+            if (gatingResult is LanguageGatingResult.Pending) {
+                return@either TodayTaskResult.GenerationPending(gatingResult.requestedLanguage)
             }
+
+            val template = (gatingResult as LanguageGatingResult.Available).template
 
             val shuffledOrder = TaskShuffleSeed.shuffleOptions(
                 template.options?.size ?: 0,
@@ -99,7 +117,7 @@ class TaskService(
                     photoUrl = null
                 )
             )
-            TodayTaskResult(savedAssignment, template)
+            TodayTaskResult.Available(savedAssignment, template)
         }
 
     override fun submitAnswer(command: SubmitAnswerCommand): Either<AppError, SubmitResult> = either {

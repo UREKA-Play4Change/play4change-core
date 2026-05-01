@@ -65,7 +65,7 @@ multilingual generation gated by subscriber language, dynamic micro-competence b
 ---
 
 ### Task 2.3 — Multi-language: subscriber language detection and gated generation trigger
-- [ ] **What:** When a user subscribes to a topic, their preferred language (BCP 47 tag stored
+- [x] **What:** When a user subscribes to a topic, their preferred language (BCP 47 tag stored
       on their user profile) is used to select which language variant of task instances to
       return. If a variant for that language does not exist yet, trigger generation.
 - **Design constraints:**

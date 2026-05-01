@@ -95,4 +95,31 @@ added in 2.16.0) — same root cause, different field.
 
 ---
 
+## [2026-05-01] [enrollment] — Language gating at read time via supported-languages whitelist
+
+**Context:** Task 2.3 requires that users receive task templates in their preferred BCP 47
+language. The system must gate generation: only produce a language variant when the user's
+language is in the whitelist AND no variant already exists. If the language is not supported,
+fall back to the topic's source language immediately (no 202, no generation trigger).
+
+**Decision:** Implement `LanguageGatingService` in the application layer with two outcomes:
+`Available` (serve template in effective language) or `Pending` (trigger generation, return
+HTTP 202 + `X-Generation-Status: PENDING`). Unsupported languages fall back to the topic
+source language and return `Available` without triggering generation. Language variants are
+stored as additional `TaskTemplate` rows with a `language` column. The unique DB index is
+`(module_id, day_index, pool_index, language) WHERE is_current = TRUE`. Variants are generated
+lazily on first request, not eagerly at topic creation time.
+
+**Why not eager generation at topic creation time:** Eager generation would call Mistral N×L
+times on every topic creation (N tasks × L languages). At 3 supported languages this triples
+AI cost for every topic even if no user in that language ever enrols. Lazy gating reduces cost
+and allows the supported-languages list to grow without retroactive regeneration.
+
+**Why not a separate TaskInstance table:** Re-using `TaskTemplate` with a `language` column
+is simpler; the existing unique index cleanly prevents duplicates with no new entity needed.
+
+**Phase:** 02, Task 2.3
+
+---
+
 *(New entries are prepended above this line — most recent first)*

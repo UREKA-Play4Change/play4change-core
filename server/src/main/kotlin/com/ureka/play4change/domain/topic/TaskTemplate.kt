@@ -19,6 +19,7 @@ data class TaskTemplate(
     val isCurrent: Boolean,
     val supersededBy: String?,
     val embedding: FloatArray?,
+    val language: String = "en",
     val createdAt: OffsetDateTime
 ) {
     fun nextVersion(newId: String = UUID.randomUUID().toString()): TaskTemplate =

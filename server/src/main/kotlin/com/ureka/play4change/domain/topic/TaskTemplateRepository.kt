@@ -4,5 +4,6 @@ interface TaskTemplateRepository {
     fun saveAll(templates: List<TaskTemplate>): List<TaskTemplate>
     fun findById(id: String): TaskTemplate?
     fun findCurrentByModuleId(moduleId: String): List<TaskTemplate>
+    fun findCurrentByModuleIdAndDayIndexAndLanguage(moduleId: String, dayIndex: Int, language: String): TaskTemplate?
     fun markAllSuperseded(moduleId: String)
 }
