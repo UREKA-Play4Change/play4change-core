@@ -5,7 +5,15 @@ useDefault = true
 
 # Add [[allowlist]] entries below for confirmed false positives only.
 # Every suppressed finding MUST include a description field explaining why it is not a real credential.
-# Example:
-# [[allowlist]]
-# description = "Test fixture — not a real credential"
-# regexes = ["FAKE_SECRET_FOR_TESTING"]
+
+[[allowlist]]
+description = """
+demo/*.http files are JetBrains HTTP Client fixtures for manual API testing.
+The hex strings flagged as 'generic-api-key' are example token values that
+developers copy-paste from server logs or responses into these placeholders.
+Magic-link tokens are single-use with a 15-minute TTL (ADR-011) so any token
+committed here is cryptographically useless. Refresh tokens rotate on every use
+and are revoked on logout; any token committed in April 2026 is long expired.
+Assessed 2026-05-01: confirmed development artefacts, not live credentials.
+"""
+paths = ['''demo/.*\.http$''']
