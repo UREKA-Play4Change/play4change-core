@@ -35,6 +35,7 @@ class TaskGenerationOrchestrator(
     private val fileStoragePort: FileStoragePort,
     private val contentExtractorPort: ContentExtractorPort,
     private val taskGenerationPort: TaskGenerationPort,
+    private val batchInstanceGenerationService: BatchInstanceGenerationService,
     private val registry: MeterRegistry,
     @Value("\${ai.mistral.timeout-seconds:60}") private val timeoutSeconds: Long
 ) {
@@ -140,6 +141,7 @@ class TaskGenerationOrchestrator(
                         }
 
                     taskTemplateRepository.saveAll(templates)
+                    batchInstanceGenerationService.generateAndSave(templates)
                     topicRepository.updateStatus(topicId, TopicStatus.ACTIVE)
                     log.info(
                         "Topic {} generation complete — {} task(s) created",

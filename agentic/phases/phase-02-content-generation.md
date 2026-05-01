@@ -140,7 +140,7 @@ multilingual generation gated by subscriber language, dynamic micro-competence b
 ---
 
 ### Task 2.5 — Anti-cheat: batch N-instance generation per task
-- [ ] **What:** Generate N shuffled instances of each task in a single Mistral call,
+- [x] **What:** Generate N shuffled instances of each task in a single Mistral call,
       where N is a configurable parameter (default: 5). This reduces API call overhead
       and ensures a pool of variants exists before any user requests a task.
 - **Design constraints:**
