@@ -6,10 +6,10 @@ import com.ureka.play4change.domain.peerreview.PeerReview
 import com.ureka.play4change.domain.topic.TaskTemplate
 import com.ureka.play4change.error.AppError
 
-data class TodayTaskResult(
-    val assignment: TaskAssignment,
-    val template: TaskTemplate
-)
+sealed class TodayTaskResult {
+    data class Available(val assignment: TaskAssignment, val template: TaskTemplate) : TodayTaskResult()
+    data class GenerationPending(val language: String) : TodayTaskResult()
+}
 
 data class SubmitPhotoCommand(
     val userId: String,

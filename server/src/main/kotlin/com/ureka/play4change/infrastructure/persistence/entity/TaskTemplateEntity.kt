@@ -55,6 +55,9 @@ class TaskTemplateEntity(
     @Column(name = "superseded_by", length = 36)
     var supersededBy: String? = null,
 
+    @Column(name = "language", nullable = false, length = 10)
+    val language: String = "en",
+
     @Convert(converter = VectorConverter::class)
     @Column(columnDefinition = "vector(1024)")
     @ColumnTransformer(write = "?::vector")

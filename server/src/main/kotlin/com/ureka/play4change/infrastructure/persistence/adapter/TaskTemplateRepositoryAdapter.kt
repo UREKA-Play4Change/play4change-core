@@ -28,6 +28,13 @@ class TaskTemplateRepositoryAdapter(
     override fun findCurrentByModuleId(moduleId: String): List<TaskTemplate> =
         jpa.findCurrentByModuleId(moduleId).map { it.toDomain() }
 
+    override fun findCurrentByModuleIdAndDayIndexAndLanguage(
+        moduleId: String,
+        dayIndex: Int,
+        language: String
+    ): TaskTemplate? =
+        jpa.findByModuleIdAndDayIndexAndLanguageAndIsCurrentTrue(moduleId, dayIndex, language)?.toDomain()
+
     override fun markAllSuperseded(moduleId: String) {
         val current = jpa.findCurrentByModuleId(moduleId)
         current.forEach { it.isCurrent = false }
@@ -50,6 +57,7 @@ class TaskTemplateRepositoryAdapter(
         isCurrent = isCurrent,
         supersededBy = supersededBy,
         embedding = embedding,
+        language = language,
         createdAt = createdAt
     )
 
@@ -71,6 +79,7 @@ class TaskTemplateRepositoryAdapter(
             isCurrent = isCurrent,
             supersededBy = supersededBy,
             embedding = embedding,
+            language = language,
             createdAt = createdAt
         )
     }
