@@ -128,7 +128,7 @@ attack surface, a STRIDE analysis is added as a subsection.
 | Risk ID | Fixed in Phase | Commit | Summary |
 |---------|--------------|--------|---------|
 | R04 | Phase 01, Task 1.4 | cc798c4 | Name.kt validates non-null/blank/2–100 chars/no control chars. Password.kt deleted (unused). |
-| R10 | Phase 01, Task 1.7 | — | gitleaks-action@v2 added to CI pre-build step. fetch-depth: 0 enables full history scan. Suppressions in .gitleaks.toml. |
+| R10 | Phase 01, Task 1.7 | 2ff82e1 | gitleaks CLI 8.18.4 added to CI pre-build step. fetch-depth: 0 enables full history scan. First scan found 6 findings in demo/*.http — assessed as expired development artefacts (magic-link tokens: 15-min single-use TTL; refresh tokens: rotated/revoked). Suppressed via path allowlist in .gitleaks.toml with full justification. No live credentials were present. |
 
 ---
 
