@@ -131,7 +131,7 @@ fix Name/Password value object stubs, document initial security posture, add OWA
 ---
 
 ### Task 1.7 — Add gitleaks secret scanning to CI (ADR-018 G6)
-- [ ] **What:** Add `gitleaks` to the GitHub Actions CI pipeline to prevent
+- [x] **What:** Add `gitleaks` to the GitHub Actions CI pipeline to prevent
       secrets from being committed to the repository. This closes the gap identified
       in ADR-018 (G6) and THREAT-LOG.md R10.
 - **Design constraints:**
