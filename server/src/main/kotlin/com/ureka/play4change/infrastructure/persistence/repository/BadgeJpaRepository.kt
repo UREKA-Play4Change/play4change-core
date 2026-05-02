@@ -10,4 +10,7 @@ interface BadgeJpaRepository : JpaRepository<BadgeEntity, String> {
     fun findByUserIdAndMicroCompetenceId(userId: String, microCompetenceId: String): BadgeEntity?
 
     fun findByUserId(userId: String): List<BadgeEntity>
+
+    @Query("SELECT b FROM BadgeEntity b WHERE b.microCompetence.id = :microCompetenceId")
+    fun findByMicroCompetenceId(microCompetenceId: String): List<BadgeEntity>
 }

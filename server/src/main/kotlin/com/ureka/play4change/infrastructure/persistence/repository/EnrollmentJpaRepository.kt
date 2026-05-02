@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository
 interface EnrollmentJpaRepository : JpaRepository<EnrollmentEntity, String> {
     fun findByUserIdAndTopicId(userId: String, topicId: String): EnrollmentEntity?
     fun findByUserIdAndStatus(userId: String, status: String): List<EnrollmentEntity>
+    fun countByTopicId(topicId: String): Long
 }
