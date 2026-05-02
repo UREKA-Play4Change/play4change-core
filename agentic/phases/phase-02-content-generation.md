@@ -196,7 +196,7 @@ multilingual generation gated by subscriber language, dynamic micro-competence b
 ---
 
 ### Task 2.7 — Badges: API endpoints
-- [ ] **What:** Add two new endpoints:
+- [x] **What:** Add two new endpoints:
       `GET /profile/badges` — returns the authenticated user's earned badges.
       `GET /admin/topics/{topicId}/badges` — returns badge issuance stats for a topic
       (total earned, percentage of enrolled users who earned it).
