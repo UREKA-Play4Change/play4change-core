@@ -1,7 +1,16 @@
 package com.ureka.play4change.web.admin.dto
 
+import com.ureka.play4change.application.port.TopicDetail
 import com.ureka.play4change.domain.topic.Topic
+import com.ureka.play4change.domain.topic.TopicPhaseLog
 import java.time.OffsetDateTime
+
+data class PhaseLogEntry(
+    val fromPhase: String,
+    val toPhase: String,
+    val transitionedAt: OffsetDateTime,
+    val durationMs: Long
+)
 
 data class TopicResponse(
     val id: String,
@@ -25,10 +34,19 @@ data class TopicResponse(
     val createdBy: String,
 
     val stats: TopicStats? = null,
-    val contentTruncated: Boolean
+    val contentTruncated: Boolean,
+
+    // Phase 02, Task 2.8 — generation pipeline phase state
+    val currentPhase: String,
+    val phaseUpdatedAt: OffsetDateTime,
+    val generationLog: List<PhaseLogEntry>? = null
 ) {
     companion object {
-        fun from(topic: Topic) = TopicResponse(
+        fun from(topic: Topic): TopicResponse = from(topic, null)
+
+        fun from(detail: TopicDetail): TopicResponse = from(detail.topic, detail.generationLog)
+
+        private fun from(topic: Topic, log: List<TopicPhaseLog>?): TopicResponse = TopicResponse(
             id = topic.id,
             title = topic.title,
             description = topic.description,
@@ -45,7 +63,17 @@ data class TopicResponse(
             expiresAt = topic.expiresAt,
             createdBy = topic.createdBy,
             stats = null,
-            contentTruncated = topic.rawExtractedText != null && topic.rawExtractedText.length >= 8000
+            contentTruncated = topic.rawExtractedText != null && topic.rawExtractedText.length >= 8000,
+            currentPhase = topic.currentPhase.name,
+            phaseUpdatedAt = topic.phaseUpdatedAt,
+            generationLog = log?.map {
+                PhaseLogEntry(
+                    fromPhase = it.fromPhase.name,
+                    toPhase = it.toPhase.name,
+                    transitionedAt = it.transitionedAt,
+                    durationMs = it.durationMs
+                )
+            }
         )
     }
 }

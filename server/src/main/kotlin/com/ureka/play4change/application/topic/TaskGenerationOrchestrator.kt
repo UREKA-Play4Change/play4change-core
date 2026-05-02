@@ -3,6 +3,7 @@ package com.ureka.play4change.application.topic
 import com.ureka.play4change.application.port.ContentExtractorPort
 import com.ureka.play4change.application.port.FileStoragePort
 import com.ureka.play4change.domain.topic.ContentSourceType
+import com.ureka.play4change.domain.topic.GenerationPhase
 import com.ureka.play4change.domain.topic.TaskTemplate
 import com.ureka.play4change.domain.topic.TaskTemplateRepository
 import com.ureka.play4change.domain.topic.TaskType
@@ -36,6 +37,7 @@ class TaskGenerationOrchestrator(
     private val contentExtractorPort: ContentExtractorPort,
     private val taskGenerationPort: TaskGenerationPort,
     private val batchInstanceGenerationService: BatchInstanceGenerationService,
+    private val phaseTransitionService: PhaseTransitionService,
     private val registry: MeterRegistry,
     @Value("\${ai.mistral.timeout-seconds:60}") private val timeoutSeconds: Long
 ) {
@@ -45,12 +47,12 @@ class TaskGenerationOrchestrator(
     fun generateAsync(topicId: String) {
         val sample = Timer.start(registry)
         try {
+            // --- INGESTION phase: fetch/validate content ---
             topicRepository.updateStatus(topicId, TopicStatus.GENERATING)
 
             val topic = topicRepository.findById(topicId)
                 ?: throw IllegalStateException("Topic $topicId not found after status update")
 
-            // Use cached text or re-fetch from MinIO
             val rawText = topic.rawExtractedText
                 ?: run {
                     val storageKey = contentKeyFor(topicId, topic.contentSourceType)
@@ -61,13 +63,15 @@ class TaskGenerationOrchestrator(
                     }
                 }
 
-            // Clean up any previous modules + task templates (handles regeneration)
+            // INGESTION → ANALYSIS
+            phaseTransitionService.transitionTo(topicId, GenerationPhase.ANALYSIS)
+
+            // --- ANALYSIS phase: clean up previous data and prepare module ---
             topicModuleRepository.findByTopicId(topicId).forEach { module ->
                 taskTemplateRepository.markAllSuperseded(module.id)
             }
             topicModuleRepository.deleteByTopicId(topicId)
 
-            // Create the single module for this topic
             val module = topicModuleRepository.save(
                 TopicModule(
                     id = UUID.randomUUID().toString(),
@@ -94,6 +98,10 @@ class TaskGenerationOrchestrator(
                 moduleObjective = topic.description.take(500)
             )
 
+            // ANALYSIS → GENERATION
+            phaseTransitionService.transitionTo(topicId, GenerationPhase.GENERATION)
+
+            // --- GENERATION phase: AI call ---
             val result = runBlocking {
                 withTimeoutOrNull(timeoutSeconds * 1_000L) {
                     taskGenerationPort.generateTasks(request)
@@ -102,6 +110,7 @@ class TaskGenerationOrchestrator(
 
             if (result == null) {
                 log.error("Task generation timed out ({}s) for topic {}", timeoutSeconds, topicId)
+                phaseTransitionService.transitionTo(topicId, GenerationPhase.FAILED)
                 topicRepository.updateStatus(topicId, TopicStatus.FAILED)
                 sample.stop(registry.timer("task_generation_duration_seconds", "status", "timeout"))
                 return
@@ -110,10 +119,15 @@ class TaskGenerationOrchestrator(
             result.fold(
                 ifLeft = { error ->
                     log.error("Task generation returned error for topic {}: {}", topicId, error)
+                    phaseTransitionService.transitionTo(topicId, GenerationPhase.FAILED)
                     topicRepository.updateStatus(topicId, TopicStatus.FAILED)
                     sample.stop(registry.timer("task_generation_duration_seconds", "status", "failed"))
                 },
                 ifRight = { generationResult ->
+                    // GENERATION → INDEXING
+                    phaseTransitionService.transitionTo(topicId, GenerationPhase.INDEXING)
+
+                    // --- INDEXING phase: persist templates and instances ---
                     val templates = generationResult.tasks
                         .filter { it.status == GenerationStatus.SUCCESS }
                         .mapIndexed { idx, task ->
@@ -142,6 +156,9 @@ class TaskGenerationOrchestrator(
 
                     taskTemplateRepository.saveAll(templates)
                     batchInstanceGenerationService.generateAndSave(templates)
+
+                    // INDEXING → ACTIVE
+                    phaseTransitionService.transitionTo(topicId, GenerationPhase.ACTIVE)
                     topicRepository.updateStatus(topicId, TopicStatus.ACTIVE)
                     log.info(
                         "Topic {} generation complete — {} task(s) created",
@@ -152,6 +169,7 @@ class TaskGenerationOrchestrator(
             )
         } catch (ex: Exception) {
             log.error("Unexpected error during task generation for topic {}: {}", topicId, ex.message, ex)
+            phaseTransitionService.transitionTo(topicId, GenerationPhase.FAILED)
             topicRepository.updateStatus(topicId, TopicStatus.FAILED)
             sample.stop(registry.timer("task_generation_duration_seconds", "status", "failed"))
         }

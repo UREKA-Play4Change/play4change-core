@@ -222,7 +222,7 @@ multilingual generation gated by subscriber language, dynamic micro-competence b
 ---
 
 ### Task 2.8 — 4-phase pipeline: GenerationPhase enum and phase state in API
-- [ ] **What:** Make the 4-phase generation pipeline (INGESTION→ANALYSIS→GENERATION→INDEXING)
+- [x] **What:** Make the 4-phase generation pipeline (INGESTION→ANALYSIS→GENERATION→INDEXING)
       visible in the API. The admin can poll `GET /admin/topics/{id}` to see the current phase.
 - **Design constraints:**
   - Add `GenerationPhase` enum: `INGESTION`, `ANALYSIS`, `GENERATION`, `INDEXING`, `ACTIVE`, `FAILED`.

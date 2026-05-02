@@ -57,5 +57,11 @@ class TopicEntity(
     var version: Long = 0,
 
     @Column(name = "status_updated_at", nullable = false)
-    var statusUpdatedAt: OffsetDateTime = OffsetDateTime.now()
+    var statusUpdatedAt: OffsetDateTime = OffsetDateTime.now(),
+
+    @Column(name = "current_phase", nullable = false, length = 20)
+    var currentPhase: String = "INGESTION",
+
+    @Column(name = "phase_updated_at", nullable = false)
+    var phaseUpdatedAt: OffsetDateTime = OffsetDateTime.now()
 )

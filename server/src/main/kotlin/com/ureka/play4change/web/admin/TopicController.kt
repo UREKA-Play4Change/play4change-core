@@ -92,7 +92,10 @@ class TopicController(private val topicUseCase: TopicUseCase) {
 
     @GetMapping("/{id}")
     fun getById(@PathVariable id: String): ResponseEntity<TopicResponse> =
-        topicUseCase.getById(id).toResponse(HttpStatus.OK)
+        topicUseCase.getByIdWithLog(id).fold(
+            ifLeft = { it.toErrorResponse() },
+            ifRight = { ResponseEntity.ok(TopicResponse.from(it)) }
+        )
 
     @PostMapping("/{id}/regenerate")
     fun regenerate(
