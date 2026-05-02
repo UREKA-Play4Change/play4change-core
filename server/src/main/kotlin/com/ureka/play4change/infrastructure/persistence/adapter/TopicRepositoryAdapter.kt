@@ -65,6 +65,14 @@ class TopicRepositoryAdapter(
         }
     }
 
+    override fun updatePhase(id: String, phase: GenerationPhase, updatedAt: OffsetDateTime) {
+        jpa.findById(id).ifPresent { entity ->
+            entity.currentPhase = phase.name
+            entity.phaseUpdatedAt = updatedAt
+            jpa.save(entity)
+        }
+    }
+
     private fun TopicEntity.toDomain(): Topic = Topic(
         id = id,
         title = title,
@@ -82,7 +90,9 @@ class TopicRepositoryAdapter(
         createdBy = createdBy,
         createdAt = createdAt,
         version = version,
-        statusUpdatedAt = statusUpdatedAt
+        statusUpdatedAt = statusUpdatedAt,
+        currentPhase = GenerationPhase.valueOf(currentPhase),
+        phaseUpdatedAt = phaseUpdatedAt
     )
 
     private fun Topic.toEntity(): TopicEntity = TopicEntity(
@@ -101,6 +111,8 @@ class TopicRepositoryAdapter(
         status = status.name,
         createdBy = createdBy,
         createdAt = createdAt,
-        statusUpdatedAt = statusUpdatedAt
+        statusUpdatedAt = statusUpdatedAt,
+        currentPhase = currentPhase.name,
+        phaseUpdatedAt = phaseUpdatedAt
     )
 }

@@ -13,4 +13,5 @@ interface TopicRepository {
     fun findStuckGenerating(cutoff: OffsetDateTime): List<Topic>
     fun save(topic: Topic): Topic
     fun updateStatus(id: String, status: TopicStatus)
+    fun updatePhase(id: String, phase: GenerationPhase, updatedAt: OffsetDateTime)
 }

@@ -8,10 +8,13 @@ import com.ureka.play4change.application.port.ContentExtractorPort
 import com.ureka.play4change.application.port.CreatePdfTopicCommand
 import com.ureka.play4change.application.port.CreateUrlTopicCommand
 import com.ureka.play4change.application.port.FileStoragePort
+import com.ureka.play4change.application.port.TopicDetail
 import com.ureka.play4change.application.port.TopicUseCase
 import com.ureka.play4change.domain.topic.ContentSourceType
+import com.ureka.play4change.domain.topic.GenerationPhase
 import com.ureka.play4change.domain.topic.PageResult
 import com.ureka.play4change.domain.topic.Topic
+import com.ureka.play4change.domain.topic.TopicPhaseLogRepository
 import com.ureka.play4change.domain.topic.TopicRepository
 import com.ureka.play4change.domain.topic.TopicStatus
 import com.ureka.play4change.error.AppError
@@ -29,7 +32,9 @@ class TopicManagementService(
     private val topicRepository: TopicRepository,
     private val fileStoragePort: FileStoragePort,
     private val contentExtractorPort: ContentExtractorPort,
-    private val orchestrator: TaskGenerationOrchestrator
+    private val orchestrator: TaskGenerationOrchestrator,
+    private val phaseTransitionService: PhaseTransitionService,
+    private val phaseLogRepository: TopicPhaseLogRepository
 ) : TopicUseCase {
 
     private val log = LoggerFactory.getLogger(TopicManagementService::class.java)
@@ -62,6 +67,7 @@ class TopicManagementService(
             raise(InternalServerError.UnexpectedException)
         }
 
+        val now = OffsetDateTime.now()
         val topic = topicRepository.save(
             Topic(
                 id = topicId,
@@ -78,7 +84,9 @@ class TopicManagementService(
                 language = command.language,
                 status = TopicStatus.PENDING,
                 createdBy = adminId,
-                createdAt = OffsetDateTime.now()
+                createdAt = now,
+                currentPhase = GenerationPhase.INGESTION,
+                phaseUpdatedAt = now
             )
         )
 
@@ -118,6 +126,7 @@ class TopicManagementService(
             raise(InternalServerError.UnexpectedException)
         }
 
+        val now = OffsetDateTime.now()
         val topic = topicRepository.save(
             Topic(
                 id = topicId,
@@ -134,7 +143,9 @@ class TopicManagementService(
                 language = command.language,
                 status = TopicStatus.PENDING,
                 createdBy = adminId,
-                createdAt = OffsetDateTime.now()
+                createdAt = now,
+                currentPhase = GenerationPhase.INGESTION,
+                phaseUpdatedAt = now
             )
         )
 
@@ -147,6 +158,13 @@ class TopicManagementService(
         ensureNotNull(topicRepository.findById(topicId)) {
             NotFound.ResourceNotFound("Topic", topicId)
         }
+    }
+
+    override fun getByIdWithLog(topicId: String): Either<AppError, TopicDetail> = either {
+        val topic = ensureNotNull(topicRepository.findById(topicId)) {
+            NotFound.ResourceNotFound("Topic", topicId)
+        }
+        TopicDetail(topic, phaseLogRepository.findByTopicId(topicId))
     }
 
     override fun listAll(statusFilter: String?, page: Int, size: Int): PageResult<Topic> {
@@ -167,7 +185,8 @@ class TopicManagementService(
         }
 
         log.info("Regeneration of topic {} requested by admin {}", topicId, adminId)
+        phaseTransitionService.transitionTo(topicId, GenerationPhase.INGESTION)
         orchestrator.generateAsync(topicId)
-        topic
+        topicRepository.findById(topicId) ?: topic
     }
 }
