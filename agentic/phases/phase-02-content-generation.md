@@ -255,7 +255,7 @@ multilingual generation gated by subscriber language, dynamic micro-competence b
 ---
 
 ### Task 2.9 — Manual test recipe for Phase 02
-- [ ] **What:** Write the full end-to-end manual test recipe for Phase 02 in
+- [x] **What:** Write the full end-to-end manual test recipe for Phase 02 in
       `agentic/manual-testing/phase-02-recipe.md`.
 - **Design constraints:** The recipe must be executable by a non-developer using only
       curl commands and the admin web UI (or Swagger). No code knowledge required.
