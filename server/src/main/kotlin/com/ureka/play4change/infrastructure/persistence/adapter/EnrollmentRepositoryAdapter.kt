@@ -54,6 +54,9 @@ class EnrollmentRepositoryAdapter(
             excludeUserId = excludeUserId
         ).map { it.toDomain() }
 
+    override fun countByTopicId(topicId: String): Long =
+        enrollmentJpa.countByTopicId(topicId)
+
     override fun save(enrollment: Enrollment): Enrollment {
         val topicEntity = topicJpa.getReferenceById(enrollment.topicId)
         val moduleEntity = moduleJpa.getReferenceById(enrollment.topicModuleId)

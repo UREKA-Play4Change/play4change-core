@@ -18,6 +18,9 @@ class BadgeRepositoryAdapter(
     override fun findMicroCompetenceByTopicId(topicId: String): MicroCompetence? =
         microCompetenceJpa.findByTopicId(topicId)?.toDomain()
 
+    override fun findMicroCompetenceById(id: String): MicroCompetence? =
+        microCompetenceJpa.findById(id).orElse(null)?.toDomain()
+
     override fun findBadgeByUserIdAndMicroCompetenceId(userId: String, microCompetenceId: String): Badge? =
         badgeJpa.findByUserIdAndMicroCompetenceId(userId, microCompetenceId)?.toDomain()
 
@@ -35,6 +38,9 @@ class BadgeRepositoryAdapter(
 
     override fun findBadgesByUserId(userId: String): List<Badge> =
         badgeJpa.findByUserId(userId).map { it.toDomain() }
+
+    override fun findBadgesByMicroCompetenceId(microCompetenceId: String): List<Badge> =
+        badgeJpa.findByMicroCompetenceId(microCompetenceId).map { it.toDomain() }
 
     override fun saveMicroCompetence(microCompetence: MicroCompetence): MicroCompetence =
         microCompetenceJpa.save(

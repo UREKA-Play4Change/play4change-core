@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.access.AccessDeniedHandler
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
@@ -21,6 +22,14 @@ class SecurityConfig(
     private val objectMapper: ObjectMapper,
     private val corsConfigurationSource: CorsConfigurationSource
 ) {
+
+    @Bean
+    fun authenticationEntryPoint(): AuthenticationEntryPoint =
+        AuthenticationEntryPoint { _, response, _ ->
+            response.status = HttpServletResponse.SC_UNAUTHORIZED
+            response.contentType = "application/json"
+            response.writer.write(objectMapper.writeValueAsString(MessageResponse("Authentication required")))
+        }
 
     @Bean
     fun accessDeniedHandler(): AccessDeniedHandler =
@@ -51,7 +60,10 @@ class SecurityConfig(
                     .requestMatchers("/admin/**").hasRole("ADMIN")
                     .anyRequest().authenticated()
             }
-            .exceptionHandling { it.accessDeniedHandler(accessDeniedHandler()) }
+            .exceptionHandling {
+                it.authenticationEntryPoint(authenticationEntryPoint())
+                it.accessDeniedHandler(accessDeniedHandler())
+            }
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
         return http.build()
     }
