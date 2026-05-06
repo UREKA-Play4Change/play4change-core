@@ -38,7 +38,9 @@ object StruggleAnalysisPrompt {
             "title": "string (max 60 chars)",
             "description": "string (max 300 chars)",
             "hint": "string (max 150 chars)",
-            "pointsReward": number (5-50, lower than main tasks to reflect smaller scope)
+            "pointsReward": number (5-50, lower than main tasks to reflect smaller scope),
+            "options": ["string", "string", "string", "string"],
+            "correctAnswerIndex": number (0-based index into options array)
           }
         ]
     """.trimIndent()
