@@ -7,6 +7,7 @@ import arrow.core.raise.ensureNotNull
 import com.ureka.play4change.application.port.AdaptiveSubmitResult
 import com.ureka.play4change.application.port.StruggleUseCase
 import com.ureka.play4change.application.port.SubmitAdaptiveTaskCommand
+import com.ureka.play4change.domain.enrollment.AssignmentStatus
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
 import com.ureka.play4change.domain.struggle.StruggleRepository
 import com.ureka.play4change.domain.struggle.StruggleSession
@@ -96,9 +97,23 @@ class AdaptiveTaskService(
             }
 
             if (allComplete) {
+                // Reset the original task assignment so the learner can retry it once (ADR-013 Decision 5)
+                val originalAssignment = enrollmentRepository.findAssignmentById(session.originalTaskAssignmentId)
+                if (originalAssignment != null) {
+                    enrollmentRepository.saveAssignment(
+                        originalAssignment.copy(
+                            status = AssignmentStatus.PENDING,
+                            wrongAttemptCount = 0,
+                            submittedAt = null,
+                            selectedOption = null,
+                            isCorrect = null,
+                            pointsAwarded = 0
+                        )
+                    )
+                }
                 log.info(
-                    "Struggle session {} resolved for enrollment {}",
-                    session.id, session.enrollmentId
+                    "Struggle session {} resolved for enrollment {} — original assignment {} reset to PENDING",
+                    session.id, session.enrollmentId, session.originalTaskAssignmentId
                 )
             }
 

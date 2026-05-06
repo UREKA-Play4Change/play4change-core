@@ -43,7 +43,7 @@ flow, user language/timezone preferences.
 ---
 
 ### Task 3.2 — Struggle path full wire-up
-- [ ] **What:** Audit the existing struggle path code and fully wire it end-to-end.
+- [x] **What:** Audit the existing struggle path code and fully wire it end-to-end.
       Before writing any code, document what is present, what is missing, and what is broken
       in `agentic/ISSUES.md`. Then implement the missing pieces.
 - **Design constraints:**
