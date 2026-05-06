@@ -12,5 +12,6 @@ data class User(
     val providerId: String?,
     val preferredLanguage: String,
     val audienceLevel: String,
-    val createdAt: OffsetDateTime
+    val createdAt: OffsetDateTime,
+    val timezone: String? = null
 )

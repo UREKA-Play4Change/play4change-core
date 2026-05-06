@@ -24,33 +24,19 @@ class UserRepositoryAdapter(
         jpa.findByProviderAndProviderId(provider.name, providerId)?.toDomain()
 
     override fun save(user: User): User {
-        val entity = if (user.id.isBlank()) {
-            UserEntity(
-                id = UUID.randomUUID().toString(),
-                email = user.email,
-                name = user.name,
-                avatarUrl = user.avatarUrl,
-                role = user.role.name,
-                provider = user.provider.name,
-                providerId = user.providerId,
-                preferredLanguage = user.preferredLanguage,
-                audienceLevel = user.audienceLevel,
-                createdAt = user.createdAt
-            )
-        } else {
-            UserEntity(
-                id = user.id,
-                email = user.email,
-                name = user.name,
-                avatarUrl = user.avatarUrl,
-                role = user.role.name,
-                provider = user.provider.name,
-                providerId = user.providerId,
-                preferredLanguage = user.preferredLanguage,
-                audienceLevel = user.audienceLevel,
-                createdAt = user.createdAt
-            )
-        }
+        val entity = UserEntity(
+            id = if (user.id.isBlank()) UUID.randomUUID().toString() else user.id,
+            email = user.email,
+            name = user.name,
+            avatarUrl = user.avatarUrl,
+            role = user.role.name,
+            provider = user.provider.name,
+            providerId = user.providerId,
+            preferredLanguage = user.preferredLanguage,
+            audienceLevel = user.audienceLevel,
+            timezone = user.timezone,
+            createdAt = user.createdAt
+        )
         return jpa.save(entity).toDomain()
     }
 
@@ -64,6 +50,7 @@ class UserRepositoryAdapter(
         providerId = providerId,
         preferredLanguage = preferredLanguage,
         audienceLevel = audienceLevel,
+        timezone = timezone,
         createdAt = createdAt
     )
 }
