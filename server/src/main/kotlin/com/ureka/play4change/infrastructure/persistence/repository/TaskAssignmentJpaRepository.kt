@@ -2,6 +2,7 @@ package com.ureka.play4change.infrastructure.persistence.repository
 
 import com.ureka.play4change.infrastructure.persistence.entity.TaskAssignmentEntity
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
@@ -30,6 +31,10 @@ interface TaskAssignmentJpaRepository : JpaRepository<TaskAssignmentEntity, Stri
     fun findByUserIdAndStatus(userId: String, status: String): List<TaskAssignmentEntity>
 
     fun findAllByEnrollmentId(enrollmentId: String): List<TaskAssignmentEntity>
+
+    @Modifying
+    @Query("UPDATE TaskAssignmentEntity a SET a.taskInstanceId = null WHERE a.taskTemplate.id = :templateId")
+    fun clearTaskInstanceIdByTemplateId(@Param("templateId") templateId: String)
 
     @Query("""
         SELECT a FROM TaskAssignmentEntity a
