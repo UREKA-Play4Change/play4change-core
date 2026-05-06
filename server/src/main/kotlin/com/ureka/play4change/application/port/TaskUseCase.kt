@@ -5,10 +5,12 @@ import com.ureka.play4change.domain.enrollment.TaskAssignment
 import com.ureka.play4change.domain.peerreview.PeerReview
 import com.ureka.play4change.domain.topic.TaskTemplate
 import com.ureka.play4change.error.AppError
+import java.time.OffsetDateTime
 
 sealed class TodayTaskResult {
     data class Available(val assignment: TaskAssignment, val template: TaskTemplate) : TodayTaskResult()
     data class GenerationPending(val language: String) : TodayTaskResult()
+    data class NotAvailableYet(val availableAt: OffsetDateTime) : TodayTaskResult()
 }
 
 data class SubmitPhotoCommand(

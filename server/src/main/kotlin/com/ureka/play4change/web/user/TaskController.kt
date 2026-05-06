@@ -10,6 +10,7 @@ import com.ureka.play4change.web.user.dto.SubmitPhotoRequest
 import com.ureka.play4change.web.user.dto.SubmitResultResponse
 import com.ureka.play4change.web.user.dto.TaskResponse
 import com.ureka.play4change.web.user.dto.TodoSubmitResponse
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
@@ -36,6 +37,10 @@ class TaskController(
                         ResponseEntity.accepted()
                             .header("X-Generation-Status", "PENDING")
                             .header("X-Generation-Language", result.language)
+                            .build()
+                    is TodayTaskResult.NotAvailableYet ->
+                        ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .header("X-Task-Available-At", result.availableAt.toString())
                             .build()
                 }
             }

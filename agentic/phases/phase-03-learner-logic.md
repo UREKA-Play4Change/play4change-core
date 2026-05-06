@@ -1,6 +1,6 @@
 # Phase 03 — Learner Logic: Rate Control, Struggle Path & Reporting
 
-**Status:** `PENDING`
+**Status:** `IN PROGRESS`
 **Goal:** Configurable task delivery rate (default 1/day, dev mode: 2min), fully wired struggle
 path (detection→adaptive branch→resolution→return), bad-question reporting with admin correction
 flow, user language/timezone preferences.
@@ -12,7 +12,7 @@ flow, user language/timezone preferences.
 ## Tasks
 
 ### Task 3.1 — Configurable task delivery rate
-- [ ] **What:** Replace any hardcoded "one task per day" logic with a configurable
+- [x] **What:** Replace any hardcoded "one task per day" logic with a configurable
       `taskRateMinutes` setting. Add a dev-mode flag that reduces the rate to 2 minutes
       so that the full task progression can be tested without waiting 24 hours.
 - **Design constraints:**
