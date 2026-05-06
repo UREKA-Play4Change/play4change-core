@@ -86,7 +86,7 @@ flow, user language/timezone preferences.
 ---
 
 ### Task 3.3 — Bad question reporting
-- [ ] **What:** Add a reporting mechanism for learners to flag bad or incorrect questions.
+- [x] **What:** Add a reporting mechanism for learners to flag bad or incorrect questions.
       Admin can review reports, correct the question, and trigger instance regeneration.
 - **Design constraints:**
   - **Learner endpoint:** `POST /tasks/{taskId}/report`
@@ -124,7 +124,7 @@ flow, user language/timezone preferences.
 ---
 
 ### Task 3.4 — User preferences: language and timezone
-- [ ] **What:** Add language and timezone preferences to the user profile.
+- [x] **What:** Add language and timezone preferences to the user profile.
       Language must be a valid BCP 47 tag. Timezone must be a valid `java.time.ZoneId`.
 - **Design constraints:**
   - **Language preference:** BCP 47 tag (e.g. `en-GB`, `pt-PT`, `fr-FR`).
@@ -161,7 +161,7 @@ flow, user language/timezone preferences.
 ---
 
 ### Task 3.5 — Manual test recipe for Phase 03
-- [ ] **What:** Write the full end-to-end manual test recipe for Phase 03 in
+- [x] **What:** Write the full end-to-end manual test recipe for Phase 03 in
       `agentic/manual-testing/phase-03-recipe.md`.
 - **Design constraints:** The recipe must cover: dev-mode task rate, struggle trigger,
       struggle resolution, bad question report, admin correction, language preference update.
