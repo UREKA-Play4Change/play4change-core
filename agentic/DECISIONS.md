@@ -122,4 +122,28 @@ is simpler; the existing unique index cleanly prevents duplicates with no new en
 
 ---
 
+## [2026-05-06] [Security] — jsoup XSS sanitisation on task report reason (OWASP A03)
+
+**Context:** Task 3.3 adds a free-text `reason` field that learners submit when flagging a bad
+question. This field is stored as plain text and later rendered in the admin dashboard. Without
+sanitisation a stored XSS payload in the reason field would execute when an admin views reports.
+
+**Decision:** The `reason` field is stored as-is (preserving the raw input for auditability).
+On every read path (`getById`, `listByStatus`) the field is sanitised with
+`org.jsoup.Jsoup.clean(reason, Safelist.none())`, which strips all HTML tags and attributes
+before the value reaches the response DTO. The jsoup library (already on the classpath via
+Phase 2 content extraction) requires no new dependency.
+
+**Why not sanitise on write:** Sanitising on write destroys the original input permanently,
+making it impossible to audit what the learner actually submitted. Sanitising on read keeps
+the raw value in the DB for audit trails while ensuring no HTML ever reaches the browser.
+
+**Why not a Spring `@HtmlEscape` annotation:** `@HtmlEscape` escapes HTML entities rather
+than stripping tags; entities can still be rendered as markup in some contexts. `Safelist.none()`
+strips tags entirely, which is the correct defence for a field that should contain plain text.
+
+**Phase:** 03, Task 3.3
+
+---
+
 *(New entries are prepended above this line — most recent first)*

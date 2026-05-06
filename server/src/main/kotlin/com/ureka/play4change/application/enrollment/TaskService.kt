@@ -12,6 +12,7 @@ import com.ureka.play4change.application.port.SubmitResult
 import com.ureka.play4change.application.port.SubmitTodoResult
 import com.ureka.play4change.application.port.TaskUseCase
 import com.ureka.play4change.application.port.TodayTaskResult
+import com.ureka.play4change.config.TaskDeliveryProperties
 import com.ureka.play4change.domain.identity.UserRepository
 import com.ureka.play4change.application.struggle.ErrorPatternClassifier
 import com.ureka.play4change.application.struggle.HandleStruggleService
@@ -33,6 +34,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 @Service
@@ -47,7 +49,8 @@ class TaskService(
     private val handleStruggleService: HandleStruggleService,
     private val peerReviewUseCase: PeerReviewUseCase,
     private val badgeIssuancePort: BadgeIssuancePort,
-    private val registry: MeterRegistry
+    private val registry: MeterRegistry,
+    private val taskDeliveryProperties: TaskDeliveryProperties
 ) : TaskUseCase {
 
     private val log = LoggerFactory.getLogger(TaskService::class.java)
@@ -58,15 +61,40 @@ class TaskService(
                 NotFound.ResourceNotFound("Enrollment", "$userId/$topicId")
             }
 
-            val dayIndex = DayIndexCalculator.compute(enrollment.enrolledAt, timezone)
-
-            // Existing assignment for today?
             val assignments = enrollmentRepository.findAssignmentsByEnrollmentId(enrollment.id)
-            val existingPair = assignments.firstNotNullOfOrNull { a ->
-                val template = taskTemplateRepository.findById(a.taskTemplateId)
-                if (template?.dayIndex == dayIndex) Pair(a, template) else null
+
+            val dayIndex: Int
+            if (taskDeliveryProperties.devMode) {
+                // Dev mode: return the current PENDING assignment if one exists
+                val pendingPair = assignments.firstNotNullOfOrNull { a ->
+                    if (a.status == AssignmentStatus.PENDING) {
+                        taskTemplateRepository.findById(a.taskTemplateId)?.let { Pair(a, it) }
+                    } else null
+                }
+                if (pendingPair != null) return@either TodayTaskResult.Available(pendingPair.first, pendingPair.second)
+
+                // Rate check: last submission must be >= effectiveRateMinutes ago
+                val lastSubmittedAt = assignments.mapNotNull { it.submittedAt }.maxOrNull()
+                if (lastSubmittedAt != null) {
+                    val rateMinutes = taskDeliveryProperties.effectiveRateMinutes().toLong()
+                    val minutesSince = ChronoUnit.MINUTES.between(lastSubmittedAt, OffsetDateTime.now())
+                    if (minutesSince < rateMinutes) {
+                        return@either TodayTaskResult.NotAvailableYet(lastSubmittedAt.plusMinutes(rateMinutes))
+                    }
+                }
+
+                // Next day index = count of assignments that have been submitted
+                dayIndex = assignments.count { it.submittedAt != null }
+            } else {
+                // Prod mode: calendar-day-based, unlocks at midnight in user's timezone
+                dayIndex = DayIndexCalculator.compute(enrollment.enrolledAt, timezone)
+
+                val existingPair = assignments.firstNotNullOfOrNull { a ->
+                    val template = taskTemplateRepository.findById(a.taskTemplateId)
+                    if (template?.dayIndex == dayIndex) Pair(a, template) else null
+                }
+                if (existingPair != null) return@either TodayTaskResult.Available(existingPair.first, existingPair.second)
             }
-            if (existingPair != null) return@either TodayTaskResult.Available(existingPair.first, existingPair.second)
 
             // Resolve which language variant to serve
             val user = ensureNotNull(userRepository.findById(userId)) {

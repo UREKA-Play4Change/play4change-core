@@ -38,7 +38,7 @@ Name.kt and Password.kt reject invalid input in unit tests.
 
 ## Phase 02 — Content Generation: Anti-Cheat, Multi-Language & Badges
 
-**Status:** `IN PROGRESS`
+**Status:** `DONE`
 **Phase file:** [phases/phase-02-content-generation.md](phases/phase-02-content-generation.md)
 
 **Goal:** Per-user anti-cheat task instances (shuffle seed = SHA-256(userId+taskId+enrollmentId)),
@@ -55,7 +55,7 @@ after completing all tasks. The topic status endpoint shows the correct pipeline
 
 ## Phase 03 — Learner Logic: Rate Control, Struggle Path & Reporting
 
-**Status:** `PENDING`
+**Status:** `DONE`
 **Phase file:** [phases/phase-03-learner-logic.md](phases/phase-03-learner-logic.md)
 
 **Goal:** Configurable task delivery rate (default 1/day, dev mode: 2min), fully wired struggle

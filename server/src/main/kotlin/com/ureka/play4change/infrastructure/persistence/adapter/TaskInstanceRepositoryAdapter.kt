@@ -23,6 +23,9 @@ class TaskInstanceRepositoryAdapter(
     override fun findByTaskTemplateId(taskTemplateId: String): List<TaskInstance> =
         jpa.findByTaskTemplateIdOrderByInstanceIndex(taskTemplateId).map { it.toDomain() }
 
+    override fun deleteByTaskTemplateId(taskTemplateId: String) =
+        jpa.deleteByTaskTemplateId(taskTemplateId)
+
     private fun TaskInstance.toEntity(): TaskInstanceEntity {
         val templateRef = templateJpa.getReferenceById(taskTemplateId)
         return TaskInstanceEntity(

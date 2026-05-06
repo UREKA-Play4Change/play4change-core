@@ -99,6 +99,10 @@ minio:
   secret-key: ${MINIO_SECRET_KEY:minioadmin}
   bucket: ${MINIO_BUCKET:play4change}
 
+task-delivery:
+  task-rate-minutes: 1440
+  dev-mode: false
+
 scheduler:
   expiration:
     rate-ms: 60000

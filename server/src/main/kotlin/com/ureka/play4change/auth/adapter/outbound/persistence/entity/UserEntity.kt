@@ -33,6 +33,9 @@ class UserEntity(
     @Column(name = "audience_level", nullable = false, length = 20)
     val audienceLevel: String = "BEGINNER",
 
+    @Column(name = "timezone", length = 60)
+    val timezone: String? = null,
+
     @Column(name = "created_at", nullable = false)
     val createdAt: OffsetDateTime = OffsetDateTime.now()
 )
