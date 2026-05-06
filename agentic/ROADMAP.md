@@ -55,7 +55,7 @@ after completing all tasks. The topic status endpoint shows the correct pipeline
 
 ## Phase 03 — Learner Logic: Rate Control, Struggle Path & Reporting
 
-**Status:** `IN PROGRESS`
+**Status:** `DONE`
 **Phase file:** [phases/phase-03-learner-logic.md](phases/phase-03-learner-logic.md)
 
 **Goal:** Configurable task delivery rate (default 1/day, dev mode: 2min), fully wired struggle
