@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ -f .env ]; then
+  export $(grep -v '^#' .env | xargs)
+fi
+
 echo "### Cleaning containers and volumes..."
 docker compose down -v
 
@@ -12,11 +16,11 @@ CREDS_FILE="$HOME/.cloudflared/$TUNNEL_ID.json"
 TOKEN_FILE="$HOME/.cloudflared/${TUNNEL_ID}.token"
 
 if [ -n "$CLOUDFLARE_TUNNEL_TOKEN" ]; then
-  cloudflared tunnel --no-autoupdate run --token "$CLOUDFLARE_TUNNEL_TOKEN"
+  cloudflared tunnel run --protocol http2 --token "$CLOUDFLARE_TUNNEL_TOKEN"
 elif [ -f "$TOKEN_FILE" ]; then
-  cloudflared tunnel --no-autoupdate run --token "$(cat "$TOKEN_FILE")"
+  cloudflared tunnel run --protocol http2 --token "$(cat "$TOKEN_FILE")"
 elif [ -f "$CREDS_FILE" ]; then
-  cloudflared tunnel --no-autoupdate run "$TUNNEL_ID"
+  cloudflared tunnel run --protocol http2 "$TUNNEL_ID"
 else
   echo ""
   echo "ERROR: Cloudflare tunnel credentials not found. Provide one of:"

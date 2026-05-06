@@ -72,9 +72,9 @@
         RESEND_FROM: ${RESEND_FROM}
         GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
         JWT_SECRET: ${JWT_SECRET}
-        # ── Domain — both derive from FRONTEND_ORIGIN in .env ────────────────
+        # ── Domain ───────────────────────────────────────────────────────────
         APP_BASE_URL: ${FRONTEND_ORIGIN}
-        CORS_ALLOWED_ORIGINS: ${FRONTEND_ORIGIN}
+        CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
       ports:
         - "8080:8080"
       depends_on:
