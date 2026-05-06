@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.ureka.play4change.domain.topic.TaskInstance
 import com.ureka.play4change.domain.topic.TaskInstanceRepository
 import com.ureka.play4change.infrastructure.persistence.entity.TaskInstanceEntity
+import com.ureka.play4change.infrastructure.persistence.repository.TaskAssignmentJpaRepository
 import com.ureka.play4change.infrastructure.persistence.repository.TaskInstanceJpaRepository
 import com.ureka.play4change.infrastructure.persistence.repository.TaskTemplateJpaRepository
 import org.springframework.stereotype.Component
@@ -12,7 +13,8 @@ import org.springframework.stereotype.Component
 @Component
 class TaskInstanceRepositoryAdapter(
     private val jpa: TaskInstanceJpaRepository,
-    private val templateJpa: TaskTemplateJpaRepository
+    private val templateJpa: TaskTemplateJpaRepository,
+    private val assignmentJpa: TaskAssignmentJpaRepository
 ) : TaskInstanceRepository {
 
     private val mapper = jacksonObjectMapper()
@@ -23,8 +25,10 @@ class TaskInstanceRepositoryAdapter(
     override fun findByTaskTemplateId(taskTemplateId: String): List<TaskInstance> =
         jpa.findByTaskTemplateIdOrderByInstanceIndex(taskTemplateId).map { it.toDomain() }
 
-    override fun deleteByTaskTemplateId(taskTemplateId: String) =
+    override fun deleteByTaskTemplateId(taskTemplateId: String) {
+        assignmentJpa.clearTaskInstanceIdByTemplateId(taskTemplateId)
         jpa.deleteByTaskTemplateId(taskTemplateId)
+    }
 
     private fun TaskInstance.toEntity(): TaskInstanceEntity {
         val templateRef = templateJpa.getReferenceById(taskTemplateId)
