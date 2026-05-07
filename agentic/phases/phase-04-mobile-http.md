@@ -211,7 +211,7 @@ all existing screens connected to live data.
 ---
 
 ### Task 4.7 — Manual test recipe for Phase 04
-- [ ] **What:** Write the full end-to-end manual test recipe for Phase 04 in
+- [x] **What:** Write the full end-to-end manual test recipe for Phase 04 in
       `agentic/manual-testing/phase-04-recipe.md`.
 - **Design constraints:** The recipe must cover: magic link flow on device, token persistence
       across app restarts, 401 refresh flow (set a short token TTL for testing), error UI
