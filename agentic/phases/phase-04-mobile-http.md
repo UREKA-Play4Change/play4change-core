@@ -1,6 +1,6 @@
 # Phase 04 — Mobile Client: HTTP Wiring & Auth
 
-**Status:** `PENDING`
+**Status:** `IN PROGRESS`
 **Goal:** Replace all mock repositories with real Ktor HTTP calls, JWT secure storage
 (EncryptedSharedPreferences on Android, Keychain on iOS), automatic token refresh on 401,
 all existing screens connected to live data.
@@ -12,7 +12,7 @@ all existing screens connected to live data.
 ## Tasks
 
 ### Task 4.1 — Ktor HttpClient setup
-- [ ] **What:** Set up the Ktor `HttpClient` in the `composeApp` KMP module with base URL
+- [x] **What:** Set up the Ktor `HttpClient` in the `composeApp` KMP module with base URL
       configuration, JSON content negotiation, Bearer token injection, 401→refresh→retry
       logic, and a `X-Request-ID` header on every request. Define the `TokenStorage` interface
       and platform-specific implementations.
@@ -66,7 +66,7 @@ all existing screens connected to live data.
 ---
 
 ### Task 4.2 — Replace mock: Auth repositories
-- [ ] **What:** Replace `MockAuthRepository` with `HttpAuthRepository` that calls the real
+- [x] **What:** Replace `MockAuthRepository` with `HttpAuthRepository` that calls the real
       server endpoints: magic link request, magic link verify, OAuth login, refresh, logout.
 - **Design constraints:**
   - `HttpAuthRepository` implements the same `AuthRepository` interface as the mock.
@@ -95,7 +95,7 @@ all existing screens connected to live data.
 ---
 
 ### Task 4.3 — Replace mock: Topic and Enrollment repositories
-- [ ] **What:** Replace `MockTopicRepository` and `MockEnrollmentRepository` with HTTP
+- [x] **What:** Replace `MockTopicRepository` and `MockEnrollmentRepository` with HTTP
       implementations that call the real server endpoints.
 - **Design constraints:**
   - Topic endpoints to wire:
@@ -125,7 +125,7 @@ all existing screens connected to live data.
 ---
 
 ### Task 4.4 — Replace mock: Struggle and PeerReview repositories
-- [ ] **What:** Replace `MockStruggleRepository` and `MockPeerReviewRepository` with HTTP
+- [x] **What:** Replace `MockStruggleRepository` and `MockPeerReviewRepository` with HTTP
       implementations.
 - **Design constraints:**
   - Struggle endpoints to wire:
@@ -148,7 +148,7 @@ all existing screens connected to live data.
 ---
 
 ### Task 4.5 — Replace mock: Profile and Badge repositories
-- [ ] **What:** Replace `MockProfileRepository` and `MockBadgeRepository` with HTTP
+- [x] **What:** Replace `MockProfileRepository` and `MockBadgeRepository` with HTTP
       implementations.
 - **Design constraints:**
   - Profile endpoints to wire:
@@ -169,7 +169,7 @@ all existing screens connected to live data.
 ---
 
 ### Task 4.6 — NetworkError sealed class and error state UI
-- [ ] **What:** Define a `NetworkError` sealed class covering all error conditions.
+- [x] **What:** Define a `NetworkError` sealed class covering all error conditions.
       Wire error states to every screen so the user sees a meaningful error message
       instead of a crash or blank screen when network requests fail.
 - **Design constraints:**
@@ -211,7 +211,7 @@ all existing screens connected to live data.
 ---
 
 ### Task 4.7 — Manual test recipe for Phase 04
-- [ ] **What:** Write the full end-to-end manual test recipe for Phase 04 in
+- [x] **What:** Write the full end-to-end manual test recipe for Phase 04 in
       `agentic/manual-testing/phase-04-recipe.md`.
 - **Design constraints:** The recipe must cover: magic link flow on device, token persistence
       across app restarts, 401 refresh flow (set a short token TTL for testing), error UI

@@ -11,10 +11,10 @@ plugins {
 kotlin {
     androidTarget {
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+            jvmTarget.set(JvmTarget.JVM_21)
         }
     }
-    
+
     listOf(
         iosArm64(),
         iosSimulatorArm64()
@@ -25,11 +25,17 @@ kotlin {
             freeCompilerArgs += listOf("-Xbinary=bundleId=com.ureka.play4change")
         }
     }
-    
+
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.ktor.client.okhttp)
+            implementation(libs.koin.android)
+            implementation(libs.androidx.security.crypto)
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
         }
         commonMain.dependencies {
             implementation(libs.kotlinx.datetime)
@@ -56,6 +62,7 @@ kotlin {
             //ktor
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.auth)
             implementation(libs.ktor.serialization.json)
 
             //icons
@@ -66,6 +73,8 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.ktor.client.mock)
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }
@@ -81,23 +90,40 @@ android {
         versionCode = 1
         versionName = "1.0"
     }
+    buildFeatures {
+        buildConfig = true
+    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
     buildTypes {
-        getByName("release") {
+        debug {
+            buildConfigField(
+                "String", "BASE_URL",
+                "\"${project.findProperty("BASE_URL") ?: "http://10.0.2.2:8080"}\""
+            )
+            buildConfigField(
+                "Boolean", "USE_MOCKS",
+                "${project.findProperty("USE_MOCKS") ?: "false"}"
+            )
+        }
+        release {
             isMinifyEnabled = false
+            buildConfigField(
+                "String", "BASE_URL",
+                "\"${project.findProperty("BASE_URL") ?: "http://10.0.2.2:8080"}\""
+            )
+            buildConfigField("Boolean", "USE_MOCKS", "false")
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 }
 
 dependencies {
     debugImplementation(libs.compose.multiplatform.uiTooling)
 }
-

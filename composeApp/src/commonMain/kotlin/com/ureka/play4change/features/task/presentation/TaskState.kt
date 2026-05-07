@@ -2,6 +2,7 @@ package com.ureka.play4change.features.task.presentation
 
 import com.ureka.play4change.core.component.base.ComponentState
 import com.ureka.play4change.core.error.AppError
+import com.ureka.play4change.core.network.NetworkError
 import com.ureka.play4change.features.task.domain.model.TaskDetail
 
 sealed class SubmissionState {
@@ -46,5 +47,6 @@ data class TaskState(
 
     // Back navigation is BLOCKED during an active quiz/task.
     // Unlocked after submission via Continue.
-    val isBackBlocked: Boolean = true
+    val isBackBlocked: Boolean = true,
+    val networkError: NetworkError? = null
 ) : ComponentState

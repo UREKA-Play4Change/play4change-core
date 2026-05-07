@@ -26,7 +26,7 @@ class MockAuthRepository : AuthRepository {
         )
     }
 
-    override suspend fun socialLogin(provider: SocialProvider): AuthResult {
+    override suspend fun socialLogin(provider: SocialProvider, idToken: String): AuthResult {
         delay(1200)
         return AuthResult(
             userId = "mock-social-user",
@@ -53,5 +53,9 @@ class MockAuthRepository : AuthRepository {
     override suspend fun register(name: String, email: String): Boolean {
         delay(1500)
         return true
+    }
+
+    override suspend fun logout() {
+        delay(300)
     }
 }

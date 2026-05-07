@@ -21,6 +21,7 @@ sealed interface TaskEvents : ComponentEvents {
     data object SubmitTask : TaskEvents
 
     // Shared
-    data object Continue : TaskEvents
+    data object Continue   : TaskEvents
+    data object RetryLoad  : TaskEvents
     // ExitRequested is REMOVED — back is blocked during an active task
 }
