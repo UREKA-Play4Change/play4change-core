@@ -104,6 +104,10 @@ android {
                 "String", "BASE_URL",
                 "\"${project.findProperty("BASE_URL") ?: "http://10.0.2.2:8080"}\""
             )
+            buildConfigField(
+                "Boolean", "USE_MOCKS",
+                "${project.findProperty("USE_MOCKS") ?: "false"}"
+            )
         }
         release {
             isMinifyEnabled = false
@@ -111,6 +115,7 @@ android {
                 "String", "BASE_URL",
                 "\"${project.findProperty("BASE_URL") ?: "http://10.0.2.2:8080"}\""
             )
+            buildConfigField("Boolean", "USE_MOCKS", "false")
         }
     }
     compileOptions {

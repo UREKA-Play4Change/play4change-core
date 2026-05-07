@@ -9,6 +9,6 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 
 actual val platformModule: Module = module {
-    single { NetworkConfig(BuildConfig.BASE_URL) }
+    single { NetworkConfig(BuildConfig.BASE_URL, BuildConfig.USE_MOCKS) }
     single<TokenStorage> { EncryptedSharedPreferencesTokenStorage(androidContext()) }
 }

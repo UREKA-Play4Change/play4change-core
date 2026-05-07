@@ -11,12 +11,18 @@ interface AuthRepository {
     /** Step 2 of magic link: exchange the token from the link for auth tokens. */
     suspend fun verifyMagicLink(token: String): AuthResult?
 
-    /** OAuth login — client SDK handles the OAuth dance, sends the ID token here. */
-    suspend fun socialLogin(provider: SocialProvider): AuthResult?
+    /**
+     * OAuth login — client platform SDK completes the OAuth dance and provides the
+     * [idToken]. Defaults to empty string for mock/test implementations that ignore it.
+     */
+    suspend fun socialLogin(provider: SocialProvider, idToken: String = ""): AuthResult?
 
     /** Silent token refresh using stored refresh token. */
     suspend fun refresh(refreshToken: String): AuthResult?
 
     /** Register new user (name + email magic link flow). */
     suspend fun register(name: String, email: String): Boolean
+
+    /** Revoke the stored refresh token and clear local token storage. */
+    suspend fun logout()
 }
