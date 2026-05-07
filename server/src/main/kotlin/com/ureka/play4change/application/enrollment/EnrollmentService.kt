@@ -118,4 +118,7 @@ class EnrollmentService(
             NotFound.ResourceNotFound("Enrollment", "$userId/$topicId")
         }
     }
+
+    override fun getActiveEnrollments(userId: String): List<Enrollment> =
+        enrollmentRepository.findActiveByUserId(userId)
 }

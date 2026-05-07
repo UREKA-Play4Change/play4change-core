@@ -148,7 +148,7 @@ all existing screens connected to live data.
 ---
 
 ### Task 4.5 — Replace mock: Profile and Badge repositories
-- [ ] **What:** Replace `MockProfileRepository` and `MockBadgeRepository` with HTTP
+- [x] **What:** Replace `MockProfileRepository` and `MockBadgeRepository` with HTTP
       implementations.
 - **Design constraints:**
   - Profile endpoints to wire:
