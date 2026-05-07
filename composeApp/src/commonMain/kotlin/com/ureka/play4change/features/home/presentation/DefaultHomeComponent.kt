@@ -4,8 +4,13 @@ import com.arkivanov.decompose.ComponentContext
 import com.ureka.play4change.core.component.base.BaseComponent
 import com.ureka.play4change.core.error.AppError
 import com.ureka.play4change.core.component.stateful.safeLaunch
+import com.ureka.play4change.core.network.NetworkException
+import com.ureka.play4change.core.network.toAppError
+import com.ureka.play4change.core.network.toNetworkError
 import com.ureka.play4change.features.home.domain.repository.HomeRepository
 import com.ureka.play4change.features.profile.domain.repository.ProfileRepository
+import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
 
 class DefaultHomeComponent(
     componentContext: ComponentContext,
@@ -18,9 +23,19 @@ class DefaultHomeComponent(
     }
 
     private fun loadHome() {
-        safeLaunch(scope) {
-            val data = repository.getHomeData(userId = "current-user")
-            updateState { copy(isLoading = false, homeData = data) }
+        updateState { copy(isLoading = true, networkError = null, error = null) }
+        scope.launch {
+            try {
+                val data = repository.getHomeData(userId = "current-user")
+                updateState { copy(isLoading = false, homeData = data) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: NetworkException) {
+                updateState { copy(isLoading = false, networkError = e.error, error = e.error.toAppError()) }
+            } catch (e: Exception) {
+                val netError = e.toNetworkError()
+                updateState { copy(isLoading = false, networkError = netError, error = netError.toAppError()) }
+            }
         }
     }
 
@@ -37,6 +52,7 @@ class DefaultHomeComponent(
                 profileRepository.signOut()
                 emitEffect(HomeEffect.LoggedOut)
             }
+            HomeEvents.RetryLoad     -> loadHome()
         }
     }
 

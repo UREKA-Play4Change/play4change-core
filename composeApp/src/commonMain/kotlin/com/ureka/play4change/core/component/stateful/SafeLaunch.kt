@@ -1,7 +1,9 @@
 package com.ureka.play4change.core.component.stateful
 
 import com.ureka.play4change.core.component.base.ComponentState
-import com.ureka.play4change.core.error.AppError
+import com.ureka.play4change.core.network.NetworkException
+import com.ureka.play4change.core.network.toAppError
+import com.ureka.play4change.core.network.toNetworkError
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.coroutines.cancellation.CancellationException
@@ -17,9 +19,10 @@ fun <S : ComponentState> StatefulComponent<S>.safeLaunch(
             updateState { copyBase(isLoading = false) }
         } catch (e: CancellationException) {
             throw e
+        } catch (e: NetworkException) {
+            updateState { copyBase(isLoading = false, error = e.error.toAppError()) }
         } catch (e: Exception) {
-            val error = AppError.ServerError.Unexpected(technicalMessage = e.message)
-            updateState { copyBase(isLoading = false, error = error) }
+            updateState { copyBase(isLoading = false, error = e.toNetworkError().toAppError()) }
         }
     }
 }

@@ -169,7 +169,7 @@ all existing screens connected to live data.
 ---
 
 ### Task 4.6 — NetworkError sealed class and error state UI
-- [ ] **What:** Define a `NetworkError` sealed class covering all error conditions.
+- [x] **What:** Define a `NetworkError` sealed class covering all error conditions.
       Wire error states to every screen so the user sees a meaningful error message
       instead of a crash or blank screen when network requests fail.
 - **Design constraints:**

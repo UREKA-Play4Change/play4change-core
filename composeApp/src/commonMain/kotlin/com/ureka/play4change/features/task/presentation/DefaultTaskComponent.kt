@@ -5,10 +5,14 @@ import com.arkivanov.essenty.backhandler.BackCallback
 import com.ureka.play4change.core.component.base.BaseComponent
 import com.ureka.play4change.core.error.AppError
 import com.ureka.play4change.core.component.stateful.safeLaunch
+import com.ureka.play4change.core.network.NetworkException
+import com.ureka.play4change.core.network.toAppError
+import com.ureka.play4change.core.network.toNetworkError
 import com.ureka.play4change.features.task.domain.model.TaskContent
 import com.ureka.play4change.features.task.domain.repository.TaskRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
 
 class DefaultTaskComponent(
     componentContext: ComponentContext,
@@ -26,9 +30,19 @@ class DefaultTaskComponent(
     }
 
     private fun loadTask() {
-        safeLaunch(scope) {
-            val task = repository.getTask(userTaskId)
-            updateState { copy(isLoading = false, task = task) }
+        updateState { copy(isLoading = true, networkError = null, error = null) }
+        scope.launch {
+            try {
+                val task = repository.getTask(userTaskId)
+                updateState { copy(isLoading = false, task = task) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: NetworkException) {
+                updateState { copy(isLoading = false, networkError = e.error, error = e.error.toAppError()) }
+            } catch (e: Exception) {
+                val netError = e.toNetworkError()
+                updateState { copy(isLoading = false, networkError = netError, error = netError.toAppError()) }
+            }
         }
     }
 
@@ -140,6 +154,7 @@ class DefaultTaskComponent(
                 updateState { copy(isBackBlocked = false) }
                 emitEffect(TaskEffect.NavigateBack)
             }
+            TaskEvents.RetryLoad -> loadTask()
         }
     }
 
