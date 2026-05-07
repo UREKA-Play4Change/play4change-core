@@ -21,6 +21,15 @@ hard-to-reverse choices) — write a full ADR in `docs/adr/` instead.
 
 ---
 
+## [2026-05-07] [composeApp] — Align composeApp Java compileOptions to JVM 21
+
+**Context:** The root `build.gradle.kts` uses `allprojects { tasks.withType<KotlinCompile> { jvmTarget = JVM_21 } }` to enforce JVM 21 for the server module. This override also applied to `compileDebugKotlinAndroid`, but `composeApp/build.gradle.kts` still declared `compileOptions { sourceCompatibility = VERSION_11 }`, causing an AGP8 inconsistency error when running `testDebugUnitTest` for the first time in Phase 04.
+**Decision:** Updated `composeApp` to `VERSION_21` / `JvmTarget.JVM_21` for both Java and Kotlin targets. D8/R8 handles the bytecode translation to support minSdk 24 at runtime.
+**Why not keep VERSION_11:** The root `allprojects` override cannot be disabled per-module without restructuring the root build script. Aligning to 21 is consistent with the rest of the project.
+**Phase:** 04
+
+---
+
 ## [2026-04-29] [agentic] — Adopt agentic/ operating system for shared sessions
 
 **Context:** Three operators share Claude Code Pro accounts on this project with a 2–3 week

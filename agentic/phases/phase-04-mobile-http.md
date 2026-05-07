@@ -1,6 +1,6 @@
 # Phase 04 — Mobile Client: HTTP Wiring & Auth
 
-**Status:** `PENDING`
+**Status:** `IN PROGRESS`
 **Goal:** Replace all mock repositories with real Ktor HTTP calls, JWT secure storage
 (EncryptedSharedPreferences on Android, Keychain on iOS), automatic token refresh on 401,
 all existing screens connected to live data.
@@ -12,7 +12,7 @@ all existing screens connected to live data.
 ## Tasks
 
 ### Task 4.1 — Ktor HttpClient setup
-- [ ] **What:** Set up the Ktor `HttpClient` in the `composeApp` KMP module with base URL
+- [x] **What:** Set up the Ktor `HttpClient` in the `composeApp` KMP module with base URL
       configuration, JSON content negotiation, Bearer token injection, 401→refresh→retry
       logic, and a `X-Request-ID` header on every request. Define the `TokenStorage` interface
       and platform-specific implementations.
