@@ -10,5 +10,5 @@ import com.ureka.play4change.di.features.taskModule
 import org.koin.dsl.module
 
 val appModule = module {
-    includes(coreModule, splashModule, authModule, homeModule, taskModule, profileModule, aboutModule, exploreModule)
+    includes(platformModule, coreModule, splashModule, authModule, homeModule, taskModule, profileModule, aboutModule, exploreModule)
 }
