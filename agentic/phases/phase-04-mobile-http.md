@@ -66,7 +66,7 @@ all existing screens connected to live data.
 ---
 
 ### Task 4.2 — Replace mock: Auth repositories
-- [ ] **What:** Replace `MockAuthRepository` with `HttpAuthRepository` that calls the real
+- [x] **What:** Replace `MockAuthRepository` with `HttpAuthRepository` that calls the real
       server endpoints: magic link request, magic link verify, OAuth login, refresh, logout.
 - **Design constraints:**
   - `HttpAuthRepository` implements the same `AuthRepository` interface as the mock.
