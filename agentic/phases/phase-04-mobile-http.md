@@ -95,7 +95,7 @@ all existing screens connected to live data.
 ---
 
 ### Task 4.3 — Replace mock: Topic and Enrollment repositories
-- [ ] **What:** Replace `MockTopicRepository` and `MockEnrollmentRepository` with HTTP
+- [x] **What:** Replace `MockTopicRepository` and `MockEnrollmentRepository` with HTTP
       implementations that call the real server endpoints.
 - **Design constraints:**
   - Topic endpoints to wire:
