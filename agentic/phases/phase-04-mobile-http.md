@@ -125,7 +125,7 @@ all existing screens connected to live data.
 ---
 
 ### Task 4.4 — Replace mock: Struggle and PeerReview repositories
-- [ ] **What:** Replace `MockStruggleRepository` and `MockPeerReviewRepository` with HTTP
+- [x] **What:** Replace `MockStruggleRepository` and `MockPeerReviewRepository` with HTTP
       implementations.
 - **Design constraints:**
   - Struggle endpoints to wire:
