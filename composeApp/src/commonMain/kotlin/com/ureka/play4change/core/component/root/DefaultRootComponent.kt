@@ -8,6 +8,13 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.lifecycle.doOnDestroy
+import com.ureka.play4change.features.auth.domain.repository.AuthRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
@@ -18,6 +25,12 @@ class DefaultRootComponent(
 ) : RootComponent, ComponentContext by componentContext, KoinComponent {
 
     private val navigation = StackNavigation<Config>()
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private val authRepository: AuthRepository = get()
+
+    init {
+        lifecycle.doOnDestroy { scope.cancel() }
+    }
 
     override val childStack: Value<ChildStack<*, RootComponent.Child>> = childStack(
         source = navigation,
@@ -61,6 +74,17 @@ class DefaultRootComponent(
 
     override fun navigateBack() {
         navigation.pop()
+    }
+
+    override fun handleDeepLink(token: String) {
+        scope.launch {
+            try {
+                authRepository.verifyMagicLink(token)
+                navigation.replaceAll(Config.Home)
+            } catch (_: Exception) {
+                navigation.replaceAll(Config.Login)
+            }
+        }
     }
 
     private fun createChild(config: Config, context: ComponentContext): RootComponent.Child {
