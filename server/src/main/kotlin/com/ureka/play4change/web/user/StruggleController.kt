@@ -3,7 +3,7 @@ package com.ureka.play4change.web.user
 import com.ureka.play4change.application.port.StruggleUseCase
 import com.ureka.play4change.application.port.SubmitAdaptiveTaskCommand
 import com.ureka.play4change.error.AppError
-import com.ureka.play4change.web.user.dto.AdaptiveTaskResponse
+import com.ureka.play4change.web.user.dto.AdaptiveSubmitResultResponse
 import com.ureka.play4change.web.user.dto.StruggleSessionResponse
 import com.ureka.play4change.web.user.dto.SubmitAdaptiveTaskRequest
 import org.springframework.http.ResponseEntity
@@ -30,7 +30,7 @@ class StruggleController(private val struggleUseCase: StruggleUseCase) {
         @PathVariable taskId: String,
         @RequestBody request: SubmitAdaptiveTaskRequest,
         @AuthenticationPrincipal userId: String
-    ): ResponseEntity<AdaptiveTaskResponse> =
+    ): ResponseEntity<AdaptiveSubmitResultResponse> =
         struggleUseCase.submitAdaptiveTask(
             SubmitAdaptiveTaskCommand(
                 userId = userId,
@@ -40,7 +40,7 @@ class StruggleController(private val struggleUseCase: StruggleUseCase) {
             )
         ).fold(
             ifLeft = { it.toErrorResponse() },
-            ifRight = { ResponseEntity.ok(AdaptiveTaskResponse.from(it.task)) }
+            ifRight = { ResponseEntity.ok(AdaptiveSubmitResultResponse.from(it)) }
         )
 
     @Suppress("UNCHECKED_CAST")
