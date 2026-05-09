@@ -87,6 +87,7 @@ fun HomeScreen(component: DefaultHomeComponent) {
 
     BaseView(
         component = component,
+        onRetry = { component.onEvent(HomeEvents.RetryLoad) },
         topBar = {
             CenterAlignedTopAppBar(
                 title = { UrekaLogo(size = LogoSize.Small) },
