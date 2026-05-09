@@ -21,6 +21,32 @@ hard-to-reverse choices) — write a full ADR in `docs/adr/` instead.
 
 ---
 
+## [2026-05-09] [network] — Ktor 3.0.0 bearer auth: refreshTokens must fall back to stored refresh token when oldTokens is null
+
+**Context:** In Ktor 3.0.0, `sendWithoutRequest { true }` does NOT cause `loadTokens` / `addRequestHeaders`
+to be called proactively. The first authenticated request after login goes out without an `Authorization`
+header, the server returns 401, and `refreshTokens` is invoked with `oldTokens = null`. The original
+code read `oldTokens?.refreshToken` which evaluates to null, triggering `onSessionExpired()` immediately
+after every successful login (Bug B9).
+
+**Decision:** Changed `val refreshToken = oldTokens?.refreshToken` to
+`val refreshToken = oldTokens?.refreshToken ?: tokenStorage.getRefreshToken()` in
+`HttpClientFactory.kt`. This makes the 401-on-first-request case transparent to the user: Ktor
+calls `refreshTokens`, we read the stored token directly from `TokenStorage`, issue `POST /auth/refresh`,
+get a fresh access token, and retry the original request — all without the user knowing a refresh
+happened.
+
+**Why not configure Ktor differently:** Ktor 3.0.0 does not offer a first-class "always send auth
+header without challenge" mechanism that is reliably cross-platform and works with bearer tokens.
+The `sendWithoutRequest` predicate controls whether the client waits for a challenge, but the
+`addRequestHeaders` / `loadTokens` proactive path has a known issue in 3.0.0 where it is not called
+on the first request. The fallback approach is more robust and does not depend on undocumented
+plugin internals.
+
+**Phase:** 04, fix/session-fixes-05
+
+---
+
 ## [2026-05-09] [iosMain] — KeychainTokenStorage must use kSecUseDataProtectionKeychain on iOS 13+
 
 **Context:** On iOS 26.2 simulator, all SecItemAdd calls in `KeychainTokenStorage.saveItem()`

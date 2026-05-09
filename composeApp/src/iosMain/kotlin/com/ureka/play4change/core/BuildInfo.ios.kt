@@ -1,5 +1,6 @@
 package com.ureka.play4change.core
 
+import kotlin.experimental.ExperimentalNativeApi
 import kotlin.native.Platform
 
 /**
@@ -10,4 +11,5 @@ import kotlin.native.Platform
  * simulator without any runtime flag injection.
  * See DECISIONS.md [2026-05-09] [iosMain] — isDebugBuild via Platform.isDebugBinary.
  */
+@OptIn(ExperimentalNativeApi::class)
 actual val isDebugBuild: Boolean = Platform.isDebugBinary

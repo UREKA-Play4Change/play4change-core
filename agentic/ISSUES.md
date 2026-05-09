@@ -23,6 +23,35 @@ When an issue is fixed, mark it FIXED with the phase, task, and commit. Do not d
 
 ---
 
+## B9 [FIXED] Severity:Critical — First authenticated request after login fires session-expired due to Ktor 3.0.0 `sendWithoutRequest` behaviour
+
+**Discovered:** Phase 04, fix/session-fixes-05, 2026-05-09.
+
+**Description:** In Ktor 3.0.0, `sendWithoutRequest { true }` does NOT cause `addRequestHeaders` /
+`loadTokens` to be called proactively before the request. The auth plugin only adds the `Authorization`
+header after the server returns a 401 challenge. Consequently, the first authenticated request
+after login (e.g. `GET /profile`) goes out without an `Authorization` header, receives 401, and
+`refreshTokens` is invoked with `oldTokens = null`. The original `refreshTokens` block read
+`val refreshToken = oldTokens?.refreshToken`, which evaluates to `null`, immediately calling
+`tokenStorage.clear()` and `onSessionExpired()`. The app bounced back to the login screen within 1
+second of a successful magic link auth — even though tokens were correctly stored in the Keychain.
+
+**Impact:** Every iOS user was logged out immediately after a successful magic link authentication.
+The entire Phase 04 iOS auth flow was broken end-to-end (Android was unaffected because
+`EncryptedSharedPreferences` shares the same token storage path but the race condition masked it).
+
+**Workaround:** None — every post-login navigation to Home failed.
+
+**Fix plan:** In `refreshTokens`, fall back to `tokenStorage.getRefreshToken()` when `oldTokens`
+is null: `val refreshToken = oldTokens?.refreshToken ?: tokenStorage.getRefreshToken()`. This
+ensures that on the first 401 challenge after login, the stored refresh token is used to silently
+refresh rather than immediately expiring the session.
+
+**Fixed:** 2026-05-09 — `HttpClientFactory.kt` line 82, `refreshTokens` fallback to
+`tokenStorage.getRefreshToken()` when `oldTokens` is null. Branch: fix/session-fixes-05.
+
+---
+
 ## B5 [FIXED] Severity:Medium — `GET /tasks/today` returns submitted task instead of 404
 
 **Discovered:** Phase 04, manual testing session 2026-05-09.
