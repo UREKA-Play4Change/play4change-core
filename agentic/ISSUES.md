@@ -80,9 +80,9 @@ isCorrect = null, pointsAwarded = 0`.
 | Flyway V5 + V8 migrations | ✅ Fully implemented | All columns present |
 | `TaskService` integration | ✅ Fully implemented | Triggers on `wrongAttemptCount == 1` |
 | `generationExecutor` bean | ✅ Configured | `AsyncConfig.kt` — present |
-| `StruggleDetectionTest` | ❌ Missing | Required by Task 3.2 spec |
-| `StruggleResolutionTest` | ❌ Missing | Required by Task 3.2 spec |
-| `StruggleControllerTest` | ❌ Missing | Required by Task 3.2 spec |
+| `StruggleDetectionTest` | ✅ Written & passing | Phase 04, session 2026-05-09 |
+| `StruggleResolutionTest` | ✅ Written & passing | Phase 04, session 2026-05-09 |
+| `StruggleControllerTest` | ✅ Written & passing | Phase 04, session 2026-05-09 |
 
 ---
 
@@ -107,6 +107,58 @@ but the gap is real.
 **Fix plan:** Phase 01, Task 1.2 — update CI YAML to `java-version: '21'` (Temurin distribution).
 
 **Fixed:** Phase 01, Task 1.2 — updated `.github/workflows/ci.yml` `java-version` to `'21'` (temurin).
+
+---
+
+## B3 [FIXED] Severity:Low — Profile name falls back to full email address in greeting
+
+**Discovered:** Phase 04, manual testing session 2026-05-09.
+
+**Description:** The server returns `"name": "radesh.govind@gmail.com"` (identical to the
+email) when the user has no display name set. The home screen greeting computed
+`userName.split(" ").first()`, which for an email with no spaces returns the entire
+email address. Result: "Good morning, radesh.govind@gmail.com!".
+
+**Impact:** Every new user who has not set a display name sees their email address in the
+greeting. Aesthetically broken; not a data leak.
+
+**Workaround:** Set a display name on the account.
+
+**Fix plan:** UI layer only — extract the local part (before `@`) and capitalise it.
+
+**Fixed:** 2026-05-09 — `HomeScreen.kt` `greetingName()` helper: if `userName` contains
+`@`, use `substringBefore('@').replaceFirstChar { it.uppercaseChar() }`.
+
+---
+
+## B4 [FIXED] Severity:Low — Apostrophe rendered as literal backslash in KMP Compose strings
+
+**Discovered:** Phase 04, manual testing session 2026-05-09.
+
+**Description:** KMP Compose multiplatform string resources do not process Android-style `\'`
+escape sequences. Strings such as `Today\'s Challenge` and French contractions (e.g.
+`d\'apprentissage`) were rendered with a literal backslash on screen.
+
+**Impact:** Cosmetic — punctuation is wrong in the UI.
+
+**Workaround:** None.
+
+**Fix plan:** Replace all `\'` occurrences in `values/strings.xml` and `values-fr/strings.xml`
+with unescaped `'`.
+
+**Fixed:** 2026-05-09 — replaced all `\'` with `'` in `values/strings.xml` (2 occurrences)
+and `values-fr/strings.xml` (12 occurrences).
+
+---
+
+## Phase 03, Task 3.2 — Struggle tests status update
+
+The three test classes previously marked `❌ Missing` now exist and all pass:
+- `StruggleDetectionTest` — FIXED 2026-05-09
+- `StruggleResolutionTest` — FIXED 2026-05-09
+- `StruggleControllerTest` — FIXED 2026-05-09
+
+`./gradlew :server:test` BUILD SUCCESSFUL.
 
 ---
 

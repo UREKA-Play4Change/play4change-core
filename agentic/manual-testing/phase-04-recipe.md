@@ -39,35 +39,52 @@ to the local Docker Compose stack.
 **Goal:** Verify that a user can authenticate via magic link and land on the
 home screen showing live data.
 
-### Steps
+### Primary testing path (debug build with Resend active)
 
-1. Open the app. Enter your email address in the magic-link field and tap **Send**.
+When `RESEND_API_KEY` is set in the Docker environment, `ResendEmailAdapter` delivers
+the link to the real inbox rather than to the server console. Use the **in-app token
+paste field** (visible only in debug builds) to bypass inbox access:
 
-2. Watch the server console for the generated link:
+1. Open the **debug** APK. Enter your email address and tap **Send**.
+
+2. On the "Check your inbox" screen, a **"Paste your verification token"** field and
+   a **"Verify token"** button appear below the resend option.
+
+3. On the host machine, extract the raw token from the server logs:
+   ```bash
+   docker compose logs server --no-log-prefix | grep -i "token\|magic" | tail -5
+   ```
+   The log line looks like:
+   ```
+   Magic link token for radesh.govind@gmail.com: <TOKEN>
+   ```
+
+4. Paste `<TOKEN>` into the field and tap **Verify token**.
+
+   Expected: the app transitions immediately to the **Home screen** showing real data.
+
+   > **If the field is not visible:** confirm you are running a debug build
+   > (`./gradlew :composeApp:installDebug`). Release builds hide this field.
+
+### Alternative path (Resend not active — ConsoleEmailAdapter)
+
+If `RESEND_API_KEY` is absent, the token is printed to the server console and you can
+also verify via curl:
+
+1. Open the app. Enter your email address and tap **Send**.
+
+2. Retrieve the token from the server log:
    ```bash
    docker compose logs server --follow | grep "magic link"
    ```
-   The log line contains a URL such as:
-   ```
-   Magic link: http://localhost:8080/auth/verify?token=<TOKEN>
-   ```
-   > **Note — Resend active:** If `RESEND_API_KEY` is set in the Docker container
-   > environment (check with `docker inspect play4change-server --format '{{range .Config.Env}}{{println .}}{{end}}' | grep RESEND`),
-   > `ResendEmailAdapter` takes priority over `ConsoleEmailAdapter` and the link is
-   > delivered to the real inbox instead of the server logs. In that case, check the
-   > inbox for the email address you entered in step 1 to retrieve `<TOKEN>`.
 
-3. Copy `<TOKEN>` from the log. Simulate the deep-link click by running on the
-   host machine:
+3. Either paste it into the in-app token field (debug builds) **or** run on the host:
    ```bash
    curl -v "http://localhost:8080/auth/verify?token=<TOKEN>"
    ```
-   Expected response: `200 OK` with JSON body containing `accessToken` and `refreshToken`.
+   Expected: `200 OK` with `accessToken` and `refreshToken`.
 
-4. The app should detect the incoming token (via the deep link, or by polling
-   the verification endpoint) and transition to the **Home screen**.
-
-   Expected: the home screen displays real enrolled topics loaded from the server.
+4. The app transitions to the **Home screen** (via deep link or the token field).
 
 ---
 

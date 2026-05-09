@@ -21,6 +21,29 @@ hard-to-reverse choices) — write a full ADR in `docs/adr/` instead.
 
 ---
 
+## [2026-05-09] [composeApp] — Debug-only token paste field for magic link testing when Resend is active
+
+**Context:** `ResendEmailAdapter` delivers magic link emails to a real inbox, not the server
+console. During manual testing and CI-adjacent development, testers cannot access the inbox.
+The operator can extract the raw token from `docker compose logs server | grep token`, but
+there is no in-app path to paste it — the app expects the deep link to arrive automatically.
+
+**Decision:** Added a "Paste your verification token" `OutlinedTextField` and "Verify token"
+button to the `LinkSentContent` composable, guarded by `if (isDebugBuild)`. Tapping the
+button calls `GET /auth/verify?token=<pasted>` directly via `AuthRepository.verifyMagicLink`.
+On success, navigates to the home screen exactly as a real deep link would. The field is
+completely absent from release builds (`isDebugBuild = BuildConfig.DEBUG`).
+
+**Why not a separate debug screen:** The extra UI lives inline in the "link sent" state where
+the operator already is. A separate screen would require navigation changes and adds friction.
+
+**Why not always-visible:** Exposing a raw-token input in release would allow phishing apps
+to redirect users to paste their tokens. Debug-only is the safe default.
+
+**Phase:** 04
+
+---
+
 ## [2026-05-07] [composeApp] — Align composeApp Java compileOptions to JVM 21
 
 **Context:** The root `build.gradle.kts` uses `allprojects { tasks.withType<KotlinCompile> { jvmTarget = JVM_21 } }` to enforce JVM 21 for the server module. This override also applied to `compileDebugKotlinAndroid`, but `composeApp/build.gradle.kts` still declared `compileOptions { sourceCompatibility = VERSION_11 }`, causing an AGP8 inconsistency error when running `testDebugUnitTest` for the first time in Phase 04.
