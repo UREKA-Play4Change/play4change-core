@@ -23,6 +23,39 @@ When an issue is fixed, mark it FIXED with the phase, task, and commit. Do not d
 
 ---
 
+## B10 [FIXED] Severity:High — Magic link email opens JSON in browser instead of launching the mobile app
+
+**Discovered:** Phase 04, fix/session-fixes-05, 2026-05-09.
+
+**Description:** The email magic link pointed to `https://radesh-govind.com/auth/verify?token=...`.
+When clicked from a mobile email client, iOS opened Safari, which called the server's
+`GET /auth/verify` endpoint. That endpoint returned `200 OK` with JSON
+`{ accessToken, refreshToken, expiresIn }` — raw JWTs displayed in the browser. The Play4Change
+app was never opened. The custom URL scheme `play4change://` registered in `Info.plist` was
+never triggered.
+
+Additionally, the app called `GET /auth/verify?token=...` internally (via `HttpAuthRepository`),
+meaning it would follow any redirect returned by the server and fail when trying to parse a
+`302 Location: play4change://...` response as JSON.
+
+**Impact:** Every user clicking the magic link from their email saw raw JSON in the browser.
+Authentication on iOS was impossible via the email link path. The debug paste field (B8)
+was the only workaround.
+
+**Workaround:** Use the in-app debug paste field (debug builds only).
+
+**Fix plan:** Change `GET /auth/verify` to respond with `302 Found` to `play4change://auth/verify?token={token}`.
+Change the app's `verifyMagicLink` to call `POST /auth/magic-link/verify` (JSON endpoint)
+instead of `GET /auth/verify` (now redirect-only). The token is NOT consumed in the redirect;
+it is consumed when the app calls `POST /auth/magic-link/verify`.
+
+**Fixed:** 2026-05-09 — `AuthController.kt` `GET /auth/verify` returns 302 redirect;
+`HttpAuthRepository.verifyMagicLink` uses `POST /auth/magic-link/verify`. Confirmed:
+token consumed (`used=t`), refresh tokens created in DB within the test window.
+Branch: fix/session-fixes-05, commit a783959.
+
+---
+
 ## B9 [FIXED] Severity:Critical — First authenticated request after login fires session-expired due to Ktor 3.0.0 `sendWithoutRequest` behaviour
 
 **Discovered:** Phase 04, fix/session-fixes-05, 2026-05-09.
