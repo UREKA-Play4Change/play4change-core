@@ -21,6 +21,32 @@ hard-to-reverse choices) — write a full ADR in `docs/adr/` instead.
 
 ---
 
+## [2026-05-09] [iosMain] — isDebugBuild via Platform.isDebugBinary
+
+**Context:** `BuildInfo.ios.kt` had `actual val isDebugBuild: Boolean = false` hardcoded.
+The in-app token paste field (guarded by `if (isDebugBuild)`) was permanently hidden on iOS,
+blocking the Phase 04 manual test recipe's primary auth path on the simulator (Bug B8).
+
+**Decision:** Replace with `Platform.isDebugBinary` from the Kotlin/Native standard library
+(`kotlin.native.Platform`). This value is set by the Kotlin/Native linker at build time:
+debug framework builds produce `true`; release/App Store builds produce `false`. No Gradle
+build config injection or freeCompilerArgs flag is needed — the value is already correct for
+simulator debug builds.
+
+**Why not freeCompilerArgs / Gradle buildConfig injection:** Those approaches require
+adding a build-time constant via `freeCompilerArgs += "-Xbinary=..."` or a separate
+`buildConfig` plugin and are more fragile (the constant must be wired through the build
+scripts). `Platform.isDebugBinary` is already present in the Kotlin/Native runtime for
+exactly this purpose and requires zero build-script changes.
+
+**Why not a separate iosDebug source set:** Kotlin Multiplatform does not expose a clean
+iosDebug/iosRelease source set split in the current Gradle DSL without significant
+restructuring. `Platform.isDebugBinary` is the idiomatic Kotlin/Native solution.
+
+**Phase:** 04, fix/session-fixes-05
+
+---
+
 ## [2026-05-09] [composeApp] — Debug-only token paste field for magic link testing when Resend is active
 
 **Context:** `ResendEmailAdapter` delivers magic link emails to a real inbox, not the server

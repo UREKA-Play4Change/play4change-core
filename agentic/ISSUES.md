@@ -215,4 +215,81 @@ The three test classes previously marked `❌ Missing` now exist and all pass:
 
 ---
 
+## B7 [FIXED] Severity:Critical — KeychainTokenStorage.saveItem silently discards tokens on iOS 26.2 simulator
+
+**Discovered:** Phase 04, fix/session-fixes-05, 2026-05-09.
+
+**Description:** `saveItem()` called `SecItemAdd(query, null)` without checking the returned
+`OSStatus`. On the iOS 26.2 simulator SecItemAdd was returning a non-success status (no entry
+written to the keychain DB, confirmed via `sqlite3` query on `keychain-2-debug.db`). Because
+the failure was silent, `store(accessToken, refreshToken)` appeared to succeed. The app
+navigated to the Home screen, `GET /profile` was called with no `Authorization` header,
+received 401, refresh token was also null (also not stored), `SessionEventBus.sessionExpired()`
+fired, and the app bounced back to the login screen in under 1 second.
+
+**Impact:** iOS users could not complete authentication at all. The entire Phase 04 iOS flow
+was blocked. Android was unaffected (EncryptedSharedPreferences has its own write path).
+
+**Workaround:** None — every iOS auth attempt failed silently.
+
+**Fix plan:** Check OSStatus from SecItemAdd. If errSecDuplicateItem, call SecItemUpdate
+instead. If any other non-success status, throw IllegalStateException so the caller can
+surface a meaningful error. Pre-delete call removed; replaced with add-or-update pattern.
+
+**Fixed:** 2026-05-09 — `KeychainTokenStorage.kt` `saveItem()` rewritten; imports for
+`SecItemUpdate` and `errSecDuplicateItem` added. Unit tests not feasible in KMP without
+XCTest host (documented in class KDoc); verified via Phase 04 manual test recipe
+Section 1 (Keychain DB query) and Section 2 (persistence across restart). Branch: fix/session-fixes-05.
+
+---
+
+## B8 [FIXED] Severity:High — isDebugBuild hardcoded to false on iOS; debug paste field never shows
+
+**Discovered:** Phase 04, fix/session-fixes-05, 2026-05-09.
+
+**Description:** `BuildInfo.ios.kt` declared `actual val isDebugBuild: Boolean = false`.
+The in-app "Paste your verification token" field — added in Phase 04 and guarded by
+`if (isDebugBuild)` — was therefore permanently hidden on iOS, including debug/simulator
+builds. The Phase 04 recipe §1 primary testing path depends on this field to inject the
+magic link token without accessing the real inbox.
+
+**Impact:** iOS testing of the magic link flow was impossible via the recipe's primary path.
+Combined with B7 (Keychain silent failure), iOS authentication was completely blocked.
+
+**Workaround:** None on iOS.
+
+**Fix plan:** Replace hardcoded `false` with `Platform.isDebugBinary` from the Kotlin/Native
+standard library. `Platform.isDebugBinary` is set by the linker at build time: debug
+framework → true, release framework → false.
+
+**Fixed:** 2026-05-09 — `BuildInfo.ios.kt` updated to `actual val isDebugBuild: Boolean =
+Platform.isDebugBinary`. DECISIONS.md entry added. Branch: fix/session-fixes-05.
+
+---
+
+## B-ROADMAP [FIXED] Severity:Medium — Roadmap returns PENDING for today's completed task
+
+**Discovered:** Phase 04, fix/session-fixes-05, 2026-05-09.
+
+**Description:** `RoadmapService.getRoadmap()` handled `template.dayIndex == dayIndex`
+(today's node) with only two cases: `PENDING_REVIEW` and an `else → PENDING` fallback.
+When an assignment existed with `status = SUBMITTED` (task correctly answered, `is_correct
+= true`, `points_awarded = 10` in DB), it fell to the `else` branch and returned
+`RoadmapNodeStatus.PENDING`. Learners saw no visual distinction between "task done" and
+"task not yet started" on today's roadmap node.
+
+**Impact:** Home screen roadmap node shows same state before and after completing today's
+task. Users cannot tell from the roadmap whether they have completed a day.
+
+**Workaround:** Check `GET /tasks/today` which returns 404 when task is submitted.
+
+**Fix plan:** Add `AssignmentStatus.SUBMITTED -> RoadmapNodeStatus.COMPLETED` as an
+explicit case before the `else` in the `dayIndex == dayIndex` branch.
+
+**Fixed:** 2026-05-09 — `RoadmapService.kt` line 64 updated; `RoadmapServiceTest.kt`
+added with 3 tests (SUBMITTED→COMPLETED, PENDING→PENDING, no-assignment→PENDING).
+All tests green. Branch: fix/session-fixes-05.
+
+---
+
 *(New entries are prepended above existing open items. Most recent first.)*
