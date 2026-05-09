@@ -23,6 +23,59 @@ When an issue is fixed, mark it FIXED with the phase, task, and commit. Do not d
 
 ---
 
+## B5 [FIXED] Severity:Medium — `GET /tasks/today` returns submitted task instead of 404
+
+**Discovered:** Phase 04, manual testing session 2026-05-09.
+
+**Description:** In prod mode, `TaskService.getTodayTask()` searches existing assignments for
+one whose template `dayIndex` matches the current calendar day index. It returned
+`TodayTaskResult.Available` for any matching assignment regardless of `AssignmentStatus`.
+After a user submitted a task correctly (`status = SUBMITTED`), calling `GET /tasks/today`
+again returned HTTP 200 with the already-submitted assignment still showing
+`wrongAttemptCount` and "Start Challenge". The `X-Task-Available-At` 404 path was never
+reached. `submitAnswer()` would then reject a re-submission with `Conflict.ConcurrentModification`.
+
+**Impact:** The home screen task card shows "Start Challenge →" permanently after completion.
+Tapping it leads to a conflict error. Users have no feedback that today's task is done.
+
+**Workaround:** None visible to the user.
+
+**Fix plan:** `TaskService.getTodayTask()` prod-mode block — add `status == PENDING` guard.
+If the matching assignment is not PENDING, return `NotAvailableYet(enrollment.enrolledAt
+.plusDays(dayIndex + 1))` so the controller renders HTTP 404 with `X-Task-Available-At`.
+
+**Fixed:** 2026-05-09 — `TaskService.kt` lines 92-100, `TaskDeliveryRateTest.kt` test
+corrected, commit acc0295.
+
+---
+
+## B6 [FIXED] Severity:Low — `GET /admin/topics/{id}/badges` returns `enrolledCount: 0`
+
+**Discovered:** Phase 04, manual testing session 2026-05-09.
+
+**Description:** `BadgeQueryService.getTopicBadgeStats()` fetched the `MicroCompetence` for
+the topic first, then early-returned `TopicBadgeStatsDto(0, 0, 0.0, emptyList())` when none
+was found — hardcoding `enrolledCount = 0` without ever querying
+`enrollmentRepository.countByTopicId()`. Topics that have not yet generated a
+`MicroCompetence` (e.g. topics still in progress or newly created) always reported zero
+enrolled users regardless of actual enrollment state. DB confirmed 2 active enrollments
+while the API returned 0.
+
+**Impact:** Admin badge stats page shows 0 enrolled users for any topic without a
+MicroCompetence record. `earnedPercentage` is therefore always 0.0 in those cases even
+if users are enrolled.
+
+**Workaround:** None — the count is always wrong until a MicroCompetence is created for
+the topic.
+
+**Fix plan:** Move `enrolledCount = enrollmentRepository.countByTopicId(topicId).toInt()`
+before the null-check so it is always computed. Pass the real count into the early-return
+`TopicBadgeStatsDto`.
+
+**Fixed:** 2026-05-09 — `BadgeQueryService.kt` lines 35-38, commit acc0295.
+
+---
+
 ## I02 [FIXED] Severity:High — Struggle resolution does not reset original task assignment for retry
 
 **Discovered:** Phase 03, Task 3.2 — audit of the struggle/ packages before implementation.
