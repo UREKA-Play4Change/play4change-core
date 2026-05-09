@@ -19,18 +19,20 @@ class DefaultLoginComponent(
 
     override fun onEvent(event: LoginEvents) {
         when (event) {
-            is LoginEvents.EmailChanged -> updateState { copy(email = event.email, emailError = null) }
-            is LoginEvents.NameChanged  -> updateState { copy(name = event.value, nameError = null) }
-            LoginEvents.Submit          -> submit()
-            LoginEvents.Resend          -> resend()
-            is LoginEvents.SocialLogin  -> handleSocialLogin(event.provider)
-            LoginEvents.ToggleMode      -> updateState {
+            is LoginEvents.EmailChanged  -> updateState { copy(email = event.email, emailError = null) }
+            is LoginEvents.NameChanged   -> updateState { copy(name = event.value, nameError = null) }
+            LoginEvents.Submit           -> submit()
+            LoginEvents.Resend           -> resend()
+            is LoginEvents.SocialLogin   -> handleSocialLogin(event.provider)
+            LoginEvents.ToggleMode       -> updateState {
                 copy(
                     mode = if (mode == AuthMode.Login) AuthMode.Register else AuthMode.Login,
                     stage = LoginStage.EmailEntry,
                     email = "", name = "", emailError = null, nameError = null
                 )
             }
+            is LoginEvents.TokenChanged  -> updateState { copy(tokenInput = event.value, error = null) }
+            LoginEvents.VerifyToken      -> verifyToken()
         }
     }
 
@@ -97,6 +99,36 @@ class DefaultLoginComponent(
                 repository.sendMagicLink(email)
                 updateState { copy(loadingAction = null) }
                 startCountdown()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                updateState {
+                    copy(
+                        loadingAction = null,
+                        error = AppError.ServerError.Unexpected(e.message)
+                    )
+                }
+            }
+        }
+    }
+
+    private fun verifyToken() {
+        val token = state.value.tokenInput.trim()
+        if (token.isBlank()) return
+        scope.launch {
+            updateState { copy(loadingAction = LoginLoadingAction.Token, error = null) }
+            try {
+                val result = repository.verifyMagicLink(token)
+                if (result != null) {
+                    emitEffect(LoginEffect.NavigateToHome)
+                } else {
+                    updateState {
+                        copy(
+                            loadingAction = null,
+                            error = AppError.ServerError.Unexpected("Token verification failed")
+                        )
+                    }
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
