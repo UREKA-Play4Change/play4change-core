@@ -9,7 +9,7 @@
 
   <!-- Auth -->
   <string name="login_welcome">Bienvenue</string>
-  <string name="login_subtitle">Connectez-vous pour continuer votre parcours d\'apprentissage</string>
+  <string name="login_subtitle">Connectez-vous pour continuer votre parcours d'apprentissage</string>
   <string name="login_email_label">Adresse e-mail</string>
   <string name="login_email_error_invalid">Veuillez saisir une adresse e-mail valide</string>
   <string name="login_cta">Continuer</string>
@@ -24,15 +24,15 @@
   <string name="home_this_week">Cette Semaine</string>
   <string name="home_todays_challenge">Défi du Jour</string>
   <string name="home_start_challenge">Commencer le Défi →</string>
-  <string name="home_completed_today">Terminé pour aujourd\'hui ! À demain.</string>
-  <string name="home_no_task">Aucune tâche disponible aujourd\'hui. Revenez demain.</string>
+  <string name="home_completed_today">Terminé pour aujourd'hui ! À demain.</string>
+  <string name="home_no_task">Aucune tâche disponible aujourd'hui. Revenez demain.</string>
   <string name="home_pts_suffix">pts</string>
   <string name="home_roadmap">Votre Parcours</string>
 
   <!-- Task -->
   <string name="task_question_label">Question</string>
-  <string name="task_show_hint">Afficher l\'indice</string>
-  <string name="task_hide_hint">Masquer l\'indice</string>
+  <string name="task_show_hint">Afficher l'indice</string>
+  <string name="task_hide_hint">Masquer l'indice</string>
   <string name="task_submit">Soumettre</string>
   <string name="task_continue">Continuer →</string>
   <string name="task_exit_title">Quitter la tâche ?</string>
@@ -40,7 +40,7 @@
   <string name="task_exit_confirm">Quitter</string>
   <string name="task_exit_cancel">Continuer</string>
   <string name="task_result_correct">Correct !</string>
-  <string name="task_result_wrong">Pas tout à fait — révisez l\'indice et réessayez demain.</string>
+  <string name="task_result_wrong">Pas tout à fait — révisez l'indice et réessayez demain.</string>
 
   <!-- Profile -->
   <string name="profile_title">Profil</string>
@@ -56,10 +56,10 @@
   <!-- About -->
   <string name="about_title">À propos</string>
   <string name="about_project_title">Le Projet</string>
-  <string name="about_project_body">U!REKA Play4Change est un jeu sérieux multiplateforme où les joueurs reçoivent des défis quotidiens générés par IA alignés sur les thèmes de durabilité et d\'éducation numérique. Développé dans le cadre de la Licenciatura em Engenharia Informática e de Computadores à l\'ISEL.</string>
+  <string name="about_project_body">U!REKA Play4Change est un jeu sérieux multiplateforme où les joueurs reçoivent des défis quotidiens générés par IA alignés sur les thèmes de durabilité et d'éducation numérique. Développé dans le cadre de la Licenciatura em Engenharia Informática e de Computadores à l'ISEL.</string>
   <string name="about_built_with">Développé Avec</string>
   <string name="about_architecture_title">Architecture</string>
-  <string name="about_architecture_body">Architecture hexagonale avec pipeline IA Ports &amp; Adapters. La génération de contenu IA s\'exécute en traitement nocturne, éliminant la latence d\'inférence de l\'expérience utilisateur. Les branches adaptatives fournissent une remédiation personnalisée via la recherche de similarité sémantique avec pgvector.</string>
+  <string name="about_architecture_body">Architecture hexagonale avec pipeline IA Ports &amp; Adapters. La génération de contenu IA s'exécute en traitement nocturne, éliminant la latence d'inférence de l'expérience utilisateur. Les branches adaptatives fournissent une remédiation personnalisée via la recherche de similarité sémantique avec pgvector.</string>
   <string name="about_author_label">Auteur</string>
   <string name="about_author_name">Radesh Ilesh Gamanbhai Govind</string>
   <string name="about_student_number">51620</string>
@@ -73,8 +73,8 @@
   <!-- Auth — Social + Register -->
   <string name="auth_continue_google">Continuer avec Google</string>
   <string name="auth_continue_facebook">Continuer avec Facebook</string>
-  <string name="auth_no_account">Vous n\'avez pas de compte ?</string>
-  <string name="auth_register">S\'inscrire</string>
+  <string name="auth_no_account">Vous n'avez pas de compte ?</string>
+  <string name="auth_register">S'inscrire</string>
   <string name="auth_have_account">Vous avez déjà un compte ?</string>
   <string name="auth_sign_in">Se connecter</string>
   <string name="auth_name_label">Nom complet</string>
@@ -84,7 +84,7 @@
 
   <!-- Explore -->
   <string name="explore_title">Explorer les Sujets</string>
-  <string name="explore_subtitle">Choisissez un sujet sur lequel vous concentrer. Vous ne pouvez être inscrit qu\'à un seul à la fois.</string>
+  <string name="explore_subtitle">Choisissez un sujet sur lequel vous concentrer. Vous ne pouvez être inscrit qu'à un seul à la fois.</string>
   <string name="explore_join">Rejoindre le sujet</string>
   <string name="explore_active">Actif</string>
   <string name="explore_switch_confirm_title">Changer de sujet ?</string>
@@ -144,7 +144,7 @@
   <!-- Common -->
   <string name="ok">OK</string>
   <string name="cancel">Annuler</string>
-  <string name="error_unexpected">Une erreur inattendue s\'est produite.</string>
+  <string name="error_unexpected">Une erreur inattendue s'est produite.</string>
   <string name="error_network">Impossible de se connecter. Vérifiez votre connexion internet.</string>
   <string name="error_auth_required">Authentification requise. Veuillez vous connecter.</string>
   <string name="error_service_unavailable">Service temporairement indisponible. Veuillez réessayer plus tard.</string>
