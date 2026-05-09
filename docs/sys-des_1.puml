@@ -1,0 +1,68 @@
+@startuml Play4Change_Simplified
+left to right direction
+
+' --- Styling inspired by the reference image ---
+skinparam roundcorner 5
+skinparam defaultFontName "Helvetica"
+skinparam backgroundColor #F4F9FC
+skinparam nodesep 40
+skinparam ranksep 60
+
+skinparam rectangle {
+    BorderThickness 1.5
+}
+
+skinparam database {
+    BackgroundColor #FFC1C1
+    BorderColor #CC5555
+    BorderThickness 1.5
+}
+
+' --- Client Layer ---
+rectangle "Client Apps" {
+    rectangle "Web Portal\n(Admin)" as WebClient #FFFFFF
+    rectangle "Mobile App\n(Learner)" as MobileClient #FFFFFF
+}
+
+' --- Gateway Layer ---
+rectangle "API Gateway / Load Balancer" as Gateway #FFD6D6
+
+' --- Microservices / Domain Layer ---
+rectangle "System Services" {
+    rectangle "Auth & Identity\nService" as AuthService #A9D1FF
+    rectangle "Topic & Content\nService" as TopicService #A9D1FF
+    rectangle "Enrollment & Task\nService" as EnrollService #A9D1FF
+    rectangle "Gamification\n(Badges) Service" as GamificationService #A9D1FF
+}
+
+' --- AI Agent Layer ---
+rectangle "AI Agent Subsystem" {
+    rectangle "Mistral AI Agent\n(+ RAG / Embeddings)" as AIAgent #C8E6C9
+}
+
+' --- Data Layer ---
+rectangle "Data Stores" {
+    database "PostgreSQL\n(+ pgvector)" as DB
+    database "Redis Cache" as Cache
+    database "MinIO\n(Object Storage)" as Minio
+}
+
+' --- Relationships / Data Flow ---
+WebClient --> Gateway
+MobileClient --> Gateway
+
+Gateway --> AuthService
+Gateway --> TopicService
+Gateway --> EnrollService
+Gateway --> GamificationService
+
+AuthService --> DB
+TopicService --> DB
+EnrollService --> DB
+GamificationService --> DB
+
+AuthService --> Cache
+TopicService --> Minio
+TopicService --> AIAgent
+
+@enduml

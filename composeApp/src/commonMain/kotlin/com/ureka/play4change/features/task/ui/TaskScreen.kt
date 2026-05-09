@@ -88,6 +88,7 @@ import play4change.composeapp.generated.resources.task_submit_task
 fun TaskScreen(component: DefaultTaskComponent) {
     BaseView(
         component = component,
+        onRetry = { component.onEvent(TaskEvents.RetryLoad) },
         topBar = {
             val taskState by component.state.subscribeAsState()
             CenterAlignedTopAppBar(

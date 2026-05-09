@@ -20,6 +20,7 @@ interface RootComponent {
     fun navigateToAbout()
     fun navigateToExplore()
     fun navigateBack()
+    fun handleDeepLink(token: String)
 
     sealed class Child {
         data class Splash(val component: DefaultSplashComponent) : Child()

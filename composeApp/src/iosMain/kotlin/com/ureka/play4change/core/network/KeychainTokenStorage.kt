@@ -1,10 +1,22 @@
 package com.ureka.play4change.core.network
 
+import cnames.structs.__CFData
+import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.alloc
+import kotlinx.cinterop.convert
+import kotlinx.cinterop.interpretCPointer
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
+import kotlinx.cinterop.rawValue
+import kotlinx.cinterop.readBytes
+import kotlinx.cinterop.reinterpret
+import kotlinx.cinterop.usePinned
 import kotlinx.cinterop.value
+import platform.CoreFoundation.CFDataCreate
+import platform.CoreFoundation.CFDataGetBytePtr
+import platform.CoreFoundation.CFDataGetLength
 import platform.CoreFoundation.CFDictionaryAddValue
 import platform.CoreFoundation.CFDictionaryCreateMutable
 import platform.CoreFoundation.CFStringCreateWithCString
@@ -12,11 +24,6 @@ import platform.CoreFoundation.CFTypeRefVar
 import platform.CoreFoundation.kCFAllocatorDefault
 import platform.CoreFoundation.kCFBooleanTrue
 import platform.CoreFoundation.kCFStringEncodingUTF8
-import platform.Foundation.NSData
-import platform.Foundation.NSString
-import platform.Foundation.NSUTF8StringEncoding
-import platform.Foundation.create
-import platform.Foundation.dataUsingEncoding
 import platform.Security.SecItemAdd
 import platform.Security.SecItemCopyMatching
 import platform.Security.SecItemDelete
@@ -70,21 +77,26 @@ class KeychainTokenStorage : TokenStorage {
         val status = SecItemCopyMatching(query, resultRef.ptr)
         if (status != errSecSuccess) return@memScoped null
 
-        @Suppress("UNCHECKED_CAST")
-        val nsData = resultRef.value as? NSData ?: return@memScoped null
-        NSString.create(nsData, NSUTF8StringEncoding) as? String
+        val opaquePtr = resultRef.value ?: return@memScoped null
+        val cfData = interpretCPointer<__CFData>(opaquePtr.rawValue) ?: return@memScoped null
+        val length = CFDataGetLength(cfData).toInt()
+        if (length <= 0) return@memScoped null
+        CFDataGetBytePtr(cfData)?.reinterpret<ByteVar>()?.readBytes(length)?.decodeToString()
     }
 
     private fun saveItem(account: String, value: String) {
         deleteItem(account)
-        val data = (value as NSString).dataUsingEncoding(NSUTF8StringEncoding) ?: return
+        val bytes = value.encodeToByteArray()
+        val cfData = bytes.usePinned { pinned ->
+            CFDataCreate(kCFAllocatorDefault, pinned.addressOf(0).reinterpret(), bytes.size.convert())
+        } ?: return
 
         val query = CFDictionaryCreateMutable(kCFAllocatorDefault, 5, null, null)!!
         CFDictionaryAddValue(query, kSecClass, kSecClassGenericPassword)
         CFDictionaryAddValue(query, kSecAttrService, cfString(SERVICE))
         CFDictionaryAddValue(query, kSecAttrAccount, cfString(account))
         CFDictionaryAddValue(query, kSecAttrAccessible, kSecAttrAccessibleAfterFirstUnlock)
-        CFDictionaryAddValue(query, kSecValueData, data)
+        CFDictionaryAddValue(query, kSecValueData, cfData)
         SecItemAdd(query, null)
     }
 

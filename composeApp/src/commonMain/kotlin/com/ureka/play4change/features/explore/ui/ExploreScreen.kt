@@ -61,6 +61,7 @@ import play4change.composeapp.generated.resources.explore_title
 fun ExploreScreen(component: DefaultExploreComponent) {
     BaseView(
         component = component,
+        onRetry = { component.onEvent(ExploreEvents.LoadTopics) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(Res.string.explore_title)) },

@@ -14,11 +14,13 @@ import play4change.composeapp.generated.resources.Res
 import play4change.composeapp.generated.resources.error_network
 import play4change.composeapp.generated.resources.error_unexpected
 import play4change.composeapp.generated.resources.ok
+import play4change.composeapp.generated.resources.retry
 
 @Composable
 fun <E : ComponentEvents, S : ComponentState> ErrorDialog(
     component: BaseComponent<S, E>,
-    error: AppError?
+    error: AppError?,
+    onRetry: (() -> Unit)? = null
 ) {
     if (error == null) return
     val message = when (error) {
@@ -49,6 +51,16 @@ fun <E : ComponentEvents, S : ComponentState> ErrorDialog(
             TextButton(onClick = { component.clearError() }) {
                 Text(stringResource(Res.string.ok))
             }
-        }
+        },
+        dismissButton = if (onRetry != null) {
+            {
+                TextButton(onClick = {
+                    component.clearError()
+                    onRetry()
+                }) {
+                    Text(stringResource(Res.string.retry))
+                }
+            }
+        } else null
     )
 }

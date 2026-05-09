@@ -3,7 +3,9 @@ package com.ureka.play4change.auth.adapter.outbound.email
 import com.ureka.play4change.auth.application.ResendProperties
 import com.ureka.play4change.auth.port.outbound.EmailPort
 import org.slf4j.LoggerFactory
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.context.annotation.Conditional
+import org.springframework.context.annotation.ConditionContext
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
 import org.springframework.context.annotation.Primary
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
@@ -13,7 +15,7 @@ import org.springframework.web.client.RestTemplate
 
 @Component
 @Primary
-@ConditionalOnProperty(name = ["resend.api-key"], matchIfMissing = false)
+@ConditionalOnExpression("T(org.springframework.util.StringUtils).hasText('\${resend.api-key:}')")
 class ResendEmailAdapter(private val props: ResendProperties) : EmailPort {
 
     private val log = LoggerFactory.getLogger(ResendEmailAdapter::class.java)

@@ -57,6 +57,7 @@ fun <S : ComponentState, E : ComponentEvents> BaseView(
     drawerState: DrawerState? = null,
     drawerContent: @Composable ColumnScope.() -> Unit = {},
     contentAlignment: Alignment = Alignment.TopStart,
+    onRetry: (() -> Unit)? = null,
     content: @Composable (state: S, onEvent: (E) -> Unit, innerPadding: PaddingValues) -> Unit,
 ) {
     val state by component.state.subscribeAsState()
@@ -72,7 +73,7 @@ fun <S : ComponentState, E : ComponentEvents> BaseView(
                 contentAlignment = contentAlignment
             ) {
                 content(state, component::onEvent, innerPadding)
-                ErrorDialog(component, state.error)
+                ErrorDialog(component, state.error, onRetry)
             }
         }
     }

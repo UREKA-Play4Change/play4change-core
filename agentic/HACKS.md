@@ -118,7 +118,28 @@ Keychain (iOS). Implement 401→refresh→retry logic.
 
 **Fix in:** Phase 04, Tasks 4.1–4.5
 
-**Fixed:** *(to be filled when task is complete)*
+**Partially fixed (Phase 04, fix/phase-04-root-causes):**
+- `SplashModule` now binds `HttpSplashRepository` — session restored from Keychain on startup.
+- `HomeModule` now binds `HttpHomeRepository` — home screen calls real `/profile` + `/tasks/today`.
+- Remaining mocks (Auth, Explore, Profile, Task, etc.) were wired in the preceding Phase 04 PRs.
+
+---
+
+## H06 [OPEN] — SessionEventBus never subscribed (expired session not redirected to login)
+
+**Location:** `composeApp/src/commonMain/kotlin/com/ureka/play4change/core/component/root/DefaultRootComponent.kt`
+
+**What it is:** `SessionEventBus.sessionExpired()` is called by the auth interceptor when a
+token refresh fails, but nothing was collecting the `events` SharedFlow. The user stayed on
+the current screen with no feedback or redirect.
+
+**Why it exists:** The event bus was added as infrastructure during Phase 04 HTTP wiring, but
+the root component subscription was missed.
+
+**Fix:** Added `scope.launch { SessionEventBus.events.collect { … } }` in `DefaultRootComponent.init`.
+On `SessionExpired`, `navigateToLogin()` is called, clearing the back stack.
+
+**Fixed:** Phase 04, fix/phase-04-root-causes, commit ecc2989
 
 ---
 

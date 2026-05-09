@@ -4,5 +4,23 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<!-- Custom URL scheme: play4change://auth/verify?token=<TOKEN> -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.ureka.play4change</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>play4change</string>
+			</array>
+		</dict>
+	</array>
+	<!-- Allow plain HTTP to localhost for dev/simulator (Ktor → local server) -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

@@ -28,10 +28,15 @@ fun Throwable.toNetworkError(): NetworkError = when (this) {
     is HttpRequestTimeoutException -> NetworkError.Timeout
     is SocketTimeoutException -> NetworkError.Timeout
     is ConnectTimeoutException -> NetworkError.Timeout
-    else -> if (isNetworkUnavailableError(this))
-        NetworkError.NoConnection
-    else
-        NetworkError.Unknown(this.message ?: "Unknown error")
+    else -> {
+        val className = this::class.simpleName ?: ""
+        when {
+            className.contains("ConnectTimeout") || className.contains("SocketTimeout") ->
+                NetworkError.Timeout
+            isNetworkUnavailableError(this) -> NetworkError.NoConnection
+            else -> NetworkError.Unknown(this.message ?: "Unknown error")
+        }
+    }
 }
 
 /**
