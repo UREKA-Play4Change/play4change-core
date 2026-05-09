@@ -236,10 +236,15 @@ was blocked. Android was unaffected (EncryptedSharedPreferences has its own writ
 instead. If any other non-success status, throw IllegalStateException so the caller can
 surface a meaningful error. Pre-delete call removed; replaced with add-or-update pattern.
 
-**Fixed:** 2026-05-09 — `KeychainTokenStorage.kt` `saveItem()` rewritten; imports for
-`SecItemUpdate` and `errSecDuplicateItem` added. Unit tests not feasible in KMP without
-XCTest host (documented in class KDoc); verified via Phase 04 manual test recipe
-Section 1 (Keychain DB query) and Section 2 (persistence across restart). Branch: fix/session-fixes-05.
+**Fixed:** 2026-05-09 — Two-stage fix on `KeychainTokenStorage.kt`. Stage 1: check OSStatus
+from SecItemAdd, throw on failure. Stage 2 (root cause): iOS 26.2 simulator has the System
+Keychain disabled (`System Keychain Always Supported set via feature flag to disabled`).
+Added `kSecUseDataProtectionKeychain = kCFBooleanTrue` to all Keychain queries to route
+operations to the Data Protection Keychain (required on iOS 13+, mandatory on iOS 26.2 sim).
+`SecItemUpdate` + `errSecDuplicateItem` imports added for the duplicate-item fallback path.
+Unit tests not feasible in KMP without XCTest host (documented in class KDoc); verified via
+Phase 04 manual test recipe Section 1 (Keychain DB query) and Section 2 (persistence across
+restart). See DECISIONS.md [2026-05-09] [iosMain] — KeychainTokenStorage. Branch: fix/session-fixes-05.
 
 ---
 

@@ -21,6 +21,31 @@ hard-to-reverse choices) — write a full ADR in `docs/adr/` instead.
 
 ---
 
+## [2026-05-09] [iosMain] — KeychainTokenStorage must use kSecUseDataProtectionKeychain on iOS 13+
+
+**Context:** On iOS 26.2 simulator, all SecItemAdd calls in `KeychainTokenStorage.saveItem()`
+were failing silently. Running the app with B7 status-check logging revealed the system log
+entry: `System Keychain Always Supported set via feature flag to disabled`. The iOS 26.2
+simulator ships with the legacy System Keychain disabled via a kernel feature flag. Standard
+SecItemAdd without `kSecUseDataProtectionKeychain` targets the System Keychain and always
+fails on iOS 26.2 sim.
+
+**Decision:** Add `kSecUseDataProtectionKeychain = kCFBooleanTrue` to every Keychain
+query in `KeychainTokenStorage` (addQuery, searchQuery, deleteQuery). This routes all
+operations to the Data Protection Keychain (per-app, sandboxed) instead of the System
+Keychain. `kSecUseDataProtectionKeychain` is available since iOS 13.0 and macOS 10.15.
+
+**Why not a different accessibility attribute:** `kSecAttrAccessibleAfterFirstUnlock` is kept
+unchanged — it controls when the item is readable, not which keychain it uses.
+`kSecUseDataProtectionKeychain` is an orthogonal selector for the keychain store.
+
+**Why not remove kSecAttrAccessibleAfterFirstUnlock:** That attribute is still required on
+real device builds to allow background token refresh after device reboot.
+
+**Phase:** 04, fix/session-fixes-05
+
+---
+
 ## [2026-05-09] [iosMain] — isDebugBuild via Platform.isDebugBinary
 
 **Context:** `BuildInfo.ios.kt` had `actual val isDebugBuild: Boolean = false` hardcoded.
