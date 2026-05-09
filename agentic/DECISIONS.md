@@ -21,6 +21,110 @@ hard-to-reverse choices) — write a full ADR in `docs/adr/` instead.
 
 ---
 
+## [2026-05-09] [auth] — Magic link GET /auth/verify redirects to play4change:// instead of returning JSON
+
+**Context:** The email magic link URL is `https://radesh-govind.com/auth/verify?token=...`. When
+clicked from an email client on iOS, Safari opens the URL and calls the server. The original
+`GET /auth/verify` returned JSON tokens, which displayed in the browser — the app was never
+opened. Bug B10.
+
+**Decision:** `GET /auth/verify` now returns `302 Found` to `play4change://auth/verify?token={token}`.
+The token is NOT consumed in the redirect. The app opens via its registered custom URL scheme,
+receives the URL in `.onOpenURL`, extracts the token, and calls `POST /auth/magic-link/verify`
+to consume the token and obtain JWTs. `HttpAuthRepository.verifyMagicLink` was updated from
+`GET /auth/verify` to `POST /auth/magic-link/verify`.
+
+**Why not Universal Links (AASA):** Universal Links require an `apple-app-site-association` file
+at `https://radesh-govind.com/.well-known/apple-app-site-association` and an Associated Domains
+entitlement in the app. This requires control of the DNS/server and App Store provisioning
+profile changes. The custom scheme redirect achieves the same result with no infrastructure
+changes and works in the simulator without entitlements.
+
+**Why not consume the token in the redirect:** Consuming the token server-side during the
+redirect would leave no way for the app to authenticate. The redirect is a pass-through;
+the actual single-use consumption happens in `POST /auth/magic-link/verify`.
+
+**Phase:** 04, fix/session-fixes-05
+
+---
+
+## [2026-05-09] [network] — Ktor 3.0.0 bearer auth: refreshTokens must fall back to stored refresh token when oldTokens is null
+
+**Context:** In Ktor 3.0.0, `sendWithoutRequest { true }` does NOT cause `loadTokens` / `addRequestHeaders`
+to be called proactively. The first authenticated request after login goes out without an `Authorization`
+header, the server returns 401, and `refreshTokens` is invoked with `oldTokens = null`. The original
+code read `oldTokens?.refreshToken` which evaluates to null, triggering `onSessionExpired()` immediately
+after every successful login (Bug B9).
+
+**Decision:** Changed `val refreshToken = oldTokens?.refreshToken` to
+`val refreshToken = oldTokens?.refreshToken ?: tokenStorage.getRefreshToken()` in
+`HttpClientFactory.kt`. This makes the 401-on-first-request case transparent to the user: Ktor
+calls `refreshTokens`, we read the stored token directly from `TokenStorage`, issue `POST /auth/refresh`,
+get a fresh access token, and retry the original request — all without the user knowing a refresh
+happened.
+
+**Why not configure Ktor differently:** Ktor 3.0.0 does not offer a first-class "always send auth
+header without challenge" mechanism that is reliably cross-platform and works with bearer tokens.
+The `sendWithoutRequest` predicate controls whether the client waits for a challenge, but the
+`addRequestHeaders` / `loadTokens` proactive path has a known issue in 3.0.0 where it is not called
+on the first request. The fallback approach is more robust and does not depend on undocumented
+plugin internals.
+
+**Phase:** 04, fix/session-fixes-05
+
+---
+
+## [2026-05-09] [iosMain] — KeychainTokenStorage must use kSecUseDataProtectionKeychain on iOS 13+
+
+**Context:** On iOS 26.2 simulator, all SecItemAdd calls in `KeychainTokenStorage.saveItem()`
+were failing silently. Running the app with B7 status-check logging revealed the system log
+entry: `System Keychain Always Supported set via feature flag to disabled`. The iOS 26.2
+simulator ships with the legacy System Keychain disabled via a kernel feature flag. Standard
+SecItemAdd without `kSecUseDataProtectionKeychain` targets the System Keychain and always
+fails on iOS 26.2 sim.
+
+**Decision:** Add `kSecUseDataProtectionKeychain = kCFBooleanTrue` to every Keychain
+query in `KeychainTokenStorage` (addQuery, searchQuery, deleteQuery). This routes all
+operations to the Data Protection Keychain (per-app, sandboxed) instead of the System
+Keychain. `kSecUseDataProtectionKeychain` is available since iOS 13.0 and macOS 10.15.
+
+**Why not a different accessibility attribute:** `kSecAttrAccessibleAfterFirstUnlock` is kept
+unchanged — it controls when the item is readable, not which keychain it uses.
+`kSecUseDataProtectionKeychain` is an orthogonal selector for the keychain store.
+
+**Why not remove kSecAttrAccessibleAfterFirstUnlock:** That attribute is still required on
+real device builds to allow background token refresh after device reboot.
+
+**Phase:** 04, fix/session-fixes-05
+
+---
+
+## [2026-05-09] [iosMain] — isDebugBuild via Platform.isDebugBinary
+
+**Context:** `BuildInfo.ios.kt` had `actual val isDebugBuild: Boolean = false` hardcoded.
+The in-app token paste field (guarded by `if (isDebugBuild)`) was permanently hidden on iOS,
+blocking the Phase 04 manual test recipe's primary auth path on the simulator (Bug B8).
+
+**Decision:** Replace with `Platform.isDebugBinary` from the Kotlin/Native standard library
+(`kotlin.native.Platform`). This value is set by the Kotlin/Native linker at build time:
+debug framework builds produce `true`; release/App Store builds produce `false`. No Gradle
+build config injection or freeCompilerArgs flag is needed — the value is already correct for
+simulator debug builds.
+
+**Why not freeCompilerArgs / Gradle buildConfig injection:** Those approaches require
+adding a build-time constant via `freeCompilerArgs += "-Xbinary=..."` or a separate
+`buildConfig` plugin and are more fragile (the constant must be wired through the build
+scripts). `Platform.isDebugBinary` is already present in the Kotlin/Native runtime for
+exactly this purpose and requires zero build-script changes.
+
+**Why not a separate iosDebug source set:** Kotlin Multiplatform does not expose a clean
+iosDebug/iosRelease source set split in the current Gradle DSL without significant
+restructuring. `Platform.isDebugBinary` is the idiomatic Kotlin/Native solution.
+
+**Phase:** 04, fix/session-fixes-05
+
+---
+
 ## [2026-05-09] [composeApp] — Debug-only token paste field for magic link testing when Resend is active
 
 **Context:** `ResendEmailAdapter` delivers magic link emails to a real inbox, not the server

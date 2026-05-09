@@ -4,6 +4,8 @@ import com.ureka.play4change.auth.domain.model.TokenPair
 import com.ureka.play4change.auth.port.inbound.AuthUseCase
 import com.ureka.play4change.auth.port.inbound.OAuthUseCase
 import com.ureka.play4change.auth.port.inbound.TokenUseCase
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -20,10 +22,18 @@ class AuthController(
         return ResponseEntity.accepted().body(MessageResponse("Magic link sent. Check your email."))
     }
 
-    /** Original redirect target — email link lands here as GET with token query param. */
+    /**
+     * Email link lands here as GET with token query param.
+     * Redirects to the mobile app's custom URL scheme so the learner's device opens
+     * the app and completes verification in-app via POST /auth/magic-link/verify.
+     * The token is NOT consumed here — consumption happens in [verifyMagicLinkPost].
+     */
     @GetMapping("/verify")
-    fun verifyMagicLink(@RequestParam token: String): ResponseEntity<TokenResponse> =
-        ResponseEntity.ok(authUseCase.verifyMagicLink(token).toResponse())
+    fun verifyMagicLink(@RequestParam token: String): ResponseEntity<Void> {
+        val headers = HttpHeaders()
+        headers.set(HttpHeaders.LOCATION, "play4change://auth/verify?token=$token")
+        return ResponseEntity(headers, HttpStatus.FOUND)
+    }
 
     /** Web frontend variant — POST body `{ "token": "..." }`. */
     @PostMapping("/magic-link/verify")

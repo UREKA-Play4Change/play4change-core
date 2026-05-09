@@ -62,6 +62,7 @@ class RoadmapService(
                         else -> RoadmapNodeStatus.SKIPPED
                     }
                     template.dayIndex == dayIndex -> when (assignment?.status) {
+                        AssignmentStatus.SUBMITTED -> RoadmapNodeStatus.COMPLETED
                         AssignmentStatus.PENDING_REVIEW -> RoadmapNodeStatus.PENDING_REVIEW
                         else -> RoadmapNodeStatus.PENDING
                     }

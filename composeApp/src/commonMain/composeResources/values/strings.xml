@@ -15,7 +15,7 @@
   <string name="login_cta">Continue</string>
   <string name="login_link_sent_title">Check your inbox</string>
   <string name="login_link_sent_body">We sent a sign-in link to %1$s</string>
-  <string name="login_link_expires">The link expires in 10 minutes</string>
+  <string name="login_link_expires">The link expires in 15 minutes</string>
   <string name="login_resend">Resend link</string>
   <string name="login_resend_countdown">Resend link (%1$ds)</string>
   <!-- Debug-only token paste field (visible in debug builds when Resend is active) -->

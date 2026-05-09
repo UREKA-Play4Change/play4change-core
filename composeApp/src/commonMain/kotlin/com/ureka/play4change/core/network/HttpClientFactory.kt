@@ -79,7 +79,7 @@ object HttpClientFactory {
                     BearerTokens(access, refresh)
                 }
                 refreshTokens {
-                    val refreshToken = oldTokens?.refreshToken
+                    val refreshToken = oldTokens?.refreshToken ?: tokenStorage.getRefreshToken()
                     if (refreshToken == null) {
                         tokenStorage.clear()
                         onSessionExpired()

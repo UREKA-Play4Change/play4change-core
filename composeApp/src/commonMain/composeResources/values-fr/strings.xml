@@ -15,7 +15,7 @@
   <string name="login_cta">Continuer</string>
   <string name="login_link_sent_title">Vérifiez votre boîte de réception</string>
   <string name="login_link_sent_body">Nous avons envoyé un lien de connexion à %1$s</string>
-  <string name="login_link_expires">Le lien expire dans 10 minutes</string>
+  <string name="login_link_expires">Le lien expire dans 15 minutes</string>
   <string name="login_resend">Renvoyer le lien</string>
   <string name="login_resend_countdown">Renvoyer le lien (%1$ds)</string>
 

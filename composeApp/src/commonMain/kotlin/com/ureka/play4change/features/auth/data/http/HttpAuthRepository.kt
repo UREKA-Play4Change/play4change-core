@@ -13,8 +13,6 @@ import com.ureka.play4change.features.auth.domain.model.SocialProvider
 import com.ureka.play4change.features.auth.domain.repository.AuthRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
-import io.ktor.client.request.get
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -35,6 +33,9 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 
 @Serializable
 private data class MagicLinkRequestBody(val email: String)
+
+@Serializable
+private data class MagicLinkVerifyBody(val token: String)
 
 @Serializable
 private data class OAuthRequestBody(val provider: AuthProvider, val idToken: String)
@@ -67,8 +68,9 @@ class HttpAuthRepository(
     }
 
     override suspend fun verifyMagicLink(token: String): AuthResult? {
-        val response = client.get("/auth/verify") {
-            parameter("token", token)
+        val response = client.post("/auth/magic-link/verify") {
+            contentType(ContentType.Application.Json)
+            setBody(MagicLinkVerifyBody(token))
         }
         return when {
             response.status.isSuccess() -> {

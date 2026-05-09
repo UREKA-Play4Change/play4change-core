@@ -23,6 +23,68 @@ When an issue is fixed, mark it FIXED with the phase, task, and commit. Do not d
 
 ---
 
+## B10 [FIXED] Severity:High — Magic link email opens JSON in browser instead of launching the mobile app
+
+**Discovered:** Phase 04, fix/session-fixes-05, 2026-05-09.
+
+**Description:** The email magic link pointed to `https://radesh-govind.com/auth/verify?token=...`.
+When clicked from a mobile email client, iOS opened Safari, which called the server's
+`GET /auth/verify` endpoint. That endpoint returned `200 OK` with JSON
+`{ accessToken, refreshToken, expiresIn }` — raw JWTs displayed in the browser. The Play4Change
+app was never opened. The custom URL scheme `play4change://` registered in `Info.plist` was
+never triggered.
+
+Additionally, the app called `GET /auth/verify?token=...` internally (via `HttpAuthRepository`),
+meaning it would follow any redirect returned by the server and fail when trying to parse a
+`302 Location: play4change://...` response as JSON.
+
+**Impact:** Every user clicking the magic link from their email saw raw JSON in the browser.
+Authentication on iOS was impossible via the email link path. The debug paste field (B8)
+was the only workaround.
+
+**Workaround:** Use the in-app debug paste field (debug builds only).
+
+**Fix plan:** Change `GET /auth/verify` to respond with `302 Found` to `play4change://auth/verify?token={token}`.
+Change the app's `verifyMagicLink` to call `POST /auth/magic-link/verify` (JSON endpoint)
+instead of `GET /auth/verify` (now redirect-only). The token is NOT consumed in the redirect;
+it is consumed when the app calls `POST /auth/magic-link/verify`.
+
+**Fixed:** 2026-05-09 — `AuthController.kt` `GET /auth/verify` returns 302 redirect;
+`HttpAuthRepository.verifyMagicLink` uses `POST /auth/magic-link/verify`. Confirmed:
+token consumed (`used=t`), refresh tokens created in DB within the test window.
+Branch: fix/session-fixes-05, commit a783959.
+
+---
+
+## B9 [FIXED] Severity:Critical — First authenticated request after login fires session-expired due to Ktor 3.0.0 `sendWithoutRequest` behaviour
+
+**Discovered:** Phase 04, fix/session-fixes-05, 2026-05-09.
+
+**Description:** In Ktor 3.0.0, `sendWithoutRequest { true }` does NOT cause `addRequestHeaders` /
+`loadTokens` to be called proactively before the request. The auth plugin only adds the `Authorization`
+header after the server returns a 401 challenge. Consequently, the first authenticated request
+after login (e.g. `GET /profile`) goes out without an `Authorization` header, receives 401, and
+`refreshTokens` is invoked with `oldTokens = null`. The original `refreshTokens` block read
+`val refreshToken = oldTokens?.refreshToken`, which evaluates to `null`, immediately calling
+`tokenStorage.clear()` and `onSessionExpired()`. The app bounced back to the login screen within 1
+second of a successful magic link auth — even though tokens were correctly stored in the Keychain.
+
+**Impact:** Every iOS user was logged out immediately after a successful magic link authentication.
+The entire Phase 04 iOS auth flow was broken end-to-end (Android was unaffected because
+`EncryptedSharedPreferences` shares the same token storage path but the race condition masked it).
+
+**Workaround:** None — every post-login navigation to Home failed.
+
+**Fix plan:** In `refreshTokens`, fall back to `tokenStorage.getRefreshToken()` when `oldTokens`
+is null: `val refreshToken = oldTokens?.refreshToken ?: tokenStorage.getRefreshToken()`. This
+ensures that on the first 401 challenge after login, the stored refresh token is used to silently
+refresh rather than immediately expiring the session.
+
+**Fixed:** 2026-05-09 — `HttpClientFactory.kt` line 82, `refreshTokens` fallback to
+`tokenStorage.getRefreshToken()` when `oldTokens` is null. Branch: fix/session-fixes-05.
+
+---
+
 ## B5 [FIXED] Severity:Medium — `GET /tasks/today` returns submitted task instead of 404
 
 **Discovered:** Phase 04, manual testing session 2026-05-09.
@@ -212,6 +274,88 @@ The three test classes previously marked `❌ Missing` now exist and all pass:
 - `StruggleControllerTest` — FIXED 2026-05-09
 
 `./gradlew :server:test` BUILD SUCCESSFUL.
+
+---
+
+## B7 [FIXED] Severity:Critical — KeychainTokenStorage.saveItem silently discards tokens on iOS 26.2 simulator
+
+**Discovered:** Phase 04, fix/session-fixes-05, 2026-05-09.
+
+**Description:** `saveItem()` called `SecItemAdd(query, null)` without checking the returned
+`OSStatus`. On the iOS 26.2 simulator SecItemAdd was returning a non-success status (no entry
+written to the keychain DB, confirmed via `sqlite3` query on `keychain-2-debug.db`). Because
+the failure was silent, `store(accessToken, refreshToken)` appeared to succeed. The app
+navigated to the Home screen, `GET /profile` was called with no `Authorization` header,
+received 401, refresh token was also null (also not stored), `SessionEventBus.sessionExpired()`
+fired, and the app bounced back to the login screen in under 1 second.
+
+**Impact:** iOS users could not complete authentication at all. The entire Phase 04 iOS flow
+was blocked. Android was unaffected (EncryptedSharedPreferences has its own write path).
+
+**Workaround:** None — every iOS auth attempt failed silently.
+
+**Fix plan:** Check OSStatus from SecItemAdd. If errSecDuplicateItem, call SecItemUpdate
+instead. If any other non-success status, throw IllegalStateException so the caller can
+surface a meaningful error. Pre-delete call removed; replaced with add-or-update pattern.
+
+**Fixed:** 2026-05-09 — Two-stage fix on `KeychainTokenStorage.kt`. Stage 1: check OSStatus
+from SecItemAdd, throw on failure. Stage 2 (root cause): iOS 26.2 simulator has the System
+Keychain disabled (`System Keychain Always Supported set via feature flag to disabled`).
+Added `kSecUseDataProtectionKeychain = kCFBooleanTrue` to all Keychain queries to route
+operations to the Data Protection Keychain (required on iOS 13+, mandatory on iOS 26.2 sim).
+`SecItemUpdate` + `errSecDuplicateItem` imports added for the duplicate-item fallback path.
+Unit tests not feasible in KMP without XCTest host (documented in class KDoc); verified via
+Phase 04 manual test recipe Section 1 (Keychain DB query) and Section 2 (persistence across
+restart). See DECISIONS.md [2026-05-09] [iosMain] — KeychainTokenStorage. Branch: fix/session-fixes-05.
+
+---
+
+## B8 [FIXED] Severity:High — isDebugBuild hardcoded to false on iOS; debug paste field never shows
+
+**Discovered:** Phase 04, fix/session-fixes-05, 2026-05-09.
+
+**Description:** `BuildInfo.ios.kt` declared `actual val isDebugBuild: Boolean = false`.
+The in-app "Paste your verification token" field — added in Phase 04 and guarded by
+`if (isDebugBuild)` — was therefore permanently hidden on iOS, including debug/simulator
+builds. The Phase 04 recipe §1 primary testing path depends on this field to inject the
+magic link token without accessing the real inbox.
+
+**Impact:** iOS testing of the magic link flow was impossible via the recipe's primary path.
+Combined with B7 (Keychain silent failure), iOS authentication was completely blocked.
+
+**Workaround:** None on iOS.
+
+**Fix plan:** Replace hardcoded `false` with `Platform.isDebugBinary` from the Kotlin/Native
+standard library. `Platform.isDebugBinary` is set by the linker at build time: debug
+framework → true, release framework → false.
+
+**Fixed:** 2026-05-09 — `BuildInfo.ios.kt` updated to `actual val isDebugBuild: Boolean =
+Platform.isDebugBinary`. DECISIONS.md entry added. Branch: fix/session-fixes-05.
+
+---
+
+## B-ROADMAP [FIXED] Severity:Medium — Roadmap returns PENDING for today's completed task
+
+**Discovered:** Phase 04, fix/session-fixes-05, 2026-05-09.
+
+**Description:** `RoadmapService.getRoadmap()` handled `template.dayIndex == dayIndex`
+(today's node) with only two cases: `PENDING_REVIEW` and an `else → PENDING` fallback.
+When an assignment existed with `status = SUBMITTED` (task correctly answered, `is_correct
+= true`, `points_awarded = 10` in DB), it fell to the `else` branch and returned
+`RoadmapNodeStatus.PENDING`. Learners saw no visual distinction between "task done" and
+"task not yet started" on today's roadmap node.
+
+**Impact:** Home screen roadmap node shows same state before and after completing today's
+task. Users cannot tell from the roadmap whether they have completed a day.
+
+**Workaround:** Check `GET /tasks/today` which returns 404 when task is submitted.
+
+**Fix plan:** Add `AssignmentStatus.SUBMITTED -> RoadmapNodeStatus.COMPLETED` as an
+explicit case before the `else` in the `dayIndex == dayIndex` branch.
+
+**Fixed:** 2026-05-09 — `RoadmapService.kt` line 64 updated; `RoadmapServiceTest.kt`
+added with 3 tests (SUBMITTED→COMPLETED, PENDING→PENDING, no-assignment→PENDING).
+All tests green. Branch: fix/session-fixes-05.
 
 ---
 
