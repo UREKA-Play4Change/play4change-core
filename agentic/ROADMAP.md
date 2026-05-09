@@ -72,7 +72,7 @@ becomes available. Report a question; admin sees it in the pending reports list.
 
 ## Phase 04 — Mobile Client: HTTP Wiring & Auth
 
-**Status:** `IN PROGRESS`
+**Status:** `DONE`
 **Phase file:** [phases/phase-04-mobile-http.md](phases/phase-04-mobile-http.md)
 
 **Goal:** Replace all mock repositories with real Ktor HTTP calls, JWT secure storage

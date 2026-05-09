@@ -51,6 +51,11 @@ home screen showing live data.
    ```
    Magic link: http://localhost:8080/auth/verify?token=<TOKEN>
    ```
+   > **Note — Resend active:** If `RESEND_API_KEY` is set in the Docker container
+   > environment (check with `docker inspect play4change-server --format '{{range .Config.Env}}{{println .}}{{end}}' | grep RESEND`),
+   > `ResendEmailAdapter` takes priority over `ConsoleEmailAdapter` and the link is
+   > delivered to the real inbox instead of the server logs. In that case, check the
+   > inbox for the email address you entered in step 1 to retrieve `<TOKEN>`.
 
 3. Copy `<TOKEN>` from the log. Simulate the deep-link click by running on the
    host machine:
