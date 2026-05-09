@@ -30,6 +30,12 @@ jobs:
         # See HACKS.md H04 for full explanation.
         run: ./gradlew :server:copyRuntimeDependencies --no-configuration-cache
 
+      - name: Clear JAVA_HOME for OWASP Docker container
+        # setup-java sets JAVA_HOME to a host path that doesn't exist inside the
+        # dependency-check Docker container, causing "JAVA_HOME is not defined correctly".
+        # Clearing it lets the container use its own pre-installed JDK via PATH.
+        run: echo "JAVA_HOME=" >> $GITHUB_ENV
+
       - name: OWASP Dependency Check
         uses: dependency-check/Dependency-Check_Action@main
         with:
