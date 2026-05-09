@@ -93,7 +93,14 @@ class TaskService(
                     val template = taskTemplateRepository.findById(a.taskTemplateId)
                     if (template?.dayIndex == dayIndex) Pair(a, template) else null
                 }
-                if (existingPair != null) return@either TodayTaskResult.Available(existingPair.first, existingPair.second)
+                if (existingPair != null) {
+                    if (existingPair.first.status == AssignmentStatus.PENDING) {
+                        return@either TodayTaskResult.Available(existingPair.first, existingPair.second)
+                    }
+                    return@either TodayTaskResult.NotAvailableYet(
+                        enrollment.enrolledAt.plusDays(dayIndex.toLong() + 1)
+                    )
+                }
             }
 
             // Resolve which language variant to serve

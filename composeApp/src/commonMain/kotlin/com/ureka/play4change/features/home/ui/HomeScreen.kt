@@ -234,7 +234,7 @@ fun HomeScreen(component: DefaultHomeComponent) {
                                 Text(
                                     text = stringResource(
                                         Res.string.home_greeting,
-                                        data.userName.split(" ").first()
+                                        greetingName(data.userName)
                                     ),
                                     style = MaterialTheme.typography.titleLarge,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -373,6 +373,14 @@ fun HomeScreen(component: DefaultHomeComponent) {
         }
     }
 }
+
+/** If the server returns the email address as the display name, use only the local part. */
+private fun greetingName(userName: String): String =
+    if (userName.contains('@')) {
+        userName.substringBefore('@').replaceFirstChar { it.uppercaseChar() }
+    } else {
+        userName.split(" ").first()
+    }
 
 @Composable
 private fun SectionHeader(title: String) {

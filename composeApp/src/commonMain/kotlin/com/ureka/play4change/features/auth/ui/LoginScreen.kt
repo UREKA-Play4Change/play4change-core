@@ -66,6 +66,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ureka.play4change.core.BaseView
+import com.ureka.play4change.core.isDebugBuild
 import com.ureka.play4change.design.Spacing
 import com.ureka.play4change.design.components.LogoSize
 import com.ureka.play4change.design.components.UrekaLogo
@@ -73,6 +74,7 @@ import com.ureka.play4change.features.auth.domain.model.SocialProvider
 import com.ureka.play4change.features.auth.presentation.AuthMode
 import com.ureka.play4change.features.auth.presentation.DefaultLoginComponent
 import com.ureka.play4change.features.auth.presentation.LoginEvents
+import com.ureka.play4change.features.auth.presentation.LoginLoadingAction
 import com.ureka.play4change.features.auth.presentation.LoginState
 import com.ureka.play4change.features.auth.presentation.isEmailLoading
 import com.ureka.play4change.features.auth.presentation.loadingProvider
@@ -93,6 +95,9 @@ import play4change.composeapp.generated.resources.login_email_label
 import play4change.composeapp.generated.resources.login_link_expires
 import play4change.composeapp.generated.resources.login_link_sent_body
 import play4change.composeapp.generated.resources.login_link_sent_title
+import play4change.composeapp.generated.resources.login_debug_token_helper
+import play4change.composeapp.generated.resources.login_debug_token_label
+import play4change.composeapp.generated.resources.login_debug_verify
 import play4change.composeapp.generated.resources.login_resend
 import play4change.composeapp.generated.resources.login_resend_countdown
 import play4change.composeapp.generated.resources.login_subtitle
@@ -150,7 +155,11 @@ fun LoginScreen(component: DefaultLoginComponent) {
                                 email = state.email,
                                 countdown = state.resendCountdown,
                                 isLoading = state.isEmailLoading,
-                                onResend = { onEvent(LoginEvents.Resend) }
+                                onResend = { onEvent(LoginEvents.Resend) },
+                                tokenInput = state.tokenInput,
+                                onTokenChange = { onEvent(LoginEvents.TokenChanged(it)) },
+                                onVerifyToken = { onEvent(LoginEvents.VerifyToken) },
+                                isTokenVerifying = state.loadingAction is LoginLoadingAction.Token
                             )
                         } else {
                             Column(modifier = Modifier.fillMaxWidth()) {
@@ -471,7 +480,11 @@ private fun LinkSentContent(
     email: String,
     countdown: Int,
     isLoading: Boolean,
-    onResend: () -> Unit
+    onResend: () -> Unit,
+    tokenInput: String,
+    onTokenChange: (String) -> Unit,
+    onVerifyToken: () -> Unit,
+    isTokenVerifying: Boolean
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -515,6 +528,39 @@ private fun LinkSentContent(
                 Text(stringResource(Res.string.login_resend))
             }
         }
+
+        if (isDebugBuild) {
+            Spacer(Modifier.height(Spacing.xl))
+            HorizontalDivider()
+            Spacer(Modifier.height(Spacing.m))
+            OutlinedTextField(
+                value = tokenInput,
+                onValueChange = onTokenChange,
+                label = { Text(stringResource(Res.string.login_debug_token_label)) },
+                supportingText = { Text(stringResource(Res.string.login_debug_token_helper)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                shape = MaterialTheme.shapes.medium
+            )
+            Spacer(Modifier.height(Spacing.s))
+            Button(
+                onClick = onVerifyToken,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = tokenInput.isNotBlank() && !isTokenVerifying,
+                shape = MaterialTheme.shapes.medium
+            ) {
+                if (isTokenVerifying) {
+                    CircularProgressIndicator(
+                        Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(stringResource(Res.string.login_debug_verify))
+                }
+            }
+        }
+
         Spacer(Modifier.height(Spacing.xl))
     }
 }

@@ -10,4 +10,8 @@ sealed interface LoginEvents : ComponentEvents {
     data object Resend : LoginEvents
     data class SocialLogin(val provider: SocialProvider) : LoginEvents
     data object ToggleMode : LoginEvents
+    /** Debug builds only: operator pastes raw token from server logs. */
+    data class TokenChanged(val value: String) : LoginEvents
+    /** Debug builds only: trigger GET /auth/verify?token= with the pasted token. */
+    data object VerifyToken : LoginEvents
 }

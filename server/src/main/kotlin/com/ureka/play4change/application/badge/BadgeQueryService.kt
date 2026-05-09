@@ -32,10 +32,10 @@ class BadgeQueryService(
         }
 
     override fun getTopicBadgeStats(topicId: String): TopicBadgeStatsDto {
-        val competence = badgeRepository.findMicroCompetenceByTopicId(topicId)
-            ?: return TopicBadgeStatsDto(0, 0, 0.0, emptyList())
-        val badges = badgeRepository.findBadgesByMicroCompetenceId(competence.id)
         val enrolledCount = enrollmentRepository.countByTopicId(topicId).toInt()
+        val competence = badgeRepository.findMicroCompetenceByTopicId(topicId)
+            ?: return TopicBadgeStatsDto(0, enrolledCount, 0.0, emptyList())
+        val badges = badgeRepository.findBadgesByMicroCompetenceId(competence.id)
         val earnedPercentage = if (enrolledCount == 0) 0.0
             else ((badges.size.toDouble() / enrolledCount) * PERCENT_FACTOR * ROUNDING_FACTOR)
                 .roundToInt() / ROUNDING_FACTOR

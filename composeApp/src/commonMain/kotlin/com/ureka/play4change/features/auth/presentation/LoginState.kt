@@ -10,6 +10,7 @@ enum class LoginStage { EmailEntry, LinkSent }
 sealed class LoginLoadingAction {
     data object Email : LoginLoadingAction()
     data class Social(val provider: SocialProvider) : LoginLoadingAction()
+    data object Token : LoginLoadingAction()
 }
 
 data class LoginState(
@@ -22,6 +23,7 @@ data class LoginState(
     val resendCountdown: Int = 0,
     val linkSent: Boolean = false,
     val loadingAction: LoginLoadingAction? = null,
+    val tokenInput: String = "",
     override val isLoading: Boolean = false,
     override val error: AppError? = null
 ) : ComponentState

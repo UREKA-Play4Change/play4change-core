@@ -40,12 +40,6 @@ fun <E : ComponentEvents, S : ComponentState> ErrorDialog(
                 tint = MaterialTheme.colorScheme.error
             )
         },
-        title = {
-            Text(
-                text = error.messageKey,
-                style = MaterialTheme.typography.titleMedium
-            )
-        },
         text = { Text(message, style = MaterialTheme.typography.bodyMedium) },
         confirmButton = {
             TextButton(onClick = { component.clearError() }) {

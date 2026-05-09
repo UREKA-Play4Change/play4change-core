@@ -8,6 +8,7 @@ import com.ureka.play4change.features.home.domain.model.TaskSummary
 import com.ureka.play4change.features.home.domain.repository.HomeRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.Serializable
@@ -25,6 +26,12 @@ private data class UserProfileDto(
     val level: Int,
     val currentDay: Int,
     val totalDays: Int
+)
+
+@Serializable
+private data class TopicSummaryDto(
+    val id: String,
+    val isEnrolled: Boolean = false
 )
 
 @Serializable
@@ -67,19 +74,26 @@ class HttpHomeRepository(
         var todayTask: TaskSummary? = null
         var todayCompleted = false
         try {
-            val taskResponse = client.get("/tasks/today")
-            when (taskResponse.status) {
-                HttpStatusCode.OK -> {
-                    val dto = json.decodeFromString<TodayTaskDto>(taskResponse.bodyAsText())
-                    todayTask = TaskSummary(
-                        id = dto.assignmentId,
-                        title = dto.title,
-                        domain = "",
-                        pointsReward = dto.pointsReward
-                    )
+            val topicsResponse = client.get("/topics")
+            val topics = json.decodeFromString<List<TopicSummaryDto>>(topicsResponse.bodyAsText())
+            val enrolledTopicId = topics.firstOrNull { it.isEnrolled }?.id
+            if (enrolledTopicId != null) {
+                val taskResponse = client.get("/tasks/today") {
+                    parameter("topicId", enrolledTopicId)
                 }
-                HttpStatusCode.NotFound -> todayCompleted = true
-                else -> { /* keep todayTask = null */ }
+                when (taskResponse.status) {
+                    HttpStatusCode.OK -> {
+                        val dto = json.decodeFromString<TodayTaskDto>(taskResponse.bodyAsText())
+                        todayTask = TaskSummary(
+                            id = dto.assignmentId,
+                            title = dto.title,
+                            domain = "",
+                            pointsReward = dto.pointsReward
+                        )
+                    }
+                    HttpStatusCode.NotFound -> todayCompleted = true
+                    else -> { /* keep todayTask = null */ }
+                }
             }
         } catch (_: Exception) {
             // Task fetch is best-effort; a failed call does not block the home screen.

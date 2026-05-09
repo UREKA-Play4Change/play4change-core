@@ -125,7 +125,7 @@ class TaskDeliveryRateTest {
     // ── Prod mode ─────────────────────────────────────────────────────────────
 
     @Test
-    fun `prod mode - existing submitted assignment for today is returned unchanged`() {
+    fun `prod mode - submitted assignment for today returns NotAvailableYet`() {
         val service = makeService(devMode = false)
         val template = makeTemplate(dayIndex = 0)
         val submitted = makeAssignment(status = AssignmentStatus.SUBMITTED)
@@ -136,8 +136,7 @@ class TaskDeliveryRateTest {
 
         val result = service.getTodayTask(userId, topicId, null).getOrNull()
 
-        assertInstanceOf(TodayTaskResult.Available::class.java, result)
-        assertEquals(submitted, (result as TodayTaskResult.Available).assignment)
+        assertInstanceOf(TodayTaskResult.NotAvailableYet::class.java, result)
     }
 
     // ── Dev mode rate check ───────────────────────────────────────────────────

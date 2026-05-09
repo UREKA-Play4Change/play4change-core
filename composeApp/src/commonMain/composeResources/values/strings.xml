@@ -18,11 +18,15 @@
   <string name="login_link_expires">The link expires in 10 minutes</string>
   <string name="login_resend">Resend link</string>
   <string name="login_resend_countdown">Resend link (%1$ds)</string>
+  <!-- Debug-only token paste field (visible in debug builds when Resend is active) -->
+  <string name="login_debug_token_label">Paste your verification token</string>
+  <string name="login_debug_token_helper">Ask the operator for the token from the server logs.</string>
+  <string name="login_debug_verify">Verify token</string>
 
   <!-- Home -->
   <string name="home_greeting">Good morning, %1$s!</string>
   <string name="home_this_week">This Week</string>
-  <string name="home_todays_challenge">Today\'s Challenge</string>
+  <string name="home_todays_challenge">Today's Challenge</string>
   <string name="home_start_challenge">Start Challenge →</string>
   <string name="home_completed_today">All done for today! See you tomorrow.</string>
   <string name="home_no_task">No task available today. Check back tomorrow.</string>
@@ -73,7 +77,7 @@
   <!-- Auth — Social + Register -->
   <string name="auth_continue_google">Continue with Google</string>
   <string name="auth_continue_facebook">Continue with Facebook</string>
-  <string name="auth_no_account">Don\'t have an account?</string>
+  <string name="auth_no_account">Don't have an account?</string>
   <string name="auth_register">Register</string>
   <string name="auth_have_account">Already have an account?</string>
   <string name="auth_sign_in">Sign in</string>

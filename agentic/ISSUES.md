@@ -23,6 +23,59 @@ When an issue is fixed, mark it FIXED with the phase, task, and commit. Do not d
 
 ---
 
+## B5 [FIXED] Severity:Medium — `GET /tasks/today` returns submitted task instead of 404
+
+**Discovered:** Phase 04, manual testing session 2026-05-09.
+
+**Description:** In prod mode, `TaskService.getTodayTask()` searches existing assignments for
+one whose template `dayIndex` matches the current calendar day index. It returned
+`TodayTaskResult.Available` for any matching assignment regardless of `AssignmentStatus`.
+After a user submitted a task correctly (`status = SUBMITTED`), calling `GET /tasks/today`
+again returned HTTP 200 with the already-submitted assignment still showing
+`wrongAttemptCount` and "Start Challenge". The `X-Task-Available-At` 404 path was never
+reached. `submitAnswer()` would then reject a re-submission with `Conflict.ConcurrentModification`.
+
+**Impact:** The home screen task card shows "Start Challenge →" permanently after completion.
+Tapping it leads to a conflict error. Users have no feedback that today's task is done.
+
+**Workaround:** None visible to the user.
+
+**Fix plan:** `TaskService.getTodayTask()` prod-mode block — add `status == PENDING` guard.
+If the matching assignment is not PENDING, return `NotAvailableYet(enrollment.enrolledAt
+.plusDays(dayIndex + 1))` so the controller renders HTTP 404 with `X-Task-Available-At`.
+
+**Fixed:** 2026-05-09 — `TaskService.kt` lines 92-100, `TaskDeliveryRateTest.kt` test
+corrected, commit acc0295.
+
+---
+
+## B6 [FIXED] Severity:Low — `GET /admin/topics/{id}/badges` returns `enrolledCount: 0`
+
+**Discovered:** Phase 04, manual testing session 2026-05-09.
+
+**Description:** `BadgeQueryService.getTopicBadgeStats()` fetched the `MicroCompetence` for
+the topic first, then early-returned `TopicBadgeStatsDto(0, 0, 0.0, emptyList())` when none
+was found — hardcoding `enrolledCount = 0` without ever querying
+`enrollmentRepository.countByTopicId()`. Topics that have not yet generated a
+`MicroCompetence` (e.g. topics still in progress or newly created) always reported zero
+enrolled users regardless of actual enrollment state. DB confirmed 2 active enrollments
+while the API returned 0.
+
+**Impact:** Admin badge stats page shows 0 enrolled users for any topic without a
+MicroCompetence record. `earnedPercentage` is therefore always 0.0 in those cases even
+if users are enrolled.
+
+**Workaround:** None — the count is always wrong until a MicroCompetence is created for
+the topic.
+
+**Fix plan:** Move `enrolledCount = enrollmentRepository.countByTopicId(topicId).toInt()`
+before the null-check so it is always computed. Pass the real count into the early-return
+`TopicBadgeStatsDto`.
+
+**Fixed:** 2026-05-09 — `BadgeQueryService.kt` lines 35-38, commit acc0295.
+
+---
+
 ## I02 [FIXED] Severity:High — Struggle resolution does not reset original task assignment for retry
 
 **Discovered:** Phase 03, Task 3.2 — audit of the struggle/ packages before implementation.
@@ -80,9 +133,9 @@ isCorrect = null, pointsAwarded = 0`.
 | Flyway V5 + V8 migrations | ✅ Fully implemented | All columns present |
 | `TaskService` integration | ✅ Fully implemented | Triggers on `wrongAttemptCount == 1` |
 | `generationExecutor` bean | ✅ Configured | `AsyncConfig.kt` — present |
-| `StruggleDetectionTest` | ❌ Missing | Required by Task 3.2 spec |
-| `StruggleResolutionTest` | ❌ Missing | Required by Task 3.2 spec |
-| `StruggleControllerTest` | ❌ Missing | Required by Task 3.2 spec |
+| `StruggleDetectionTest` | ✅ Written & passing | Phase 04, session 2026-05-09 |
+| `StruggleResolutionTest` | ✅ Written & passing | Phase 04, session 2026-05-09 |
+| `StruggleControllerTest` | ✅ Written & passing | Phase 04, session 2026-05-09 |
 
 ---
 
@@ -107,6 +160,58 @@ but the gap is real.
 **Fix plan:** Phase 01, Task 1.2 — update CI YAML to `java-version: '21'` (Temurin distribution).
 
 **Fixed:** Phase 01, Task 1.2 — updated `.github/workflows/ci.yml` `java-version` to `'21'` (temurin).
+
+---
+
+## B3 [FIXED] Severity:Low — Profile name falls back to full email address in greeting
+
+**Discovered:** Phase 04, manual testing session 2026-05-09.
+
+**Description:** The server returns `"name": "radesh.govind@gmail.com"` (identical to the
+email) when the user has no display name set. The home screen greeting computed
+`userName.split(" ").first()`, which for an email with no spaces returns the entire
+email address. Result: "Good morning, radesh.govind@gmail.com!".
+
+**Impact:** Every new user who has not set a display name sees their email address in the
+greeting. Aesthetically broken; not a data leak.
+
+**Workaround:** Set a display name on the account.
+
+**Fix plan:** UI layer only — extract the local part (before `@`) and capitalise it.
+
+**Fixed:** 2026-05-09 — `HomeScreen.kt` `greetingName()` helper: if `userName` contains
+`@`, use `substringBefore('@').replaceFirstChar { it.uppercaseChar() }`.
+
+---
+
+## B4 [FIXED] Severity:Low — Apostrophe rendered as literal backslash in KMP Compose strings
+
+**Discovered:** Phase 04, manual testing session 2026-05-09.
+
+**Description:** KMP Compose multiplatform string resources do not process Android-style `\'`
+escape sequences. Strings such as `Today\'s Challenge` and French contractions (e.g.
+`d\'apprentissage`) were rendered with a literal backslash on screen.
+
+**Impact:** Cosmetic — punctuation is wrong in the UI.
+
+**Workaround:** None.
+
+**Fix plan:** Replace all `\'` occurrences in `values/strings.xml` and `values-fr/strings.xml`
+with unescaped `'`.
+
+**Fixed:** 2026-05-09 — replaced all `\'` with `'` in `values/strings.xml` (2 occurrences)
+and `values-fr/strings.xml` (12 occurrences).
+
+---
+
+## Phase 03, Task 3.2 — Struggle tests status update
+
+The three test classes previously marked `❌ Missing` now exist and all pass:
+- `StruggleDetectionTest` — FIXED 2026-05-09
+- `StruggleResolutionTest` — FIXED 2026-05-09
+- `StruggleControllerTest` — FIXED 2026-05-09
+
+`./gradlew :server:test` BUILD SUCCESSFUL.
 
 ---
 
