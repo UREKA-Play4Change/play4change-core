@@ -1,0 +1,97 @@
+@startuml CleanSystemArchitecture
+left to right direction
+skinparam backgroundColor #F4F8FA
+skinparam defaultFontName "Helvetica"
+skinparam shadowing false
+skinparam arrowColor #333333
+skinparam arrowThickness 1.5
+skinparam nodesep 30
+skinparam ranksep 50
+
+' ── Styles to match the clean visual pattern ──
+skinparam rectangle {
+    BackgroundColor #FFFFFF
+    BorderColor #000000
+    BorderStyle dashed
+    RoundCorner 10
+    FontSize 16
+    FontStyle bold
+}
+
+skinparam component {
+    BackgroundColor #A4C8FA
+    BorderColor #3A6BC8
+    RoundCorner 5
+    FontSize 14
+    FontStyle bold
+    Padding 10
+}
+
+skinparam database {
+    BackgroundColor #FFC1C1
+    BorderColor #D9534F
+    FontSize 14
+    FontStyle bold
+}
+
+skinparam cloud {
+    BackgroundColor #E8F5E9
+    BorderColor #388E3C
+    FontSize 14
+    FontStyle bold
+}
+
+' ── Client Apps Boundary ──
+rectangle "Client Apps" {
+    actor "Admin\n(Web Portal)" as Web
+    actor "Learner\n(Mobile App)" as Mobile
+}
+
+' ── Backend System Boundary ──
+rectangle "Backend Architecture" {
+
+    ' API Gateway (Red solid block)
+    rectangle "API Gateway\n(Nginx / Tunnel)" as Gateway #FFC1C1 {
+    }
+
+    ' Invisible grouping for layout alignment
+    rectangle "Services & AI Agents" <<Invisible>> {
+        component "Auth & Identity\nService" as Auth
+        component "Topic Generation\n(AI Agent)" as Topic
+        component "Enrollment & Progression\nService" as Enroll
+        component "Struggle & Adaptive\nService" as Adaptive
+    }
+
+    ' Invisible grouping for layout alignment
+    rectangle "Data & External" <<Invisible>> {
+        database "User DB\n(Postgres)" as DBAuth
+        database "Vector DB\n(pgvector)" as DBTopic
+        cloud "Mistral AI\n(LLM API)" as LLM
+        database "Core DB\n(Postgres / Redis)" as DBEnroll
+    }
+}
+
+' ── Relationships & Data Flow ──
+Web --> Gateway
+Mobile --> Gateway
+
+Gateway ---> Auth
+Gateway ---> Topic
+Gateway ---> Enroll
+Gateway ---> Adaptive
+
+Auth ---> DBAuth
+Topic ---> DBTopic
+Topic ---> LLM
+Enroll ---> DBEnroll
+Adaptive ---> DBEnroll
+Adaptive ---> LLM
+
+' Hide the boundaries of layout groups
+hide <<Invisible>> stereotype
+skinparam rectangle<<Invisible>> {
+    BorderColor transparent
+    BackgroundColor transparent
+}
+
+@enduml
