@@ -9,6 +9,8 @@ import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnDestroy
+import com.ureka.play4change.core.network.SessionEvent
+import com.ureka.play4change.core.network.SessionEventBus
 import com.ureka.play4change.features.auth.domain.repository.AuthRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +32,13 @@ class DefaultRootComponent(
 
     init {
         lifecycle.doOnDestroy { scope.cancel() }
+        scope.launch {
+            SessionEventBus.events.collect { event ->
+                when (event) {
+                    SessionEvent.SessionExpired -> navigateToLogin()
+                }
+            }
+        }
     }
 
     override val childStack: Value<ChildStack<*, RootComponent.Child>> = childStack(
