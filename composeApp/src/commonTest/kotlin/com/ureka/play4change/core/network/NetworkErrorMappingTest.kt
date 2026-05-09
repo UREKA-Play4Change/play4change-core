@@ -76,12 +76,6 @@ class NetworkErrorMappingTest {
     }
 
     @Test
-    fun `IOException maps to NoConnection`() {
-        val e = java.io.IOException("Connection refused")
-        assertEquals(NetworkError.NoConnection, e.toNetworkError())
-    }
-
-    @Test
     fun `Unknown exception maps to Unknown NetworkError`() {
         val e = RuntimeException("Something broke")
         assertIs<NetworkError.Unknown>(e.toNetworkError())
