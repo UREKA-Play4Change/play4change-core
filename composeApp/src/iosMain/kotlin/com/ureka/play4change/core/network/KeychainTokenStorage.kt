@@ -39,6 +39,7 @@ import platform.Security.kSecClassGenericPassword
 import platform.Security.kSecMatchLimit
 import platform.Security.kSecMatchLimitOne
 import platform.Security.kSecReturnData
+import platform.Security.kSecUseDataProtectionKeychain
 import platform.Security.kSecValueData
 
 private const val SERVICE = "com.ureka.play4change.tokens"
@@ -46,9 +47,13 @@ private const val KEY_ACCESS = "access_token"
 private const val KEY_REFRESH = "refresh_token"
 
 /**
- * Stores JWT tokens in the iOS Keychain with [kSecAttrAccessibleAfterFirstUnlock]
- * accessibility, which allows background access after the first device unlock.
+ * Stores JWT tokens in the iOS Keychain using the **Data Protection Keychain**
+ * ([kSecUseDataProtectionKeychain] = true), required on iOS 13 + and enforced on
+ * iOS 26.2 simulator where the legacy System Keychain is disabled via a feature flag
+ * ("System Keychain Always Supported set via feature flag to disabled").
  *
+ * Token accessibility is [kSecAttrAccessibleAfterFirstUnlock], which allows background
+ * token refresh after the first device unlock post-reboot.
  * Plain UserDefaults must never be used for tokens. See THREAT-LOG Phase 04 Security Note.
  *
  * Note on unit testing: [saveItem] calls SecItemAdd / SecItemUpdate from the Security
@@ -74,8 +79,9 @@ class KeychainTokenStorage : TokenStorage {
     }
 
     private fun readItem(account: String): String? = memScoped {
-        val query = CFDictionaryCreateMutable(kCFAllocatorDefault, 5, null, null)!!
+        val query = CFDictionaryCreateMutable(kCFAllocatorDefault, 6, null, null)!!
         CFDictionaryAddValue(query, kSecClass, kSecClassGenericPassword)
+        CFDictionaryAddValue(query, kSecUseDataProtectionKeychain, kCFBooleanTrue)
         CFDictionaryAddValue(query, kSecAttrService, cfString(SERVICE))
         CFDictionaryAddValue(query, kSecAttrAccount, cfString(account))
         CFDictionaryAddValue(query, kSecReturnData, kCFBooleanTrue)
@@ -93,7 +99,7 @@ class KeychainTokenStorage : TokenStorage {
     }
 
     /**
-     * Saves [value] under [account] in the Keychain.
+     * Saves [value] under [account] in the Data Protection Keychain.
      *
      * Strategy: attempt SecItemAdd first. If the item already exists
      * (errSecDuplicateItem — possible after app reinstall or a failed [clear])
@@ -107,8 +113,9 @@ class KeychainTokenStorage : TokenStorage {
             CFDataCreate(kCFAllocatorDefault, pinned.addressOf(0).reinterpret(), bytes.size.convert())
         } ?: throw IllegalStateException("Keychain: CFDataCreate returned null for key=$account")
 
-        val addQuery = CFDictionaryCreateMutable(kCFAllocatorDefault, 5, null, null)!!
+        val addQuery = CFDictionaryCreateMutable(kCFAllocatorDefault, 6, null, null)!!
         CFDictionaryAddValue(addQuery, kSecClass, kSecClassGenericPassword)
+        CFDictionaryAddValue(addQuery, kSecUseDataProtectionKeychain, kCFBooleanTrue)
         CFDictionaryAddValue(addQuery, kSecAttrService, cfString(SERVICE))
         CFDictionaryAddValue(addQuery, kSecAttrAccount, cfString(account))
         CFDictionaryAddValue(addQuery, kSecAttrAccessible, kSecAttrAccessibleAfterFirstUnlock)
@@ -120,8 +127,9 @@ class KeychainTokenStorage : TokenStorage {
 
             errSecDuplicateItem -> {
                 // Item already exists; update the value in place.
-                val searchQuery = CFDictionaryCreateMutable(kCFAllocatorDefault, 3, null, null)!!
+                val searchQuery = CFDictionaryCreateMutable(kCFAllocatorDefault, 4, null, null)!!
                 CFDictionaryAddValue(searchQuery, kSecClass, kSecClassGenericPassword)
+                CFDictionaryAddValue(searchQuery, kSecUseDataProtectionKeychain, kCFBooleanTrue)
                 CFDictionaryAddValue(searchQuery, kSecAttrService, cfString(SERVICE))
                 CFDictionaryAddValue(searchQuery, kSecAttrAccount, cfString(account))
 
@@ -143,8 +151,9 @@ class KeychainTokenStorage : TokenStorage {
     }
 
     private fun deleteItem(account: String) {
-        val query = CFDictionaryCreateMutable(kCFAllocatorDefault, 3, null, null)!!
+        val query = CFDictionaryCreateMutable(kCFAllocatorDefault, 4, null, null)!!
         CFDictionaryAddValue(query, kSecClass, kSecClassGenericPassword)
+        CFDictionaryAddValue(query, kSecUseDataProtectionKeychain, kCFBooleanTrue)
         CFDictionaryAddValue(query, kSecAttrService, cfString(SERVICE))
         CFDictionaryAddValue(query, kSecAttrAccount, cfString(account))
         SecItemDelete(query)
