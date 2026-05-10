@@ -1,0 +1,274 @@
+@startuml Play4Change — System Architecture
+
+' ── Skin ─────────────────────────────────────────────────────────────────────
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName "Helvetica"
+skinparam defaultFontSize 12
+skinparam roundcorner 10
+skinparam ArrowColor #555555
+skinparam ArrowFontSize 10
+skinparam ArrowThickness 1.2
+skinparam nodesep 10
+skinparam ranksep 20
+skinparam packageStyle rectangle
+skinparam legendBackgroundColor #FFFFFF
+skinparam legendBorderColor #AAAAAA
+
+skinparam rectangle {
+  BackgroundColor #EBF2FF
+  BorderColor #3A6BC8
+  FontStyle bold
+  FontSize 13
+}
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #3A6BC8
+  FontSize 11
+}
+skinparam database {
+  BackgroundColor #FFF8E1
+  BorderColor #E6A817
+  FontSize 11
+}
+skinparam cloud {
+  BackgroundColor #E8F5E9
+  BorderColor #388E3C
+  FontSize 11
+}
+skinparam queue {
+  BackgroundColor #FCE4EC
+  BorderColor #C62828
+  FontSize 11
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #1A2E50
+  FontSize 13
+}
+skinparam node {
+  BackgroundColor #F3E5F5
+  BorderColor #7B1FA2
+  FontSize 11
+}
+
+' ── Actors ───────────────────────────────────────────────────────────────────
+actor "Admin" as Admin
+actor "Learner" as Learner
+
+' ── External Services ────────────────────────────────────────────────────────
+cloud "Cloudflare Pages\n(Web Hosting)" as CF_Pages
+cloud "Cloudflare Tunnel\n(Expose Backend)" as CF_Tunnel
+cloud "Resend\n(Transactional Email)" as Resend
+cloud "Google OAuth 2.0" as GoogleOAuth
+cloud "Facebook OAuth" as FacebookOAuth
+cloud "Mistral AI API" as MistralAI
+
+' ── CI/CD ────────────────────────────────────────────────────────────────────
+node "GitHub Actions\nCI/CD" as CICD {
+  component "lint → typecheck\n→ test → build" as CIPipeline
+  component "wrangler-action\n(Cloudflare Deploy)" as WranglerDeploy
+}
+
+' ── Web Admin Portal (React / Hexagonal) ─────────────────────────────────────
+rectangle "Web Admin Portal\n(React 18 + TypeScript 5 · Vite 6 · Cloudflare Pages)" as WebPortal {
+
+  rectangle "UI Layer" as Web_UI {
+    component "Landing Page\n/ Download Page" as Web_Public
+    component "Login Page\nAuth Callback / Verify" as Web_Auth
+    component "Dashboard / Topics\nCreate / Detail" as Web_Admin
+    component "ProtectedRoute\n(useCurrentUser → /admin/me)" as Web_Guard
+    component "i18next\n(9 locales)" as Web_i18n
+    component "React Router v7\n(lazy-loaded · nested Outlet)" as Web_Router
+  }
+
+  rectangle "Application Layer\n(TanStack Query v5)" as Web_App {
+    component "useCurrentUser\nuseSendMagicLink\nuseVerifyMagicLink\nuseLoginWithOAuth\nuseLogout" as Web_AuthHooks
+    component "usePlatformStats" as Web_StatsHooks
+    component "useTopics · useTopic\nuseCreateTopicFromUrl\nuseCreateTopicFromPdf\nuseRegenerateTopic" as Web_TopicHooks
+  }
+
+  rectangle "Domain Layer\n(Pure TypeScript Models + Port Interfaces)" as Web_Domain {
+    component "IAuthService\nITopicService\nIStatsService" as Web_Ports
+    component "AuthTokens · AdminUser\nTopic · TopicStats\nPlatformStats · Enrollment" as Web_Models
+  }
+
+  rectangle "Infrastructure Layer" as Web_Infra {
+    component "Axios HTTP Adapters\n(JWT inject · 401 refresh · retry\nBroadcastChannel sync)" as Web_Axios
+    component "In-Memory Mock Adapters\n(VITE_USE_MOCK=true)" as Web_Mock
+    component "DI Container\n(selects adapter via VITE_USE_MOCK)" as Web_DI
+  }
+}
+
+' ── Mobile App (KMP / Compose Multiplatform) ─────────────────────────────────
+rectangle "Mobile App\n(Kotlin Multiplatform · Compose Multiplatform · Android + iOS)" as MobileApp {
+
+  rectangle "Core" as Mobile_Core {
+    component "Ktor HTTP Client\n(JWT interceptor · token refresh)" as Mobile_Http
+    component "Keychain / Keystore\n(TokenStorage)" as Mobile_KeyStore
+    component "Camera (expect/actual)" as Mobile_Camera
+    component "Magic Link Deep Link\n(Intent Filter / onOpenURL)" as Mobile_DeepLink
+  }
+
+  rectangle "DI (Koin)" as Mobile_DI_Box {
+    component "AppModule\n(feature modules)" as Mobile_Koin
+  }
+
+  rectangle "Features" as Mobile_Features {
+    rectangle "Auth" as Mob_Auth {
+      component "AuthViewModel\nMagicLinkScreen\nOAuthScreen" as Mob_AuthUI
+    }
+    rectangle "Explore" as Mob_Explore {
+      component "ExploreViewModel\nTopicListScreen\nTopicDetailScreen" as Mob_ExploreUI
+    }
+    rectangle "Home" as Mob_Home {
+      component "HomeViewModel\nRoadmapScreen\nStatsScreen" as Mob_HomeUI
+    }
+    rectangle "Task" as Mob_Task {
+      component "TaskViewModel\nMCQ / Todo / Photo\nTask Submission" as Mob_TaskUI
+    }
+    rectangle "Struggle" as Mob_Struggle {
+      component "StruggleViewModel\nAdaptive Task Screen" as Mob_StruggleUI
+    }
+    rectangle "Peer Review" as Mob_PeerReview {
+      component "PeerReviewViewModel\nVerdict Screen" as Mob_PeerUI
+    }
+    rectangle "Profile" as Mob_Profile {
+      component "ProfileViewModel\nBadge Wall\nPreferences" as Mob_ProfileUI
+    }
+  }
+}
+
+' ── Backend Server (Spring Boot · DDD / Clean Architecture) ──────────────────
+rectangle "Backend Server\n(Spring Boot 3 · Kotlin · DDD / Hexagonal)" as Backend {
+
+  rectangle "Web (Inbound Adapters)" as BE_Web {
+    component "AuthController\nPOST /auth/magic-link\nGET  /auth/verify\nPOST /auth/oauth\nPOST /auth/refresh\nDEL  /auth/logout" as BE_AuthCtrl
+    component "AdminProfileController\nGET /admin/me" as BE_AdminCtrl
+    component "TopicController\nGET|POST /admin/topics\nGET /admin/topics/:id\nPOST /admin/topics/pdf\nPOST /admin/topics/:id/regenerate" as BE_TopicCtrl
+    component "EnrollmentController\nRoadmapController\nTaskController\nPeerReviewController" as BE_LearnerCtrl
+    component "StruggleController\nBadgeController\nUserProfileController\nUserPreferencesController" as BE_StruggleCtrl
+    component "StatsController\nGET /api/stats/public" as BE_StatsCtrl
+    component "AdminTaskReportController\nAdminBadgeController" as BE_AdminMod
+    component "JwtAuthFilter\n(Spring Security)" as BE_Security
+    component "OpenAPI / Swagger UI\n(springdoc)" as BE_Swagger
+  }
+
+  rectangle "Application (Use Cases / Ports)" as BE_App {
+    component "MagicLinkService\nOAuthService\nTokenService" as BE_AuthSvc
+    component "TopicManagementService\nTaskGenerationOrchestrator\nPhaseTransitionService\nBatchInstanceGenerationService\nAiOutputSanitiser" as BE_TopicSvc
+    component "EnrollmentService\nRoadmapService\nTaskService\nDayIndexCalculator\nLanguageGatingService" as BE_EnrollSvc
+    component "HandleStruggleService\nAdaptiveTaskService\nErrorPatternClassifier" as BE_StruggleSvc
+    component "BadgeIssuanceService\nBadgeQueryService" as BE_BadgeSvc
+    component "PeerReviewService" as BE_PeerSvc
+    component "TaskReportService" as BE_ReportSvc
+    component "GetAdminProfileService\nGetUserProfileService\nUserPreferencesService" as BE_IdentitySvc
+  }
+
+  rectangle "Domain (Pure Business Logic)" as BE_Domain {
+    component "Topic · TopicModule\nTaskTemplate · TaskInstance\nTopicStatus · GenerationPhase\nContentSourceType · AudienceLevel" as BE_TopicDomain
+    component "Enrollment · TaskAssignment\nEnrollmentStatus · AssignmentStatus\nTaskShuffleSeed (anti-cheat)" as BE_EnrollDomain
+    component "StruggleSession · AdaptiveTask\nErrorPattern · StruggleStatus" as BE_StruggleDomain
+    component "Badge · MicroCompetence\nPeerReview · ReviewVerdict\nTaskReport · TaskReportStatus" as BE_BadgeDomain
+    component "User · UserRole\nAuthProvider (domain)" as BE_UserDomain
+  }
+
+  rectangle "Infrastructure (Outbound Adapters)" as BE_Infra {
+    component "JPA Repository Adapters\n(Topic, Enrollment, Task, Badge\nStruggle, PeerReview, Report)" as BE_JPA
+    component "RedisCacheAdapter\n(CachePort)" as BE_Redis
+    component "MinioFileStorageAdapter\n(FileStoragePort)" as BE_Minio
+    component "ContentExtractorAdapter\n(URL scraping + SSRF guard\nApache PDFBox)" as BE_Content
+    component "LanguageGenerationAdapter\n(LangChain4j + pgvector RAG)" as BE_LangChain
+    component "BatchInstanceAdapter\n(AI task instances)" as BE_Batch
+    component "ResendEmailAdapter / ConsoleEmailAdapter\n(EmailPort)" as BE_Email
+    component "GoogleOAuthAdapter\nFacebookOAuthAdapter\nOAuthVerifierRegistry" as BE_OAuth
+    component "StuckGenerationWatchdog\nTopicExpirationJob\n(schedulers)" as BE_Scheduler
+  }
+
+  rectangle "Auth Bounded Context\n(self-contained hexagon)" as BE_AuthCtx {
+    component "Auth Domain:\nUser · MagicLinkToken\nRefreshToken · TokenPair\nOAuthClaims · AuthProvider" as BE_AuthDomain
+    component "Auth Persistence:\nUserJpaAdapter\nMagicLinkTokenJpaAdapter\nRefreshTokenJpaAdapter" as BE_AuthPersist
+  }
+}
+
+' ── Data Stores ───────────────────────────────────────────────────────────────
+rectangle "Infrastructure Services\n(Docker Compose)" as Infra {
+  database "PostgreSQL 16\n+ pgvector\n(port 5432)" as Postgres
+  database "Redis 7\n(cache · port 6379)" as Redis
+  database "MinIO\n(S3-compatible · port 9000/9001)" as Minio
+  component "nginx 1.27\n(reverse proxy · port 80)" as Nginx
+  component "Prometheus\n(metrics · port 9090)" as Prometheus
+  component "Grafana\n(dashboards · port 3000)" as Grafana
+}
+
+' ── Relationships ─────────────────────────────────────────────────────────────
+
+' Actors to clients
+Admin --> WebPortal : "HTTPS (browser)"
+Learner --> MobileApp : "Android / iOS"
+
+' Web portal deployment
+WebPortal -right-> CF_Pages : "deployed via\nGitHub Actions"
+CICD -right-> CF_Pages : "wrangler-action"
+
+' Web to backend
+Web_Axios --> Nginx : "HTTPS\nAxios + JWT"
+Web_Mock ..> Web_Axios : "«replaces when\nVITE_USE_MOCK=true»"
+
+' DI wiring
+Web_DI --> Web_Axios : "selects"
+Web_DI --> Web_Mock : "selects"
+Web_App --> Web_DI : "resolves ports"
+Web_UI --> Web_App : "uses hooks"
+Web_App --> Web_Domain : "typed by"
+
+' Mobile to backend
+Mobile_Http --> Nginx : "HTTPS\nKtor + JWT"
+Mobile_Features --> Mobile_Http : "via repositories"
+Mobile_Koin --> Mobile_Http : "provides"
+Mobile_DeepLink --> Mobile_Http : "triggers token store"
+Mobile_KeyStore --> Mobile_Http : "reads/writes tokens"
+
+' nginx to backend
+Nginx --> BE_Web : ":8080"
+
+' Backend security
+BE_Security --> BE_Web : "filters"
+BE_Web --> BE_App : "delegates"
+BE_App --> BE_Domain : "operates on"
+BE_App --> BE_Infra : "via port interfaces"
+BE_AuthSvc --> BE_AuthCtx : "uses"
+
+' Outbound adapters to infra
+BE_JPA --> Postgres : "JPA / Flyway\nmigrations"
+BE_Redis --> Redis : "Spring Data Redis"
+BE_Minio --> Minio : "AWS SDK S3"
+BE_LangChain --> Postgres : "pgvector\n(embeddings)"
+BE_LangChain --> MistralAI : "LangChain4j\nMistral adapter"
+BE_Batch --> MistralAI : "AI task generation"
+BE_Email --> Resend : "REST API"
+BE_OAuth --> GoogleOAuth : "token verify"
+BE_OAuth --> FacebookOAuth : "token verify"
+BE_AuthPersist --> Postgres : "JPA"
+BE_AuthCtx --> BE_Email : "sends magic link"
+BE_AuthCtx --> BE_OAuth : "verifies OAuth"
+BE_Content --> MistralAI : "URL content → embeddings"
+
+' Observability
+Backend --> Prometheus : "micrometer\n/actuator/prometheus"
+Prometheus --> Grafana : "scrapes"
+
+' Tunnel
+CF_Tunnel --> Nginx : "exposes backend\nfor dev/demo"
+
+' CI/CD
+CICD --> WebPortal : "lint → typecheck\n→ test → build"
+
+legend right
+  |<#EBF2FF>     | Frontend Layer |
+  |<#F3E5F5>     | Infrastructure / CI |
+  |<#E8F5E9>     | External Cloud Services |
+  |<#FFF8E1>     | Data Stores |
+  |<#FFFFFF>     | Backend Bounded Contexts |
+endlegend
+
+@enduml

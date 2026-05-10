@@ -1,0 +1,114 @@
+@startuml Learner Use Cases
+
+left to right direction
+
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam defaultFontSize 13
+skinparam usecaseFontSize 12
+skinparam actorFontSize 15
+skinparam backgroundColor white
+skinparam nodesep 8
+skinparam ranksep 25
+skinparam padding 4
+skinparam roundcorner 8
+skinparam ArrowColor #555555
+skinparam ArrowFontSize 10
+skinparam rectangleBackgroundColor #EBF2FF
+skinparam rectangleBorderColor #3A6BC8
+skinparam rectangleFontSize 13
+skinparam rectangleFontStyle bold
+skinparam usecaseBackgroundColor #FFFFFF
+skinparam usecaseBorderColor #3A6BC8
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #1A2E50
+
+actor Learner
+
+rectangle "Authentication" {
+  usecase "Request Magic Link" as UC_AUTH_ML
+  usecase "Verify Magic Link" as UC_AUTH_VERIFY
+  usecase "OAuth Login" as UC_AUTH_OAUTH
+  usecase "Refresh Token" as UC_AUTH_REFRESH
+  usecase "Logout" as UC_AUTH_LOGOUT
+}
+
+rectangle "Profile & Preferences" {
+  usecase "View Own Profile" as UC_PROF_GET
+  usecase "View Preferences" as UC_PREF_GET
+  usecase "Update Preferences" as UC_PREF_UPDATE
+}
+
+rectangle "Topic Browsing & Enrollment" {
+  usecase "Browse Available Topics" as UC_TOPIC_LIST
+  usecase "Enroll in Topic" as UC_TOPIC_ENROLL
+  usecase "View Enrollment Status" as UC_TOPIC_ENROLLMENT
+}
+
+rectangle "Daily Learning" {
+  usecase "Get Today's Task" as UC_TASK_TODAY
+  usecase "Submit Task Answer" as UC_TASK_SUBMIT
+  usecase "Submit Photo Task" as UC_TASK_PHOTO
+  usecase "View Learning Roadmap" as UC_ROADMAP
+}
+
+rectangle "Adaptive Learning" {
+  usecase "View Struggle Session" as UC_STRUGGLE_GET
+  usecase "Submit Adaptive Task" as UC_STRUGGLE_SUBMIT
+}
+
+rectangle "Peer Review" {
+  usecase "View Pending Reviews" as UC_REVIEW_LIST
+  usecase "Submit Review Verdict" as UC_REVIEW_VERDICT
+}
+
+rectangle "Achievements" {
+  usecase "View Earned Badges" as UC_BADGE_GET
+}
+
+rectangle "Quality Feedback" {
+  usecase "Report Task Issue" as UC_REPORT_TASK
+}
+
+Learner --> UC_AUTH_ML
+Learner --> UC_AUTH_VERIFY
+Learner --> UC_AUTH_OAUTH
+Learner --> UC_AUTH_REFRESH
+Learner --> UC_AUTH_LOGOUT
+
+Learner --> UC_PROF_GET
+Learner --> UC_PREF_GET
+Learner --> UC_PREF_UPDATE
+
+Learner --> UC_TOPIC_LIST
+Learner --> UC_TOPIC_ENROLL
+Learner --> UC_TOPIC_ENROLLMENT
+
+Learner --> UC_TASK_TODAY
+Learner --> UC_TASK_SUBMIT
+Learner --> UC_TASK_PHOTO
+Learner --> UC_ROADMAP
+
+Learner --> UC_STRUGGLE_GET
+Learner --> UC_STRUGGLE_SUBMIT
+
+Learner --> UC_REVIEW_LIST
+Learner --> UC_REVIEW_VERDICT
+
+Learner --> UC_BADGE_GET
+
+Learner --> UC_REPORT_TASK
+
+UC_TOPIC_ENROLL ..> UC_TOPIC_LIST : <<include>>
+UC_TASK_TODAY ..> UC_TOPIC_ENROLLMENT : <<include>>
+UC_TASK_SUBMIT ..> UC_TASK_TODAY : <<include>>
+UC_TASK_PHOTO ..> UC_TASK_TODAY : <<include>>
+UC_STRUGGLE_GET ..> UC_TOPIC_ENROLLMENT : <<include>>
+UC_STRUGGLE_SUBMIT ..> UC_STRUGGLE_GET : <<include>>
+UC_TASK_SUBMIT ..> UC_STRUGGLE_GET : <<extends>>
+UC_TASK_PHOTO ..> UC_REVIEW_LIST : <<extends>>
+UC_REVIEW_VERDICT ..> UC_REVIEW_LIST : <<include>>
+UC_BADGE_GET ..> UC_TOPIC_ENROLLMENT : <<include>>
+UC_REPORT_TASK ..> UC_TASK_TODAY : <<include>>
+
+@enduml

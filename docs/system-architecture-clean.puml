@@ -1,0 +1,94 @@
+@startuml Play4Change — System Architecture
+
+skinparam backgroundColor #F0F6FF
+skinparam defaultFontName "Helvetica"
+skinparam defaultFontSize 13
+skinparam roundcorner 12
+skinparam ArrowColor #444444
+skinparam ArrowThickness 1.5
+skinparam nodesep 30
+skinparam ranksep 40
+skinparam packageStyle rectangle
+
+skinparam rectangle {
+  BackgroundColor #D6E4FF
+  BorderColor #3A6BC8
+  FontStyle bold
+  FontSize 13
+  BorderThickness 2
+}
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #3A6BC8
+  FontSize 12
+}
+skinparam database {
+  BackgroundColor #FFD6D6
+  BorderColor #C0392B
+  FontSize 12
+}
+skinparam cloud {
+  BackgroundColor #D6F0D6
+  BorderColor #388E3C
+  FontSize 12
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #1A2E50
+  FontSize 13
+}
+
+' ── Actors ───────────────────────────────────────────────────────
+actor "Admin" as Admin
+actor "Learner" as Learner
+
+' ── Clients ──────────────────────────────────────────────────────
+rectangle "Client Apps" as Clients {
+  component "Web Portal\n(React + Vite)" as Web
+  component "Mobile App\n(Kotlin Multiplatform)" as Mobile
+}
+
+' ── API Gateway ──────────────────────────────────────────────────
+rectangle "API Gateway\n(nginx)" as Gateway
+
+' ── Backend ──────────────────────────────────────────────────────
+rectangle "Backend\n(Spring Boot · Kotlin · DDD)" as Backend {
+  component "Auth Service\n(Magic Link · OAuth · JWT)" as AuthSvc
+  component "Topic Service\n(AI Generation · PDF/URL)" as TopicSvc
+  component "Learning Service\n(Enrollment · Tasks · Roadmap)" as LearnSvc
+  component "Engagement Service\n(Badges · Peer Review · Struggle)" as EngageSvc
+}
+
+' ── Data Stores ──────────────────────────────────────────────────
+rectangle "Data Stores" as DataStores {
+  database "PostgreSQL\n+ pgvector" as Postgres
+  database "Redis\n(Cache)" as Redis
+  database "MinIO\n(File Storage)" as Minio
+}
+
+' ── External Services ────────────────────────────────────────────
+cloud "Mistral AI\n(LLM)" as MistralAI
+cloud "Google / Facebook\n(OAuth)" as OAuth
+cloud "Resend\n(Email)" as Resend
+cloud "Cloudflare\n(Hosting · Tunnel)" as Cloudflare
+
+' ── Relationships ────────────────────────────────────────────────
+Admin    --> Web    : "Browser"
+Learner  --> Mobile : "Android / iOS"
+
+Web    --> Gateway : "HTTPS + JWT"
+Mobile --> Gateway : "HTTPS + JWT"
+
+Gateway --> Backend : "HTTP :8080"
+
+Backend --> Postgres : "JPA"
+Backend --> Redis    : "Cache"
+Backend --> Minio    : "S3 API"
+
+Backend --> MistralAI : "AI generation"
+Backend --> OAuth     : "Token verify"
+Backend --> Resend    : "Transactional email"
+
+Web    --> Cloudflare : "Deployed via\nGitHub Actions"
+
+@enduml

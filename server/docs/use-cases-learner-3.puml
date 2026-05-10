@@ -1,0 +1,59 @@
+@startuml Learner Use Cases (3/3)
+
+left to right direction
+
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam defaultFontSize 13
+skinparam usecaseFontSize 12
+skinparam actorFontSize 15
+skinparam backgroundColor white
+skinparam nodesep 8
+skinparam ranksep 25
+skinparam padding 4
+skinparam roundcorner 8
+skinparam ArrowColor #555555
+skinparam ArrowFontSize 10
+skinparam rectangleBackgroundColor #EBF2FF
+skinparam rectangleBorderColor #3A6BC8
+skinparam rectangleFontSize 13
+skinparam rectangleFontStyle bold
+skinparam usecaseBackgroundColor #FFFFFF
+skinparam usecaseBorderColor #3A6BC8
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #1A2E50
+
+actor Learner
+
+rectangle "Adaptive Learning" {
+  usecase "View Struggle Session" as UC_STRUGGLE_GET
+  usecase "Submit Adaptive Task" as UC_STRUGGLE_SUBMIT
+}
+
+rectangle "Peer Review" {
+  usecase "View Pending Reviews" as UC_REVIEW_LIST
+  usecase "Submit Review Verdict" as UC_REVIEW_VERDICT
+}
+
+rectangle "Achievements" {
+  usecase "View Earned Badges" as UC_BADGE_GET
+}
+
+rectangle "Quality Feedback" {
+  usecase "Report Task Issue" as UC_REPORT_TASK
+}
+
+Learner --> UC_STRUGGLE_GET
+Learner --> UC_STRUGGLE_SUBMIT
+
+Learner --> UC_REVIEW_LIST
+Learner --> UC_REVIEW_VERDICT
+
+Learner --> UC_BADGE_GET
+
+Learner --> UC_REPORT_TASK
+
+UC_STRUGGLE_SUBMIT ..> UC_STRUGGLE_GET : <<include>>
+UC_REVIEW_VERDICT ..> UC_REVIEW_LIST : <<include>>
+
+@enduml

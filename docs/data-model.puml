@@ -1,0 +1,296 @@
+@startuml data-model
+!theme plain
+skinparam linetype ortho
+skinparam roundcorner 5
+skinparam entity {
+  BackgroundColor #F8F9FA
+  BorderColor #495057
+  FontColor #212529
+}
+skinparam note {
+  BackgroundColor #FFF3CD
+  BorderColor #FFC107
+}
+
+title Play4Change — Data Model
+
+' ─────────────────────────────────────────
+' IDENTITY
+' ─────────────────────────────────────────
+entity "users" as User {
+  * id : UUID <<PK>>
+  --
+  * email : String <<unique>>
+  name : String?
+  avatarUrl : String?
+  * role : USER | ADMIN
+  * provider : MAGIC_LINK | GOOGLE | FACEBOOK
+  providerId : String?
+  * preferredLanguage : String
+  * audienceLevel : BEGINNER | INTERMEDIATE | ADVANCED
+  timezone : String?
+  * createdAt : OffsetDateTime
+}
+
+entity "magic_link_tokens" as MagicLink {
+  * id : UUID <<PK>>
+  --
+  * token : String <<unique>>
+  * email : String
+  * expiresAt : OffsetDateTime
+  * used : Boolean
+  * createdAt : OffsetDateTime
+}
+
+entity "refresh_tokens" as RefreshToken {
+  * id : UUID <<PK>>
+  --
+  * tokenHash : String <<unique>>
+  * userId : UUID <<FK>>
+  * familyId : String
+  * expiresAt : OffsetDateTime
+  * used : Boolean
+  * role : USER | ADMIN
+  * createdAt : OffsetDateTime
+}
+
+' ─────────────────────────────────────────
+' TOPIC
+' ─────────────────────────────────────────
+entity "topics" as Topic {
+  * id : UUID <<PK>>
+  --
+  * title : String
+  * description : String
+  * category : String
+  * contentSourceType : URL | PDF
+  * contentSourceRef : String
+  rawExtractedText : String?
+  * taskCount : Int
+  * subscriptionWindowDays : Int
+  * expiresAt : OffsetDateTime
+  * audienceLevel : BEGINNER | INTERMEDIATE | ADVANCED
+  * language : String
+  * status : PENDING | GENERATING | ACTIVE | EXPIRED | FAILED
+  * currentPhase : INGESTION | ANALYSIS | GENERATION | INDEXING | ACTIVE | FAILED
+  * createdBy : UUID <<FK>>
+  * createdAt : OffsetDateTime
+  * version : Long
+  * statusUpdatedAt : OffsetDateTime
+  * phaseUpdatedAt : OffsetDateTime
+}
+
+entity "topic_modules" as TopicModule {
+  * id : UUID <<PK>>
+  --
+  * topicId : UUID <<FK>>
+  * orderIndex : Int
+  * objective : String
+}
+
+entity "topic_phase_log" as TopicPhaseLog {
+  * id : UUID <<PK>>
+  --
+  * topicId : UUID <<FK>>
+  * fromPhase : String
+  * toPhase : String
+  * transitionedAt : OffsetDateTime
+  * durationMs : Long
+}
+
+' ─────────────────────────────────────────
+' TASK
+' ─────────────────────────────────────────
+entity "task_templates" as TaskTemplate {
+  * id : UUID <<PK>>
+  --
+  * moduleId : UUID <<FK>>
+  * dayIndex : Int
+  * poolIndex : Int
+  * title : String
+  * description : String
+  hint : String?
+  * taskType : MULTIPLE_CHOICE | TODO_ACTION
+  * pointsReward : Int
+  * options : JSONB
+  correctAnswer : Int?
+  * language : String
+  * version : Int
+  * isCurrent : Boolean
+  supersededBy : UUID?
+  embedding : vector(1024)?
+  * createdAt : OffsetDateTime
+}
+
+entity "task_instances" as TaskInstance {
+  * id : UUID <<PK>>
+  --
+  * taskTemplateId : UUID <<FK>>
+  * instanceIndex : Int
+  * options : JSONB
+  * correctAnswer : Int
+}
+
+' ─────────────────────────────────────────
+' ENROLLMENT & ASSIGNMENT
+' ─────────────────────────────────────────
+entity "enrollments" as Enrollment {
+  * id : UUID <<PK>>
+  --
+  * userId : UUID <<FK>>
+  * topicId : UUID <<FK>>
+  * topicModuleId : UUID <<FK>>
+  * enrolledAt : OffsetDateTime
+  * status : ACTIVE | COMPLETED | EXPIRED | PAUSED
+  * currentDayIndex : Int
+  * totalPointsEarned : Int
+  * streakDays : Int
+  lastActivityAt : OffsetDateTime?
+}
+
+entity "task_assignments" as TaskAssignment {
+  * id : UUID <<PK>>
+  --
+  * enrollmentId : UUID <<FK>>
+  * userId : UUID
+  * taskTemplateId : UUID <<FK>>
+  taskInstanceId : UUID? <<FK>>
+  * taskTemplateVersion : Int
+  * taskType : MULTIPLE_CHOICE | TODO_ACTION
+  * assignedAt : OffsetDateTime
+  * dueAt : OffsetDateTime
+  submittedAt : OffsetDateTime?
+  * status : PENDING | SUBMITTED | LATE | SKIPPED | PENDING_REVIEW
+  selectedOption : Int?
+  isCorrect : Boolean?
+  * pointsAwarded : Int
+  * optionOrder : JSONB
+  * wrongAttemptCount : Int
+  photoUrl : String?
+}
+
+' ─────────────────────────────────────────
+' STRUGGLE
+' ─────────────────────────────────────────
+entity "struggle_sessions" as StruggleSession {
+  * id : UUID <<PK>>
+  --
+  * enrollmentId : UUID <<FK>>
+  * originalTaskAssignmentId : UUID <<FK>>
+  * errorPattern : WRONG_CONCEPT | PARTIAL_UNDERSTANDING | READING_ERROR | TIME_PRESSURE
+  * attemptCount : Int
+  * detectedAt : OffsetDateTime
+  resolvedAt : OffsetDateTime?
+  * status : OPEN | RESOLVED | ABANDONED
+}
+
+entity "adaptive_tasks" as AdaptiveTask {
+  * id : UUID <<PK>>
+  --
+  * struggleSessionId : UUID <<FK>>
+  * title : String
+  * description : String
+  hint : String?
+  * pointsReward : Int
+  * orderIndex : Int
+  completedAt : OffsetDateTime?
+  isCorrect : Boolean?
+  options : JSONB?
+  correctAnswer : Int?
+  selectedOption : Int?
+  optionOrder : JSONB?
+}
+
+' ─────────────────────────────────────────
+' PEER REVIEW
+' ─────────────────────────────────────────
+entity "peer_reviews" as PeerReview {
+  * id : UUID <<PK>>
+  --
+  * submissionAssignmentId : UUID <<FK>>
+  * reviewerUserId : UUID <<FK>>
+  verdict : CORRECT | INCORRECT?
+  comment : String?
+  * assignedAt : OffsetDateTime
+  reviewedAt : OffsetDateTime?
+}
+
+' ─────────────────────────────────────────
+' BADGE SYSTEM
+' ─────────────────────────────────────────
+entity "micro_competences" as MicroCompetence {
+  * id : UUID <<PK>>
+  --
+  * name : String
+  * description : String
+  * topicId : UUID <<FK>>
+  iconUrl : String?
+}
+
+entity "user_badges" as Badge {
+  * id : UUID <<PK>>
+  --
+  * userId : UUID <<FK>>
+  * microCompetenceId : UUID <<FK>>
+  * earnedAt : OffsetDateTime
+  <<unique (userId, microCompetenceId)>>
+}
+
+' ─────────────────────────────────────────
+' REPORTS
+' ─────────────────────────────────────────
+entity "task_reports" as TaskReport {
+  * id : UUID <<PK>>
+  --
+  * taskTemplateId : UUID <<FK>>
+  * userId : UUID <<FK>>
+  * reason : String
+  * status : PENDING | RESOLVED | DISMISSED
+  * reportedAt : OffsetDateTime
+  resolvedAt : OffsetDateTime?
+  <<unique (userId, taskTemplateId)>>
+}
+
+' ─────────────────────────────────────────
+' RELATIONSHIPS
+' ─────────────────────────────────────────
+
+' Identity
+User ||--o{ RefreshToken      : "has"
+User ||--o{ Topic             : "creates"
+User ||--o{ Enrollment        : "has"
+User ||--o{ Badge             : "earns"
+User ||--o{ TaskReport        : "files"
+User ||--o{ PeerReview        : "reviews as"
+
+' Topic hierarchy
+Topic ||--o{ TopicModule      : "has"
+Topic ||--o{ TopicPhaseLog    : "logs phases"
+Topic ||--|| MicroCompetence  : "has one"
+
+' Task hierarchy
+TopicModule ||--o{ TaskTemplate : "has"
+TaskTemplate ||--o{ TaskInstance : "has instances"
+
+' Enrollment flow
+Enrollment }o--|| Topic           : "for"
+Enrollment }o--|| TopicModule     : "at module"
+Enrollment ||--o{ TaskAssignment  : "has"
+Enrollment ||--o{ StruggleSession : "has"
+
+' Assignment
+TaskAssignment }o--|| TaskTemplate  : "uses"
+TaskAssignment }o--o| TaskInstance  : "may use"
+TaskAssignment ||--o{ PeerReview   : "reviewed by"
+TaskAssignment ||--o| StruggleSession : "triggers"
+
+' Struggle
+StruggleSession ||--o{ AdaptiveTask : "has"
+
+' Badges
+MicroCompetence ||--o{ Badge : "awarded as"
+
+' Reports
+TaskTemplate ||--o{ TaskReport : "reported via"
+
+@enduml
