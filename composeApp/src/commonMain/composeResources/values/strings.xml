@@ -24,7 +24,10 @@
   <string name="login_debug_verify">Verify token</string>
 
   <!-- Home -->
-  <string name="home_greeting">Good morning, %1$s!</string>
+  <string name="home_greeting_morning">Good morning, %1$s!</string>
+  <string name="home_greeting_afternoon">Good afternoon, %1$s!</string>
+  <string name="home_greeting_evening">Good evening, %1$s!</string>
+  <string name="home_greeting_night">Good night, %1$s!</string>
   <string name="home_this_week">This Week</string>
   <string name="home_todays_challenge">Today's Challenge</string>
   <string name="home_start_challenge">Start Challenge →</string>

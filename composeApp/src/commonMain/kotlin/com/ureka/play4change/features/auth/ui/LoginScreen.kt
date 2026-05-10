@@ -13,7 +13,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -71,7 +70,6 @@ import com.ureka.play4change.design.Spacing
 import com.ureka.play4change.design.components.LogoSize
 import com.ureka.play4change.design.components.UrekaLogo
 import com.ureka.play4change.features.auth.domain.model.SocialProvider
-import com.ureka.play4change.features.auth.presentation.AuthMode
 import com.ureka.play4change.features.auth.presentation.DefaultLoginComponent
 import com.ureka.play4change.features.auth.presentation.LoginEvents
 import com.ureka.play4change.features.auth.presentation.LoginLoadingAction
@@ -82,13 +80,7 @@ import org.jetbrains.compose.resources.stringResource
 import play4change.composeapp.generated.resources.Res
 import play4change.composeapp.generated.resources.auth_continue_facebook
 import play4change.composeapp.generated.resources.auth_continue_google
-import play4change.composeapp.generated.resources.auth_have_account
-import play4change.composeapp.generated.resources.auth_name_label
-import play4change.composeapp.generated.resources.auth_no_account
 import play4change.composeapp.generated.resources.auth_or_divider
-import play4change.composeapp.generated.resources.auth_register
-import play4change.composeapp.generated.resources.auth_register_cta
-import play4change.composeapp.generated.resources.auth_sign_in
 import play4change.composeapp.generated.resources.login_cta
 import play4change.composeapp.generated.resources.login_email_error_invalid
 import play4change.composeapp.generated.resources.login_email_label
@@ -163,29 +155,11 @@ fun LoginScreen(component: DefaultLoginComponent) {
                             )
                         } else {
                             Column(modifier = Modifier.fillMaxWidth()) {
-                                AnimatedContent(
-                                    targetState = state.mode,
-                                    transitionSpec = {
-                                        slideInVertically { it / 3 } + fadeIn(tween(250)) togetherWith
-                                        slideOutVertically { -it / 3 } + fadeOut(tween(200))
-                                    },
-                                    label = "auth_mode"
-                                ) { mode ->
-                                    if (mode == AuthMode.Login) {
-                                        LoginFormContent(
-                                            state = state,
-                                            onEmailChange = { onEvent(LoginEvents.EmailChanged(it)) },
-                                            onSubmit = { onEvent(LoginEvents.Submit) }
-                                        )
-                                    } else {
-                                        RegisterFormContent(
-                                            state = state,
-                                            onNameChange = { onEvent(LoginEvents.NameChanged(it)) },
-                                            onEmailChange = { onEvent(LoginEvents.EmailChanged(it)) },
-                                            onSubmit = { onEvent(LoginEvents.Submit) }
-                                        )
-                                    }
-                                }
+                                LoginFormContent(
+                                    state = state,
+                                    onEmailChange = { onEvent(LoginEvents.EmailChanged(it)) },
+                                    onSubmit = { onEvent(LoginEvents.Submit) }
+                                )
 
                                 Spacer(Modifier.height(Spacing.l))
                                 OrDivider()
@@ -203,11 +177,6 @@ fun LoginScreen(component: DefaultLoginComponent) {
                                     enabled = !anyLoading || state.loadingProvider == SocialProvider.FACEBOOK
                                 )
                                 Spacer(Modifier.height(Spacing.xl))
-                                ToggleModeRow(
-                                    mode = state.mode,
-                                    onToggle = { onEvent(LoginEvents.ToggleMode) }
-                                )
-                                Spacer(Modifier.height(Spacing.m))
                             }
                         }
                     }
@@ -291,77 +260,6 @@ private fun LoginFormContent(
 }
 
 @Composable
-private fun RegisterFormContent(
-    state: LoginState,
-    onNameChange: (String) -> Unit,
-    onEmailChange: (String) -> Unit,
-    onSubmit: () -> Unit
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text(
-            text = stringResource(Res.string.auth_register),
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(Modifier.height(Spacing.xl))
-
-        OutlinedTextField(
-            value = state.name,
-            onValueChange = onNameChange,
-            label = { Text(stringResource(Res.string.auth_name_label)) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            isError = state.nameError != null,
-            supportingText = { state.nameError?.let { Text(it) } },
-            shape = MaterialTheme.shapes.medium
-        )
-        Spacer(Modifier.height(Spacing.xs))
-
-        OutlinedTextField(
-            value = state.email,
-            onValueChange = onEmailChange,
-            label = { Text(stringResource(Res.string.login_email_label)) },
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(onDone = { onSubmit() }),
-            isError = state.emailError != null,
-            supportingText = {
-                state.emailError?.let {
-                    Text(stringResource(Res.string.login_email_error_invalid),
-                        color = MaterialTheme.colorScheme.error)
-                }
-            },
-            singleLine = true,
-            shape = MaterialTheme.shapes.medium
-        )
-        Spacer(Modifier.height(Spacing.m))
-
-        Button(
-            onClick = onSubmit,
-            modifier = Modifier.fillMaxWidth().height(52.dp),
-            enabled = !state.isEmailLoading && state.name.isNotBlank() && state.email.isNotBlank(),
-            shape = MaterialTheme.shapes.medium
-        ) {
-            if (state.isEmailLoading) {
-                CircularProgressIndicator(
-                    Modifier.size(20.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
-                )
-            } else {
-                Text(stringResource(Res.string.auth_register_cta))
-            }
-        }
-    }
-}
-
-@Composable
 private fun OrDivider() {
     Row(verticalAlignment = Alignment.CenterVertically) {
         HorizontalDivider(Modifier.weight(1f))
@@ -439,37 +337,6 @@ private fun FacebookSignInButton(onClick: () -> Unit, isLoading: Boolean, enable
             Text(
                 stringResource(Res.string.auth_continue_facebook),
                 style = MaterialTheme.typography.labelLarge
-            )
-        }
-    }
-}
-
-@Composable
-private fun ToggleModeRow(mode: AuthMode, onToggle: () -> Unit) {
-    Row(
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text(
-            stringResource(
-                if (mode == AuthMode.Login) Res.string.auth_no_account
-                else Res.string.auth_have_account
-            ),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        TextButton(
-            onClick = onToggle,
-            contentPadding = PaddingValues(start = 4.dp)
-        ) {
-            Text(
-                stringResource(
-                    if (mode == AuthMode.Login) Res.string.auth_register
-                    else Res.string.auth_sign_in
-                ),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary
             )
         }
     }

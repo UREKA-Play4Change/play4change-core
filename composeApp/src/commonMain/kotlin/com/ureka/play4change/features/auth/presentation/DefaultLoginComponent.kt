@@ -20,25 +20,16 @@ class DefaultLoginComponent(
     override fun onEvent(event: LoginEvents) {
         when (event) {
             is LoginEvents.EmailChanged  -> updateState { copy(email = event.email, emailError = null) }
-            is LoginEvents.NameChanged   -> updateState { copy(name = event.value, nameError = null) }
             LoginEvents.Submit           -> submit()
             LoginEvents.Resend           -> resend()
             is LoginEvents.SocialLogin   -> handleSocialLogin(event.provider)
-            LoginEvents.ToggleMode       -> updateState {
-                copy(
-                    mode = if (mode == AuthMode.Login) AuthMode.Register else AuthMode.Login,
-                    stage = LoginStage.EmailEntry,
-                    email = "", name = "", emailError = null, nameError = null
-                )
-            }
             is LoginEvents.TokenChanged  -> updateState { copy(tokenInput = event.value, error = null) }
             LoginEvents.VerifyToken      -> verifyToken()
         }
     }
 
     private fun submit() {
-        val current = state.value
-        val email = current.email.trim()
+        val email = state.value.email.trim()
         if (email.isBlank() || !email.contains('@')) {
             updateState { copy(emailError = "Invalid email") }
             return
@@ -46,11 +37,7 @@ class DefaultLoginComponent(
         scope.launch {
             updateState { copy(loadingAction = LoginLoadingAction.Email, error = null) }
             try {
-                if (current.mode == AuthMode.Register) {
-                    repository.register(current.name.trim(), email)
-                } else {
-                    repository.sendMagicLink(email)
-                }
+                repository.sendMagicLink(email)
                 updateState { copy(loadingAction = null, linkSent = true, stage = LoginStage.LinkSent) }
                 startCountdown()
             } catch (e: CancellationException) {

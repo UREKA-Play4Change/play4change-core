@@ -39,7 +39,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,7 +70,10 @@ import org.jetbrains.compose.resources.stringResource
 import play4change.composeapp.generated.resources.Res
 import play4change.composeapp.generated.resources.cancel
 import play4change.composeapp.generated.resources.home_completed_today
-import play4change.composeapp.generated.resources.home_greeting
+import play4change.composeapp.generated.resources.home_greeting_afternoon
+import play4change.composeapp.generated.resources.home_greeting_evening
+import play4change.composeapp.generated.resources.home_greeting_morning
+import play4change.composeapp.generated.resources.home_greeting_night
 import play4change.composeapp.generated.resources.home_no_task
 import play4change.composeapp.generated.resources.home_roadmap
 import play4change.composeapp.generated.resources.home_start_challenge
@@ -231,11 +238,18 @@ fun HomeScreen(component: DefaultHomeComponent) {
                             elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
                         ) {
                             Column(Modifier.padding(Spacing.l)) {
+                                val greetingRes = remember {
+                                    val hour = Clock.System.now()
+                                        .toLocalDateTime(TimeZone.currentSystemDefault()).hour
+                                    when (hour) {
+                                        in 5..11  -> Res.string.home_greeting_morning
+                                        in 12..17 -> Res.string.home_greeting_afternoon
+                                        in 18..21 -> Res.string.home_greeting_evening
+                                        else      -> Res.string.home_greeting_night
+                                    }
+                                }
                                 Text(
-                                    text = stringResource(
-                                        Res.string.home_greeting,
-                                        greetingName(data.userName)
-                                    ),
+                                    text = stringResource(greetingRes, greetingName(data.userName)),
                                     style = MaterialTheme.typography.titleLarge,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
@@ -374,13 +388,23 @@ fun HomeScreen(component: DefaultHomeComponent) {
     }
 }
 
-/** If the server returns the email address as the display name, use only the local part. */
-private fun greetingName(userName: String): String =
-    if (userName.contains('@')) {
-        userName.substringBefore('@').replaceFirstChar { it.uppercaseChar() }
-    } else {
-        userName.split(" ").first()
-    }
+/**
+ * Derives a display-friendly name from an email address or a display name.
+ * Non-letter characters (dots, underscores, digits, hyphens) are replaced with spaces,
+ * then each whitespace-separated word is capitalised and joined.
+ * Examples: "radesh.govind123@x.com" → "Radesh Govind", "alice" → "Alice".
+ */
+private fun greetingName(userName: String): String {
+    val raw = if (userName.contains('@')) userName.substringBefore('@') else userName
+    val words = raw
+        .map { if (it.isLetter()) it else ' ' }
+        .joinToString("")
+        .trim()
+        .split("\\s+".toRegex())
+        .filter { it.isNotEmpty() }
+    return if (words.isEmpty()) "there"
+    else words.joinToString(" ") { word -> word.replaceFirstChar { it.uppercaseChar() } }
+}
 
 @Composable
 private fun SectionHeader(title: String) {

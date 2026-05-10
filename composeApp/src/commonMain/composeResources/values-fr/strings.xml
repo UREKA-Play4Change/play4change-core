@@ -20,7 +20,10 @@
   <string name="login_resend_countdown">Renvoyer le lien (%1$ds)</string>
 
   <!-- Home -->
-  <string name="home_greeting">Bonjour, %1$s !</string>
+  <string name="home_greeting_morning">Bonjour, %1$s !</string>
+  <string name="home_greeting_afternoon">Bon après-midi, %1$s !</string>
+  <string name="home_greeting_evening">Bonsoir, %1$s !</string>
+  <string name="home_greeting_night">Bonne nuit, %1$s !</string>
   <string name="home_this_week">Cette Semaine</string>
   <string name="home_todays_challenge">Défi du Jour</string>
   <string name="home_start_challenge">Commencer le Défi →</string>

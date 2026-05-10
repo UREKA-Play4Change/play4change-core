@@ -5,13 +5,11 @@ import com.ureka.play4change.features.auth.domain.model.SocialProvider
 
 sealed interface LoginEvents : ComponentEvents {
     data class EmailChanged(val email: String) : LoginEvents
-    data class NameChanged(val value: String) : LoginEvents
     data object Submit : LoginEvents
     data object Resend : LoginEvents
     data class SocialLogin(val provider: SocialProvider) : LoginEvents
-    data object ToggleMode : LoginEvents
     /** Debug builds only: operator pastes raw token from server logs. */
     data class TokenChanged(val value: String) : LoginEvents
-    /** Debug builds only: trigger GET /auth/verify?token= with the pasted token. */
+    /** Debug builds only: trigger POST /auth/magic-link/verify with the pasted token. */
     data object VerifyToken : LoginEvents
 }
