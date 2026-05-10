@@ -34,6 +34,10 @@ class TaskReportService(
 
     private val log = LoggerFactory.getLogger(TaskReportService::class.java)
 
+    companion object {
+        private const val MAX_REASON_LENGTH = 500
+    }
+
     override fun reportTask(command: ReportTaskCommand): Either<AppError, TaskReport> = either {
         ensureNotNull(taskTemplateRepository.findById(command.taskTemplateId)) {
             NotFound.ResourceNotFound("TaskTemplate", command.taskTemplateId)
@@ -48,7 +52,7 @@ class TaskReportService(
             id = UUID.randomUUID().toString(),
             taskTemplateId = command.taskTemplateId,
             userId = command.userId,
-            reason = command.reason.take(500),
+            reason = command.reason.take(MAX_REASON_LENGTH),
             status = TaskReportStatus.PENDING,
             reportedAt = OffsetDateTime.now(),
             resolvedAt = null

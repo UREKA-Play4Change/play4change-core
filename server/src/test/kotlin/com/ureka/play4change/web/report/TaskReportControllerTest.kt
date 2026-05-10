@@ -128,7 +128,10 @@ class TaskReportControllerTest {
 
     @Test
     fun `POST admin task-reports id correct with ADMIN JWT returns 200`() {
-        val resolved = pendingReport.copy(status = TaskReportStatus.RESOLVED, resolvedAt = OffsetDateTime.now(ZoneOffset.UTC))
+        val resolved = pendingReport.copy(
+            status = TaskReportStatus.RESOLVED,
+            resolvedAt = OffsetDateTime.now(ZoneOffset.UTC)
+        )
         every {
             taskReportUseCase.correct(
                 CorrectTaskCommand("report-1", "Fixed title", listOf("X", "Y", "Z"), 1)
@@ -168,7 +171,10 @@ class TaskReportControllerTest {
 
     @Test
     fun `POST admin task-reports id dismiss with ADMIN JWT returns 200`() {
-        val dismissed = pendingReport.copy(status = TaskReportStatus.DISMISSED, resolvedAt = OffsetDateTime.now(ZoneOffset.UTC))
+        val dismissed = pendingReport.copy(
+            status = TaskReportStatus.DISMISSED,
+            resolvedAt = OffsetDateTime.now(ZoneOffset.UTC)
+        )
         every { taskReportUseCase.dismiss("report-1") } returns Either.Right(dismissed)
 
         mockMvc.perform(

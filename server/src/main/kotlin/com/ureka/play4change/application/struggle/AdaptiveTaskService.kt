@@ -41,6 +41,7 @@ class AdaptiveTaskService(
         }
     }
 
+    @Suppress("LongMethod") // struggle resolution state machine — all branches must stay together for correctness
     override fun submitAdaptiveTask(command: SubmitAdaptiveTaskCommand): Either<AppError, AdaptiveSubmitResult> =
         either {
             val session = ensureNotNull(struggleRepository.findById(command.sessionId)) {
