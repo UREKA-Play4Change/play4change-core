@@ -1,0 +1,79 @@
+@startuml Play4Change — System Overview
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Helvetica"
+skinparam defaultFontSize 13
+skinparam roundcorner 12
+skinparam ArrowColor #555555
+skinparam ArrowThickness 1.5
+skinparam nodesep 30
+skinparam ranksep 40
+
+skinparam rectangle {
+  BackgroundColor #EBF2FF
+  BorderColor #3A6BC8
+  FontStyle bold
+  FontSize 14
+}
+skinparam database {
+  BackgroundColor #FFF8E1
+  BorderColor #E6A817
+}
+skinparam cloud {
+  BackgroundColor #E8F5E9
+  BorderColor #388E3C
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #1A2E50
+}
+skinparam node {
+  BackgroundColor #F3E5F5
+  BorderColor #7B1FA2
+}
+
+' ── Actors ───────────────────────────────────────────
+actor "Admin" as Admin
+actor "Learner" as Learner
+
+' ── Clients ──────────────────────────────────────────
+rectangle "Admin Portal\n(Content & platform management)" as Web
+rectangle "Mobile App\n(Learner experience)" as Mobile
+
+' ── Backend ──────────────────────────────────────────
+rectangle "Backend API\n(Business logic & orchestration)" as Backend
+
+' ── Data Stores ──────────────────────────────────────
+database "Relational Database\n(persistent data + semantic search)" as Postgres
+database "Cache\n(session & query acceleration)" as Redis
+database "File Storage\n(PDFs, images, uploads)" as Minio
+
+' ── External Services ────────────────────────────────
+cloud "Web Hosting & Tunnel\n(public access)" as Cloudflare
+cloud "Identity Providers\n(social login)" as OAuth
+cloud "Email Service\n(magic-link delivery)" as Resend
+cloud "AI Service\n(content generation & RAG)" as Mistral
+
+' ── CI/CD ────────────────────────────────────────────
+node "Automation Pipeline\n(build, test & deploy)" as CICD
+
+' ── Relationships ─────────────────────────────────────
+Admin   --> Web     : browser
+Learner --> Mobile  : Android / iOS
+
+Web    --> Backend  : HTTPS + JWT
+Mobile --> Backend  : HTTPS + JWT
+
+Backend --> Postgres : stores data
+Backend --> Redis    : caches data
+Backend --> Minio    : stores files
+
+Backend --> OAuth    : authenticates users
+Backend --> Resend   : sends emails
+Backend --> Mistral  : generates content
+
+Web    --> Cloudflare : hosted on
+CICD   --> Cloudflare : deploys to
+CICD   --> Backend    : validates & builds
+
+@enduml

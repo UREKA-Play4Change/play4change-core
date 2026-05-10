@@ -1,0 +1,70 @@
+@startuml architecture_1
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_LEFT_RIGHT()
+
+skinparam linetype ortho
+
+hide stereotype
+
+skinparam rectangle {
+    StereotypeFontSize 0
+}
+
+title System Architecture
+
+System_Boundary(clients, "Clients") {
+    Container(mobile_app, "Mobile App", "", "")
+    Container(web_app, "Web App", "", "")
+}
+
+Container(api_gateway, "API Gateway", "", "")
+
+System_Boundary(backend, "Backend Services") {
+    Container(identity_svc, "Identity Service", "", "")
+    Container(content_creation_svc, "Content Creation Service", "", "")
+    Container(content_consumption_svc, "Content Consumption Service", "", "")
+}
+
+System_Boundary(external, "External Services") {
+    System_Ext(auth_api, "Auth API", "")
+    System_Ext(llm_api, "LLM API", "")
+}
+
+System_Boundary(data, "Data Layer") {
+    ContainerDb(postgres, "Relational Database", "", "")
+    ContainerDb(vector_db, "Vector Store", "", "")
+    ContainerDb(object_store, "Object Store", "", "")
+    ContainerDb(cache, "Cache", "", "")
+}
+
+AddElementTag("hidden", $bgColor="transparent", $borderColor="transparent", $fontColor="transparent", $shadowing="false")
+Container(spacer, " ", " ", " ", $tags="hidden")
+
+Lay_D(backend, spacer)
+Lay_D(spacer, external)
+Lay_D(spacer, data)
+Lay_R(external, data)
+
+Rel(mobile_app, api_gateway, " ")
+Rel(web_app, api_gateway, " ")
+
+Rel(api_gateway, identity_svc, " ")
+Rel(api_gateway, content_creation_svc, " ")
+Rel(api_gateway, content_consumption_svc, " ")
+
+Rel(identity_svc, auth_api, " ")
+Rel(identity_svc, postgres, " ")
+Rel(identity_svc, cache, " ")
+
+Rel(content_creation_svc, llm_api, " ")
+Rel(content_creation_svc, postgres, " ")
+Rel(content_creation_svc, vector_db, " ")
+Rel(content_creation_svc, object_store, " ")
+
+Rel(content_consumption_svc, postgres, " ")
+Rel(content_consumption_svc, vector_db, " ")
+Rel(content_consumption_svc, llm_api, " ")
+Rel(content_consumption_svc, cache, " ")
+
+@enduml

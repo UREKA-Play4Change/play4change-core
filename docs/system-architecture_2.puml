@@ -1,0 +1,112 @@
+@startuml Play4Change — System Architecture
+
+' ── Skin ──────────────────────────────────────────────────────────────────────
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Helvetica"
+skinparam defaultFontSize 13
+skinparam roundcorner 10
+skinparam ArrowColor #444444
+skinparam ArrowFontSize 11
+skinparam ArrowThickness 1.5
+skinparam nodesep 30
+skinparam ranksep 40
+
+skinparam rectangle {
+  BackgroundColor #EBF2FF
+  BorderColor #3A6BC8
+  FontStyle bold
+  FontSize 13
+}
+skinparam database {
+  BackgroundColor #FFF8E1
+  BorderColor #E6A817
+}
+skinparam cloud {
+  BackgroundColor #E8F5E9
+  BorderColor #388E3C
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #1A2E50
+}
+skinparam node {
+  BackgroundColor #F3E5F5
+  BorderColor #7B1FA2
+}
+
+' ── Actors ────────────────────────────────────────────────────────────────────
+actor Admin
+actor Learner
+
+' ── Client ────────────────────────────────────────────────────────────────────
+rectangle "Web Admin Portal" as WebPortal {
+  rectangle "UI" as Web_UI
+  rectangle "Application" as Web_App
+  rectangle "Infrastructure" as Web_Infra
+}
+
+rectangle "Mobile App" as MobileApp {
+  rectangle "UI" as Mob_UI
+  rectangle "Application" as Mob_App
+  rectangle "Core" as Mob_Core
+}
+
+' ── Server ────────────────────────────────────────────────────────────────────
+rectangle "Server" as Server {
+  rectangle "Controllers" as BE_Controllers
+  rectangle "Services" as BE_Services
+  rectangle "Domain" as BE_Domain
+  rectangle "Data" as BE_Data
+}
+
+' ── Data Stores ───────────────────────────────────────────────────────────────
+database "PostgreSQL + pgvector" as Postgres
+database "Redis" as Redis
+database "MinIO" as Minio
+
+' ── External Services ─────────────────────────────────────────────────────────
+cloud "Google / Facebook OAuth" as OAuth
+cloud "Resend" as Resend
+cloud "Mistral AI" as MistralAI
+
+' ── Infrastructure Nodes ──────────────────────────────────────────────────────
+node "GitHub Actions" as CICD
+node "Prometheus / Grafana" as Observability
+
+' ── Relationships ─────────────────────────────────────────────────────────────
+
+Admin   --> WebPortal  : HTTPS
+Learner --> MobileApp  : Android / iOS
+
+Web_UI   --> Web_App   : uses hooks
+Web_App  --> Web_Infra : resolves via DI
+Web_Infra --> Server   : HTTPS + JWT
+
+Mob_UI   --> Mob_App   : delegates
+Mob_App  --> Mob_Core  : via repositories
+Mob_Core --> Server    : HTTPS + JWT
+
+BE_Controllers --> BE_Services  : delegates
+BE_Services    --> BE_Domain    : operates on
+BE_Services    --> BE_Data      : via port interfaces
+
+BE_Data --> Postgres : JPA + Flyway
+BE_Data --> Redis    : Spring Data Redis
+BE_Data --> Minio    : AWS S3 SDK
+BE_Data --> OAuth    : token verify
+BE_Data --> Resend   : REST API
+BE_Data --> MistralAI : LangChain4j + pgvector
+
+Server --> Observability : micrometer
+
+CICD --> WebPortal : lint, test, build
+CICD --> Server    : lint, test, build
+
+legend right
+  |<#EBF2FF>  | Modules & Layers |
+  |<#E8F5E9>  | External Services |
+  |<#FFF8E1>  | Data Stores |
+  |<#F3E5F5>  | Infrastructure |
+endlegend
+
+@enduml
