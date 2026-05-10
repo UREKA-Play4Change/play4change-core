@@ -359,4 +359,29 @@ All tests green. Branch: fix/session-fixes-05.
 
 ---
 
+## I03 [OPEN] Severity:Low — `EnrollmentService` first-assignment `dueAt` uses `now + 24h` instead of midnight
+
+**Discovered:** 2026-05-10, during fix of Issue 4 (task availability window).
+
+**Description:** `EnrollmentService` creates the very first `TaskAssignment` on enrollment with
+`dueAt = now.plusHours(24)`. This is the same bug that was fixed in `TaskService.getTodayTask()`,
+but `EnrollmentService` does not receive an `X-Timezone` header (the enrollment endpoint doesn't
+propagate it), so the same fix cannot be applied directly.
+
+Impact is limited: the first task is almost always completed on the enrollment day, and the
+late-submission penalty (half points) is only triggered if the user submits after `dueAt`.
+With `now + 24h`, a user enrolling at 10 PM and submitting the next morning at 9 AM is
+incorrectly not penalised.
+
+**Impact:** First task `dueAt` is up to ~23 h later than it should be. Late-submission
+half-point penalty is not applied in some edge cases for the very first task.
+
+**Workaround:** None — only affects point calculation on the first assignment.
+
+**Fix plan:** Unscheduled. Options: (a) pass a default UTC midnight as `dueAt` in
+`EnrollmentService`; (b) propagate the `X-Timezone` header from the enrollment endpoint
+down to the service. Either requires a small service-layer change and a test update.
+
+---
+
 *(New entries are prepended above existing open items. Most recent first.)*

@@ -4,7 +4,6 @@ import com.ureka.play4change.core.component.base.ComponentState
 import com.ureka.play4change.core.error.AppError
 import com.ureka.play4change.features.auth.domain.model.SocialProvider
 
-enum class AuthMode { Login, Register }
 enum class LoginStage { EmailEntry, LinkSent }
 
 sealed class LoginLoadingAction {
@@ -14,9 +13,6 @@ sealed class LoginLoadingAction {
 }
 
 data class LoginState(
-    val mode: AuthMode = AuthMode.Login,
-    val name: String = "",
-    val nameError: String? = null,
     val email: String = "",
     val emailError: String? = null,
     val stage: LoginStage = LoginStage.EmailEntry,

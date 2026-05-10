@@ -98,7 +98,7 @@ class TaskService(
                         return@either TodayTaskResult.Available(existingPair.first, existingPair.second)
                     }
                     return@either TodayTaskResult.NotAvailableYet(
-                        enrollment.enrolledAt.plusDays(dayIndex.toLong() + 1)
+                        DayIndexCalculator.startOfTomorrow(timezone)
                     )
                 }
             }
@@ -143,7 +143,7 @@ class TaskService(
                     taskTemplateVersion = template.version,
                     taskType = template.taskType,
                     assignedAt = now,
-                    dueAt = now.plusHours(24),
+                    dueAt = DayIndexCalculator.startOfTomorrow(timezone),
                     submittedAt = null,
                     status = AssignmentStatus.PENDING,
                     selectedOption = null,
