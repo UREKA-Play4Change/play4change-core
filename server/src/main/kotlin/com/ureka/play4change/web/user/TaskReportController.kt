@@ -7,7 +7,11 @@ import com.ureka.play4change.web.user.dto.ReportTaskRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/tasks")
@@ -20,7 +24,7 @@ class TaskReportController(private val taskReportUseCase: TaskReportUseCase) {
         @AuthenticationPrincipal userId: String
     ): ResponseEntity<Map<String, String>> {
         require(request.reason.isNotBlank()) { "reason must not be blank" }
-        require(request.reason.length <= 500) { "reason must be at most 500 characters" }
+        require(request.reason.length <= MAX_REASON_LENGTH) { "reason must be at most $MAX_REASON_LENGTH characters" }
 
         return taskReportUseCase.reportTask(
             ReportTaskCommand(
@@ -37,4 +41,8 @@ class TaskReportController(private val taskReportUseCase: TaskReportUseCase) {
     @Suppress("UNCHECKED_CAST")
     private fun <T> AppError.toErrorResponse(): ResponseEntity<T> =
         ResponseEntity.status(httpStatus).build()
+
+    companion object {
+        private const val MAX_REASON_LENGTH = 500
+    }
 }

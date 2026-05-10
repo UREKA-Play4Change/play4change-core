@@ -55,6 +55,7 @@ class TaskService(
 
     private val log = LoggerFactory.getLogger(TaskService::class.java)
 
+    @Suppress("LongMethod") // multi-branch prod/dev task delivery logic — splitting would obscure the flow
     override fun getTodayTask(userId: String, topicId: String, timezone: String?): Either<AppError, TodayTaskResult> =
         either {
             val enrollment = ensureNotNull(enrollmentRepository.findByUserIdAndTopicId(userId, topicId)) {
