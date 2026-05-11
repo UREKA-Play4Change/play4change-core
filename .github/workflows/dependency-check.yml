@@ -52,11 +52,13 @@ jobs:
           path: server/build/dependencies/
 
       - name: OWASP Dependency Check
-        # This job intentionally does NOT run setup-java so that JAVA_HOME is
-        # never set on the runner.  The Docker action passes -e "JAVA_HOME" to
-        # the container; when the variable is absent on the host, Docker omits
-        # it entirely and the container uses its own bundled JDK correctly.
+        # ubuntu-latest runners have JAVA_HOME pre-set to a host path that
+        # does not exist inside the owasp/dependency-check Docker container.
+        # The action passes -e "JAVA_HOME" to Docker, so we override it here
+        # to the path Eclipse Temurin uses inside the container image.
         uses: dependency-check/Dependency-Check_Action@main
+        env:
+          JAVA_HOME: /opt/java/openjdk
         with:
           project: 'play4change-server'
           path: 'server/build/dependencies'
