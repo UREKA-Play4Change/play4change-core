@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  dependency-check:
+  build-deps:
     runs-on: ubuntu-latest
 
     steps:
@@ -30,13 +30,32 @@ jobs:
         # See HACKS.md H04 for full explanation.
         run: ./gradlew :server:copyRuntimeDependencies --no-configuration-cache
 
-      - name: Clear JAVA_HOME for OWASP Docker container
-        # setup-java sets JAVA_HOME to a host path that doesn't exist inside the
-        # dependency-check Docker container, causing "JAVA_HOME is not defined correctly".
-        # Clearing it lets the container use its own pre-installed JDK via PATH.
-        run: echo "JAVA_HOME=" >> $GITHUB_ENV
+      - name: Upload server dependencies artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-dependencies
+          path: server/build/dependencies/
+          retention-days: 1
+
+  dependency-check:
+    needs: build-deps
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download server dependencies artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: server-dependencies
+          path: server/build/dependencies/
 
       - name: OWASP Dependency Check
+        # This job intentionally does NOT run setup-java so that JAVA_HOME is
+        # never set on the runner.  The Docker action passes -e "JAVA_HOME" to
+        # the container; when the variable is absent on the host, Docker omits
+        # it entirely and the container uses its own bundled JDK correctly.
         uses: dependency-check/Dependency-Check_Action@main
         with:
           project: 'play4change-server'
