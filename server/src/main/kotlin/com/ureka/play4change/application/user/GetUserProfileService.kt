@@ -39,7 +39,7 @@ class GetUserProfileService(
             else submitted.count { it.isCorrect == true }.toFloat() / submitted.size.toFloat()
         } ?: 0.0f
 
-        val level = totalPoints / 100 + 1
+        val level = totalPoints / POINTS_PER_LEVEL + 1
 
         return UserProfile(
             userId = user.id,
@@ -52,5 +52,9 @@ class GetUserProfileService(
             currentDay = currentDay,
             totalDays = totalDays
         ).right()
+    }
+
+    companion object {
+        private const val POINTS_PER_LEVEL = 100
     }
 }

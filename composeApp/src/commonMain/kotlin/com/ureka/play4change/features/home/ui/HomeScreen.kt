@@ -41,9 +41,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.datetime.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
+import com.ureka.play4change.core.currentHour
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -239,8 +237,7 @@ fun HomeScreen(component: DefaultHomeComponent) {
                         ) {
                             Column(Modifier.padding(Spacing.l)) {
                                 val greetingRes = remember {
-                                    val hour = Clock.System.now()
-                                        .toLocalDateTime(TimeZone.currentSystemDefault()).hour
+                                    val hour = currentHour()
                                     when (hour) {
                                         in 5..11  -> Res.string.home_greeting_morning
                                         in 12..17 -> Res.string.home_greeting_afternoon

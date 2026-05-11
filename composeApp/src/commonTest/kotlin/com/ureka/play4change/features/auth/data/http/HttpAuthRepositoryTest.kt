@@ -99,9 +99,8 @@ class HttpAuthRepositoryTest {
     fun `given valid token when verifyMagicLink called then returns AuthResult and stores tokens`() =
         runTest {
             val engine = MockEngine { request ->
-                assertEquals(HttpMethod.Get, request.method)
-                assertEquals("/auth/verify", request.url.encodedPath)
-                assertEquals("good-token", request.url.parameters["token"])
+                assertEquals(HttpMethod.Post, request.method)
+                assertEquals("/auth/magic-link/verify", request.url.encodedPath)
                 respond(
                     content = ByteReadChannel(tokenJson("user-abc")),
                     status = HttpStatusCode.OK,
