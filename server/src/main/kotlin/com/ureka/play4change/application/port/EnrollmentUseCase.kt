@@ -6,7 +6,8 @@ import com.ureka.play4change.error.AppError
 
 data class EnrollCommand(
     val userId: String,
-    val topicId: String
+    val topicId: String,
+    val timezone: String? = null
 )
 
 interface EnrollmentUseCase {

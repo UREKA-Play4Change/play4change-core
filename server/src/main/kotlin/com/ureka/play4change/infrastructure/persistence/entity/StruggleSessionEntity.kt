@@ -33,6 +33,9 @@ class StruggleSessionEntity(
     @Column(nullable = false, length = 15)
     var status: String = "OPEN",
 
+    @Column(name = "pre_struggle_streak_days", nullable = false)
+    var preStruggleStreakDays: Int = 0,
+
     @OneToMany(mappedBy = "struggleSession", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
     @OrderBy("order_index ASC")
     val adaptiveTasks: MutableList<AdaptiveTaskEntity> = mutableListOf()

@@ -8,6 +8,7 @@ import com.ureka.play4change.application.port.CorrectTaskCommand
 import com.ureka.play4change.application.port.ReportTaskCommand
 import com.ureka.play4change.application.port.TaskReportUseCase
 import com.ureka.play4change.application.topic.BatchInstanceGenerationService
+import com.ureka.play4change.domain.enrollment.EnrollmentRepository
 import com.ureka.play4change.domain.report.TaskReport
 import com.ureka.play4change.domain.report.TaskReportRepository
 import com.ureka.play4change.domain.report.TaskReportStatus
@@ -29,6 +30,7 @@ class TaskReportService(
     private val taskReportRepository: TaskReportRepository,
     private val taskTemplateRepository: TaskTemplateRepository,
     private val taskInstanceRepository: TaskInstanceRepository,
+    private val enrollmentRepository: EnrollmentRepository,
     private val batchInstanceGenerationService: BatchInstanceGenerationService
 ) : TaskReportUseCase {
 
@@ -39,18 +41,22 @@ class TaskReportService(
     }
 
     override fun reportTask(command: ReportTaskCommand): Either<AppError, TaskReport> = either {
-        ensureNotNull(taskTemplateRepository.findById(command.taskTemplateId)) {
-            NotFound.ResourceNotFound("TaskTemplate", command.taskTemplateId)
+        val assignment = ensureNotNull(enrollmentRepository.findAssignmentById(command.assignmentId)) {
+            NotFound.ResourceNotFound("TaskAssignment", command.assignmentId)
+        }
+        val taskTemplateId = assignment.taskTemplateId
+        ensureNotNull(taskTemplateRepository.findById(taskTemplateId)) {
+            NotFound.ResourceNotFound("TaskTemplate", taskTemplateId)
         }
 
-        val existing = taskReportRepository.findByUserIdAndTaskTemplateId(command.userId, command.taskTemplateId)
+        val existing = taskReportRepository.findByUserIdAndTaskTemplateId(command.userId, taskTemplateId)
         ensure(existing == null) {
             Conflict.DuplicateResource("TaskReport", "userId+taskTemplateId")
         }
 
         val report = TaskReport(
             id = UUID.randomUUID().toString(),
-            taskTemplateId = command.taskTemplateId,
+            taskTemplateId = taskTemplateId,
             userId = command.userId,
             reason = command.reason.take(MAX_REASON_LENGTH),
             status = TaskReportStatus.PENDING,

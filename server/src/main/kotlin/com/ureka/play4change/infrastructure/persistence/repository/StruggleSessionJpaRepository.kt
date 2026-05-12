@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository
 @Repository
 interface StruggleSessionJpaRepository : JpaRepository<StruggleSessionEntity, String> {
     fun findByEnrollmentIdAndStatus(enrollmentId: String, status: String): StruggleSessionEntity?
+    fun findTopByEnrollmentIdOrderByDetectedAtDesc(enrollmentId: String): StruggleSessionEntity?
 }

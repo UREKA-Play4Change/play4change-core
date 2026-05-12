@@ -36,7 +36,7 @@ class AdaptiveTaskService(
         ensure(enrollment.userId == userId) {
             ResourceOwnershipViolation("Enrollment")
         }
-        ensureNotNull(struggleRepository.findOpenByEnrollmentId(enrollmentId)) {
+        ensureNotNull(struggleRepository.findLatestByEnrollmentId(enrollmentId)) {
             NotFound.ResourceNotFound("StruggleSession", enrollmentId)
         }
     }
@@ -92,9 +92,14 @@ class AdaptiveTaskService(
 
             struggleRepository.save(resolvedSession)
 
-            if (isCorrect) {
-                val updatedEnrollment = enrollment.addPoints(pointsAwarded)
-                enrollmentRepository.save(updatedEnrollment)
+            // Update enrollment: combine points award and/or streak restoration in a single save.
+            if (allComplete) {
+                // On resolution: restore pre-struggle streak. If this final task was also correct,
+                // include points in the same write to avoid a lost-update with the isCorrect block.
+                val base = if (isCorrect) enrollment.addPoints(pointsAwarded) else enrollment
+                enrollmentRepository.save(base.copy(streakDays = resolvedSession.preStruggleStreakDays))
+            } else if (isCorrect) {
+                enrollmentRepository.save(enrollment.addPoints(pointsAwarded))
             }
 
             if (allComplete) {
@@ -113,8 +118,8 @@ class AdaptiveTaskService(
                     )
                 }
                 log.info(
-                    "Struggle session {} resolved for enrollment {} — original assignment {} reset to PENDING",
-                    session.id, session.enrollmentId, session.originalTaskAssignmentId
+                    "Struggle session {} resolved for enrollment {} — original assignment {} reset to PENDING, streak restored to {}",
+                    session.id, session.enrollmentId, session.originalTaskAssignmentId, resolvedSession.preStruggleStreakDays
                 )
             }
 

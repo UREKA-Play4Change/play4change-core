@@ -58,4 +58,5 @@ interface TopicUseCase {
     fun getByIdWithLog(topicId: String): Either<AppError, TopicDetail>
     fun listAll(statusFilter: String?, page: Int, size: Int): PageResult<Topic>
     fun regenerate(topicId: String, adminId: String): Either<AppError, Topic>
+    fun markFailed(topicId: String): Either<AppError, Topic>
 }

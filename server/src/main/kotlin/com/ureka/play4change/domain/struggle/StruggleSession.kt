@@ -11,7 +11,8 @@ data class StruggleSession(
     val detectedAt: OffsetDateTime,
     val resolvedAt: OffsetDateTime?,
     val status: StruggleStatus,
-    val adaptiveTasks: List<AdaptiveTask>
+    val adaptiveTasks: List<AdaptiveTask>,
+    val preStruggleStreakDays: Int = 0
 ) {
     fun resolve(): StruggleSession =
         copy(status = StruggleStatus.RESOLVED, resolvedAt = OffsetDateTime.now())

@@ -44,7 +44,8 @@ class HandleStruggleService(
         assignmentId: String,
         errorPattern: ErrorPattern,
         template: TaskTemplate,
-        userId: String
+        userId: String,
+        preStruggleStreakDays: Int = 0
     ) {
         try {
             val enrollment = enrollmentRepository.findById(enrollmentId) ?: run {
@@ -61,6 +62,16 @@ class HandleStruggleService(
                 return
             }
 
+            // Ensure only one OPEN session per enrollment — abandon any existing one.
+            val existingOpen = struggleRepository.findOpenByEnrollmentId(enrollmentId)
+            if (existingOpen != null) {
+                log.warn(
+                    "Abandoning existing open struggle session {} for enrollment {} before creating new one",
+                    existingOpen.id, enrollmentId
+                )
+                struggleRepository.save(existingOpen.abandon())
+            }
+
             val session = struggleRepository.save(
                 StruggleSession(
                     id = UUID.randomUUID().toString(),
@@ -71,7 +82,8 @@ class HandleStruggleService(
                     detectedAt = OffsetDateTime.now(),
                     resolvedAt = null,
                     status = StruggleStatus.OPEN,
-                    adaptiveTasks = emptyList()
+                    adaptiveTasks = emptyList(),
+                    preStruggleStreakDays = preStruggleStreakDays
                 )
             )
 
@@ -157,7 +169,7 @@ class HandleStruggleService(
             ErrorPattern.WRONG_CONCEPT -> com.ureka.play4change.model.ErrorPattern.CONCEPTUAL_MISUNDERSTANDING
             ErrorPattern.PARTIAL_UNDERSTANDING -> com.ureka.play4change.model.ErrorPattern.PROCEDURAL_ERROR
             ErrorPattern.READING_ERROR -> com.ureka.play4change.model.ErrorPattern.UNCLEAR_INSTRUCTIONS
-            ErrorPattern.TIME_PRESSURE -> com.ureka.play4change.model.ErrorPattern.UNKNOWN
+            ErrorPattern.TIME_PRESSURE -> com.ureka.play4change.model.ErrorPattern.TIME_PRESSURE
         }
 
     private fun parseOptionsJson(jsonStr: String): List<String>? = runCatching {

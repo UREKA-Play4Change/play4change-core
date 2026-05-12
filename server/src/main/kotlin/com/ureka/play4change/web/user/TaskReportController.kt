@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/tasks")
 class TaskReportController(private val taskReportUseCase: TaskReportUseCase) {
 
-    @PostMapping("/{taskId}/report")
+    @PostMapping("/{assignmentId}/report")
     fun reportTask(
-        @PathVariable taskId: String,
+        @PathVariable assignmentId: String,
         @RequestBody request: ReportTaskRequest,
         @AuthenticationPrincipal userId: String
     ): ResponseEntity<Map<String, String>> {
@@ -29,7 +29,7 @@ class TaskReportController(private val taskReportUseCase: TaskReportUseCase) {
         return taskReportUseCase.reportTask(
             ReportTaskCommand(
                 userId = userId,
-                taskTemplateId = taskId,
+                assignmentId = assignmentId,
                 reason = request.reason
             )
         ).fold(

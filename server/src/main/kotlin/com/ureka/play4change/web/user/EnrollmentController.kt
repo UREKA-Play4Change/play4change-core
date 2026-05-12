@@ -16,9 +16,10 @@ class EnrollmentController(private val enrollmentUseCase: EnrollmentUseCase) {
     @PostMapping("/{topicId}/enroll")
     fun enroll(
         @PathVariable topicId: String,
-        @AuthenticationPrincipal userId: String
+        @AuthenticationPrincipal userId: String,
+        @RequestHeader(value = "X-Timezone", required = false) timezone: String?
     ): ResponseEntity<EnrollmentResponse> =
-        enrollmentUseCase.enroll(EnrollCommand(userId, topicId)).fold(
+        enrollmentUseCase.enroll(EnrollCommand(userId, topicId, timezone)).fold(
             ifLeft = { it.toErrorResponse() },
             ifRight = { ResponseEntity.status(HttpStatus.CREATED).body(EnrollmentResponse.from(it)) }
         )

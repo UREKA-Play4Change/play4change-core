@@ -44,6 +44,8 @@ class SecurityConfig(
         http
             .cors { it.configurationSource(corsConfigurationSource) }
             .csrf { it.disable() }
+            .httpBasic { it.disable() }
+            .formLogin { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
                 auth

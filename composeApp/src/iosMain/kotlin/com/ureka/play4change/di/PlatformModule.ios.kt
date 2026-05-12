@@ -5,9 +5,13 @@ import com.ureka.play4change.core.network.NetworkConfig
 import com.ureka.play4change.core.network.TokenStorage
 import org.koin.core.module.Module
 import org.koin.dsl.module
+import platform.Foundation.NSBundle
 
 actual val platformModule: Module = module {
-    // iOS simulator connects to host machine via localhost; real device needs the LAN IP.
-    single { NetworkConfig("http://localhost:8080") }
+    single {
+        val baseUrl = NSBundle.mainBundle.objectForInfoDictionaryKey("BASE_URL") as? String
+            ?: "http://localhost:8080"
+        NetworkConfig(baseUrl)
+    }
     single<TokenStorage> { KeychainTokenStorage() }
 }

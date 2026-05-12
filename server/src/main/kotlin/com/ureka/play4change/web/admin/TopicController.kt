@@ -104,6 +104,10 @@ class TopicController(private val topicUseCase: TopicUseCase) {
     ): ResponseEntity<TopicResponse> =
         topicUseCase.regenerate(id, adminId).toResponse(HttpStatus.OK)
 
+    @PatchMapping("/{id}/status/failed")
+    fun markFailed(@PathVariable id: String): ResponseEntity<TopicResponse> =
+        topicUseCase.markFailed(id).toResponse(HttpStatus.OK)
+
     private fun arrow.core.Either<AppError, com.ureka.play4change.domain.topic.Topic>.toResponse(
         successStatus: HttpStatus
     ): ResponseEntity<TopicResponse> = fold(
@@ -113,5 +117,6 @@ class TopicController(private val topicUseCase: TopicUseCase) {
 
     @Suppress("UNCHECKED_CAST")
     private fun <T> AppError.toErrorResponse(): ResponseEntity<T> =
-        ResponseEntity.status(httpStatus).build()
+        ResponseEntity.status(httpStatus)
+            .body(mapOf("message" to messageKey, "params" to params) as T)
 }

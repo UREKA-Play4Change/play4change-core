@@ -359,7 +359,50 @@ All tests green. Branch: fix/session-fixes-05.
 
 ---
 
-## I03 [OPEN] Severity:Low — `EnrollmentService` first-assignment `dueAt` uses `now + 24h` instead of midnight
+## B11 [FIXED] Severity:High — Concurrent 401s trigger multiple refresh calls; second call hits rotated token → family revocation → unexpected logout
+
+**Discovered:** 2026-05-10, Phase 04 manual test recipe Section 4.
+
+**Description:** When the access token expires and the home screen loads, the app fires multiple
+concurrent HTTP requests (GET /profile, GET /tasks/today, GET /topics/{id}/roadmap). All requests
+go out without an Authorization header (Ktor 3.0 `sendWithoutRequest` behaviour — see B9), all
+receive 401 simultaneously, and all independently invoke the `refreshTokens` block. The first
+refresh call succeeds and rotates the refresh token (old=used, new=unused). The second concurrent
+refresh call presents the already-rotated (used) token to the server. The server detects token
+reuse, revokes the entire token family, and returns 401. `SessionEventBus.sessionExpired()` fires
+and the app navigates back to the login screen, showing "An unexpected error occurred." briefly
+before the navigation.
+
+**Impact:** Any time the access token expires while the user is on the home screen (or any screen
+that fires multiple concurrent requests on load), the user is silently logged out instead of
+experiencing a transparent refresh. With a 15-minute token TTL this happens roughly once per
+session on average.
+
+**Workaround:** None visible to the user — they must re-authenticate.
+
+**Fix plan:** Introduce a `Mutex` in `HttpClientFactory.kt` wrapping the `refreshTokens` block.
+The first coroutine to acquire the lock performs the refresh and stores the new tokens; subsequent
+concurrent coroutines wait, then read the already-refreshed tokens from `TokenStorage` and return
+them without calling the server again. Pattern:
+```kotlin
+refreshTokens {
+    mutex.withLock {
+        val stored = tokenStorage.getAccessToken()
+        if (stored != null && stored != oldTokens?.accessToken) {
+            // Another coroutine already refreshed — reuse its result
+            return@withLock BearerTokens(stored, tokenStorage.getRefreshToken()!!)
+        }
+        // We are the first — call POST /auth/refresh
+        ...
+    }
+}
+```
+
+**Fixed:** 2026-05-12 — `HttpClientFactory.kt` wraps entire `refreshTokens` block in `Mutex.withLock`. Waiting coroutines check stored access token vs `oldTokens.accessToken`; if already refreshed by another coroutine, reuse stored tokens without a server call. P001 F-01.
+
+---
+
+## I03 [FIXED] Severity:Low — `EnrollmentService` first-assignment `dueAt` uses `now + 24h` instead of midnight
 
 **Discovered:** 2026-05-10, during fix of Issue 4 (task availability window).
 
@@ -378,9 +421,7 @@ half-point penalty is not applied in some edge cases for the very first task.
 
 **Workaround:** None — only affects point calculation on the first assignment.
 
-**Fix plan:** Unscheduled. Options: (a) pass a default UTC midnight as `dueAt` in
-`EnrollmentService`; (b) propagate the `X-Timezone` header from the enrollment endpoint
-down to the service. Either requires a small service-layer change and a test update.
+**Fixed:** 2026-05-12 — `EnrollmentController.enroll()` now accepts `@RequestHeader("X-Timezone")` and passes it into `EnrollCommand`. `EnrollmentService` uses `DayIndexCalculator.startOfTomorrow(command.timezone)` for `dueAt`. Mobile client sends `X-Timezone` header on every request via `defaultRequest` (F-04). P001 F-14.
 
 ---
 

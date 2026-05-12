@@ -7,7 +7,7 @@ import com.ureka.play4change.error.AppError
 
 data class ReportTaskCommand(
     val userId: String,
-    val taskTemplateId: String,
+    val assignmentId: String,
     val reason: String
 )
 

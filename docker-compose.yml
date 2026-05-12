@@ -59,8 +59,8 @@
       environment:
         SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
         SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/play4change
-        DB_USER: ${DB_USER}
-        DB_PASS: ${DB_PASS}
+        DB_USERNAME: play4change
+        DB_PASSWORD: play4change
         REDIS_HOST: redis
         REDIS_PORT: 6379
         MINIO_ENDPOINT: http://minio:9000

@@ -25,6 +25,9 @@ class StruggleRepositoryAdapter(
     override fun findOpenByEnrollmentId(enrollmentId: String): StruggleSession? =
         jpa.findByEnrollmentIdAndStatus(enrollmentId, "OPEN")?.toDomain()
 
+    override fun findLatestByEnrollmentId(enrollmentId: String): StruggleSession? =
+        jpa.findTopByEnrollmentIdOrderByDetectedAtDesc(enrollmentId)?.toDomain()
+
     override fun save(session: StruggleSession): StruggleSession {
         val enrollmentEntity = enrollmentJpa.getReferenceById(session.enrollmentId)
         val assignmentEntity = assignmentJpa.getReferenceById(session.originalTaskAssignmentId)
@@ -37,7 +40,8 @@ class StruggleRepositoryAdapter(
             attemptCount = session.attemptCount,
             detectedAt = session.detectedAt,
             resolvedAt = session.resolvedAt,
-            status = session.status.name
+            status = session.status.name,
+            preStruggleStreakDays = session.preStruggleStreakDays
         )
 
         session.adaptiveTasks.forEachIndexed { _, task ->
@@ -73,7 +77,8 @@ class StruggleRepositoryAdapter(
         detectedAt = detectedAt,
         resolvedAt = resolvedAt,
         status = StruggleStatus.valueOf(status),
-        adaptiveTasks = adaptiveTasks.map { it.toDomain() }
+        adaptiveTasks = adaptiveTasks.map { it.toDomain() },
+        preStruggleStreakDays = preStruggleStreakDays
     )
 
     private fun AdaptiveTaskEntity.toDomain(): AdaptiveTask = AdaptiveTask(

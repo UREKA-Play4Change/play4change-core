@@ -189,4 +189,14 @@ class TopicManagementService(
         orchestrator.generateAsync(topicId)
         topicRepository.findById(topicId) ?: topic
     }
+
+    override fun markFailed(topicId: String): Either<AppError, Topic> = either {
+        val topic = ensureNotNull(topicRepository.findById(topicId)) {
+            NotFound.ResourceNotFound("Topic", topicId)
+        }
+        ensure(topic.status != TopicStatus.FAILED) {
+            Conflict.ConcurrentModification
+        }
+        topicRepository.save(topic.copy(status = TopicStatus.FAILED))
+    }
 }

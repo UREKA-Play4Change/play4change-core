@@ -49,7 +49,7 @@ class EnrollmentService(
             BadRequest.InvalidField("topicId", "topic has expired")
         }
         ensure(enrollmentRepository.findByUserIdAndTopicId(command.userId, command.topicId) == null) {
-            Conflict.ConcurrentModification
+            Conflict.DuplicateResource("Enrollment", "userId+topicId")
         }
 
         val modules = topicModuleRepository.findByTopicId(command.topicId)
@@ -96,7 +96,7 @@ class EnrollmentService(
                 taskTemplateVersion = firstTemplate.version,
                 taskType = firstTemplate.taskType,
                 assignedAt = now,
-                dueAt = now.plusHours(24),
+                dueAt = DayIndexCalculator.startOfTomorrow(command.timezone),
                 submittedAt = null,
                 status = AssignmentStatus.PENDING,
                 selectedOption = null,

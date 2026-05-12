@@ -18,6 +18,9 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.datetime.TimeZone
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlin.uuid.ExperimentalUuidApi
@@ -49,13 +52,16 @@ object HttpClientFactory {
         networkConfig: NetworkConfig,
         onSessionExpired: () -> Unit,
         engine: HttpClientEngine? = null,
-    ): HttpClient = if (engine != null) {
-        HttpClient(engine) {
-            applyConfig(tokenStorage, networkConfig, onSessionExpired)
-        }
-    } else {
-        platformHttpClient {
-            applyConfig(tokenStorage, networkConfig, onSessionExpired)
+    ): HttpClient {
+        val refreshMutex = Mutex()
+        return if (engine != null) {
+            HttpClient(engine) {
+                applyConfig(tokenStorage, networkConfig, onSessionExpired, refreshMutex)
+            }
+        } else {
+            platformHttpClient {
+                applyConfig(tokenStorage, networkConfig, onSessionExpired, refreshMutex)
+            }
         }
     }
 
@@ -63,6 +69,7 @@ object HttpClientFactory {
         tokenStorage: TokenStorage,
         networkConfig: NetworkConfig,
         onSessionExpired: () -> Unit,
+        refreshMutex: Mutex,
     ) {
         install(ContentNegotiation) {
             json(Json {
@@ -79,33 +86,47 @@ object HttpClientFactory {
                     BearerTokens(access, refresh)
                 }
                 refreshTokens {
-                    val refreshToken = oldTokens?.refreshToken ?: tokenStorage.getRefreshToken()
-                    if (refreshToken == null) {
-                        tokenStorage.clear()
-                        onSessionExpired()
-                        return@refreshTokens null
-                    }
-
-                    try {
-                        val response = client.post("${networkConfig.baseUrl}/auth/refresh") {
-                            markAsRefreshTokenRequest()
-                            contentType(ContentType.Application.Json)
-                            setBody(RefreshBody(refreshToken))
+                    refreshMutex.withLock {
+                        // If another coroutine already refreshed while we waited for the lock,
+                        // its new access token is now in storage — return it without a server call.
+                        val storedAccess = tokenStorage.getAccessToken()
+                        if (storedAccess != null && storedAccess != oldTokens?.accessToken) {
+                            val storedRefresh = tokenStorage.getRefreshToken() ?: return@withLock null
+                            return@withLock BearerTokens(storedAccess, storedRefresh)
                         }
 
-                        if (response.status.isSuccess()) {
-                            val tokens = Json.decodeFromString<TokensBody>(response.bodyAsText())
-                            tokenStorage.store(tokens.accessToken, tokens.refreshToken)
-                            BearerTokens(tokens.accessToken, tokens.refreshToken)
-                        } else {
+                        val refreshToken = oldTokens?.refreshToken ?: tokenStorage.getRefreshToken()
+                        if (refreshToken == null) {
+                            // Only signal session expiry if the user had tokens before.
+                            // Cold-start with empty storage: return null silently.
+                            if (oldTokens != null) {
+                                tokenStorage.clear()
+                                onSessionExpired()
+                            }
+                            return@withLock null
+                        }
+
+                        try {
+                            val response = client.post("${networkConfig.baseUrl}/auth/refresh") {
+                                markAsRefreshTokenRequest()
+                                contentType(ContentType.Application.Json)
+                                setBody(RefreshBody(refreshToken))
+                            }
+
+                            if (response.status.isSuccess()) {
+                                val tokens = Json.decodeFromString<TokensBody>(response.bodyAsText())
+                                tokenStorage.store(tokens.accessToken, tokens.refreshToken)
+                                BearerTokens(tokens.accessToken, tokens.refreshToken)
+                            } else {
+                                tokenStorage.clear()
+                                onSessionExpired()
+                                null
+                            }
+                        } catch (_: Exception) {
                             tokenStorage.clear()
                             onSessionExpired()
                             null
                         }
-                    } catch (_: Exception) {
-                        tokenStorage.clear()
-                        onSessionExpired()
-                        null
                     }
                 }
                 sendWithoutRequest { true }
@@ -115,6 +136,7 @@ object HttpClientFactory {
         defaultRequest {
             url(networkConfig.baseUrl)
             header("X-Request-ID", Uuid.random().toString())
+            header("X-Timezone", TimeZone.currentSystemDefault().id)
         }
     }
 }

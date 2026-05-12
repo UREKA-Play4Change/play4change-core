@@ -195,6 +195,10 @@ class TaskService(
             else -> template.pointsReward
         }
 
+        val enrollment = ensureNotNull(enrollmentRepository.findById(assignment.enrollmentId)) {
+            NotFound.ResourceNotFound("Enrollment", assignment.enrollmentId)
+        }
+
         var struggleTriggered = false
 
         val updatedAssignment = if (isCorrect || assignment.wrongAttemptCount >= 1) {
@@ -207,7 +211,8 @@ class TaskService(
                     assignmentId = assignment.id,
                     errorPattern = pattern,
                     template = template,
-                    userId = command.userId
+                    userId = command.userId,
+                    preStruggleStreakDays = enrollment.streakDays
                 )
                 struggleTriggered = true
                 log.info(
@@ -231,10 +236,6 @@ class TaskService(
         val savedAssignment = enrollmentRepository.saveAssignment(updatedAssignment)
 
         // Update enrollment points + streak only on final correct submission
-        val enrollment = ensureNotNull(enrollmentRepository.findById(assignment.enrollmentId)) {
-            NotFound.ResourceNotFound("Enrollment", assignment.enrollmentId)
-        }
-
         val updatedEnrollment = if (isCorrect) {
             enrollment.addPoints(pointsAwarded).incrementStreak()
         } else if (updatedAssignment.status != AssignmentStatus.PENDING) {

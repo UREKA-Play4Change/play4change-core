@@ -282,4 +282,54 @@ strips tags entirely, which is the correct defence for a field that should conta
 
 ---
 
+## [2026-05-12] [mobile/auth] — Ktor BearerAuthProvider always costs one extra round-trip after login
+
+**Context:** After a successful magic-link or OAuth login the app navigates to home. The Ktor
+bearer plugin caches the `loadTokens` result per `HttpClient` instance. A fresh client (created
+at DI startup) has an empty cache, so the first post-login request fires without an `Authorization`
+header, the server returns 401, `refreshTokens` is invoked, and the request is retried with the
+access token (ADR-021 B.3, P001 F-02).
+
+**Decision:** Accept the extra round-trip. It costs ~31 ms and is invisible to the user. The
+only fix would be replacing the entire Ktor bearer plugin with a custom `HttpSend` interceptor
+that proactively injects the stored access token — a high-risk rewrite with no user-visible benefit.
+
+**Why not a custom interceptor:** The Ktor `Auth` plugin handles 401 retry logic, expiry, and
+thread-safe token refresh. Replacing it removes those guarantees for marginal gain.
+
+**Phase:** P001 audit fix batch (2026-05-12)
+
+---
+
+## [2026-05-12] [server/struggle] — Struggle generation shares generationExecutor pool with topic generation
+
+**Context:** Both `@Async("generationExecutor")` calls — topic generation and struggle adaptive branch
+generation — share the same pool (pool-size: 3, queue: 25). With many concurrent admins creating
+topics the queue could theoretically starve struggle generation for learners.
+
+**Decision:** Accept the shared pool for the current POC scale (≤5 concurrent admins, ≤50 concurrent
+learners). The queue capacity of 25 provides sufficient buffer. A dedicated `struggleExecutor` pool
+can be split out in Phase 06 if concurrent admin topic creation is observed to starve struggle
+generation in a load test (P001 F-20, ADR-021 D2).
+
+**Phase:** P001 audit fix batch (2026-05-12)
+
+---
+
+## [2026-05-12] [server/struggle] — Adaptive task option shuffle uses unseeded java.util.Random
+
+**Context:** When adaptive tasks are generated, option shuffle uses `(options.indices.toMutableList()).also { it.shuffle() }`
+— `shuffle()` with no seed defaults to `java.util.Random()` which is time-seeded and non-deterministic.
+
+**Decision:** Accept the unseeded shuffle. Adaptive tasks are remediation content, not anti-cheat
+content. The shuffle is stored in the `AdaptiveTask.optionOrder` column at generation time, so it is
+stable per session even though it varies between sessions. Users cannot share answers via session
+comparison because each session is tied to a unique enrollment. If a session is ABANDONED and a new
+one is triggered, the user gets a different option ordering — which is acceptable and slightly improves
+remediation value (P001 F-16).
+
+**Phase:** P001 audit fix batch (2026-05-12)
+
+---
+
 *(New entries are prepended above this line — most recent first)*
