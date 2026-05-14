@@ -386,12 +386,12 @@ fun HomeScreen(component: DefaultHomeComponent) {
 }
 
 /**
- * Derives a display-friendly name from an email address or a display name.
- * Non-letter characters (dots, underscores, digits, hyphens) are replaced with spaces,
- * then each whitespace-separated word is capitalised and joined.
- * Examples: "radesh.govind123@x.com" → "Radesh Govind", "alice" → "Alice".
+ * Derives the first name from an email address or a display name for use in the greeting.
+ * Non-letter characters are treated as word separators; only the first word is returned,
+ * capitalised.
+ * Examples: "Radesh Govind" → "Radesh", "radesh.govind@gmail.com" → "Radesh".
  */
-private fun greetingName(userName: String): String {
+internal fun greetingName(userName: String): String {
     val raw = if (userName.contains('@')) userName.substringBefore('@') else userName
     val words = raw
         .map { if (it.isLetter()) it else ' ' }
@@ -399,8 +399,7 @@ private fun greetingName(userName: String): String {
         .trim()
         .split("\\s+".toRegex())
         .filter { it.isNotEmpty() }
-    return if (words.isEmpty()) "there"
-    else words.joinToString(" ") { word -> word.replaceFirstChar { it.uppercaseChar() } }
+    return words.firstOrNull()?.replaceFirstChar { it.uppercaseChar() } ?: "there"
 }
 
 @Composable
