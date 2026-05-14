@@ -5,6 +5,7 @@ import com.ureka.play4change.core.model.RoadmapNode
 import com.ureka.play4change.design.components.DayStatus
 import com.ureka.play4change.features.home.domain.model.HomeData
 import com.ureka.play4change.features.home.domain.model.TaskSummary
+import com.ureka.play4change.features.home.domain.model.TaskSummaryWithTopic
 import com.ureka.play4change.features.home.domain.repository.HomeRepository
 import kotlinx.coroutines.delay
 
@@ -34,13 +35,19 @@ class MockHomeRepository : HomeRepository {
                 RoadmapNode(7, "Sustainable Tech Choices", NodeStatus.Locked,    pointsReward = 60),
                 RoadmapNode(8, "Final Challenge",          NodeStatus.Locked,    pointsReward = 100),
             ),
-            todayTask = TaskSummary(
-                id = "task-quiz-001",
-                title = "Recycling Knowledge Check",
-                domain = "Sustainability",
-                pointsReward = 100
+            todayTasks = listOf(
+                TaskSummaryWithTopic(
+                    topicId = "sustainability",
+                    topicTitle = "Sustainability",
+                    task = TaskSummary(
+                        id = "task-quiz-001",
+                        title = "Recycling Knowledge Check",
+                        domain = "Sustainability",
+                        pointsReward = 100
+                    ),
+                    completed = false
+                )
             ),
-            todayCompleted = false,
             isEnrolled = true
         )
     }

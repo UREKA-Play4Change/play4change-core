@@ -11,7 +11,10 @@ import io.ktor.http.headersOf
 import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class HttpHomeRepositoryTest {
@@ -46,9 +49,7 @@ class HttpHomeRepositoryTest {
 
     @Test
     fun `getHomeData returns isEnrolled=false when no topic has isEnrolled=true`() = runTest {
-        var requestCount = 0
         val engine = MockEngine { request ->
-            requestCount++
             when (request.url.encodedPath) {
                 "/profile" -> respond(
                     content = ByteReadChannel(profileJson),
@@ -67,6 +68,7 @@ class HttpHomeRepositoryTest {
         val data = buildRepo(engine).getHomeData("user-1")
 
         assertFalse(data.isEnrolled)
+        assertTrue(data.todayTasks.isEmpty())
     }
 
     @Test
@@ -79,7 +81,7 @@ class HttpHomeRepositoryTest {
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
                 "/topics" -> respond(
-                    content = ByteReadChannel("""[{"id":"t1","isEnrolled":true}]"""),
+                    content = ByteReadChannel("""[{"id":"t1","title":"Sustainability","isEnrolled":true}]"""),
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
@@ -95,5 +97,87 @@ class HttpHomeRepositoryTest {
         val data = buildRepo(engine).getHomeData("user-1")
 
         assertTrue(data.isEnrolled)
+    }
+
+    // ---------------------------------------------------------------------------
+    // todayTasks — multi-topic
+    // ---------------------------------------------------------------------------
+
+    @Test
+    fun `getHomeData returns one TaskSummaryWithTopic per enrolled topic`() = runTest {
+        val engine = MockEngine { request ->
+            when {
+                request.url.encodedPath == "/profile" -> respond(
+                    content = ByteReadChannel(profileJson),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+                request.url.encodedPath == "/topics" -> respond(
+                    content = ByteReadChannel(
+                        """[
+                            {"id":"sustainability","title":"Sustainability","isEnrolled":true},
+                            {"id":"digital","title":"Digital","isEnrolled":true},
+                            {"id":"health","title":"Health","isEnrolled":false}
+                        ]"""
+                    ),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+                request.url.encodedPath == "/tasks/today" && request.url.parameters["topicId"] == "sustainability" -> respond(
+                    content = ByteReadChannel("""{"assignmentId":"a1","title":"Sustainability Quiz","pointsReward":50}"""),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+                request.url.encodedPath == "/tasks/today" && request.url.parameters["topicId"] == "digital" -> respond(
+                    content = ByteReadChannel("""{"assignmentId":"a2","title":"Digital Quiz","pointsReward":40}"""),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+                else -> respond(content = ByteReadChannel(""), status = HttpStatusCode.NotFound)
+            }
+        }
+
+        val data = buildRepo(engine).getHomeData("user-1")
+
+        assertEquals(2, data.todayTasks.size)
+        val sustainability = data.todayTasks.first { it.topicId == "sustainability" }
+        assertEquals("Sustainability", sustainability.topicTitle)
+        assertNotNull(sustainability.task)
+        assertFalse(sustainability.completed)
+
+        val digital = data.todayTasks.first { it.topicId == "digital" }
+        assertEquals("Digital", digital.topicTitle)
+        assertNotNull(digital.task)
+        assertFalse(digital.completed)
+    }
+
+    @Test
+    fun `getHomeData marks entry as completed when tasks today returns 404`() = runTest {
+        val engine = MockEngine { request ->
+            when (request.url.encodedPath) {
+                "/profile" -> respond(
+                    content = ByteReadChannel(profileJson),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+                "/topics" -> respond(
+                    content = ByteReadChannel("""[{"id":"t1","title":"Sustainability","isEnrolled":true}]"""),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+                "/tasks/today" -> respond(
+                    content = ByteReadChannel(""),
+                    status = HttpStatusCode.NotFound
+                )
+                else -> respond(content = ByteReadChannel(""), status = HttpStatusCode.NotFound)
+            }
+        }
+
+        val data = buildRepo(engine).getHomeData("user-1")
+
+        assertEquals(1, data.todayTasks.size)
+        val entry = data.todayTasks.first()
+        assertTrue(entry.completed)
+        assertNull(entry.task)
     }
 }
