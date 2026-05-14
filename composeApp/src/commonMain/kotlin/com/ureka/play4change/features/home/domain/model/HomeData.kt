@@ -11,9 +11,18 @@ data class HomeData(
     val xpProgress: Float,
     val weekProgress: List<DayStatus>,
     val roadmapNodes: List<RoadmapNode>,
-    val todayTask: TaskSummary?,
-    val todayCompleted: Boolean,
+    val todayTasks: List<TaskSummaryWithTopic>,
     val isEnrolled: Boolean = true
+)
+
+/** Per-topic daily task entry shown on the home screen. */
+data class TaskSummaryWithTopic(
+    val topicId: String,
+    val topicTitle: String,
+    /** Null when the task is still generating or unavailable. */
+    val task: TaskSummary?,
+    /** True when the learner already submitted their answer today. */
+    val completed: Boolean
 )
 
 data class TaskSummary(

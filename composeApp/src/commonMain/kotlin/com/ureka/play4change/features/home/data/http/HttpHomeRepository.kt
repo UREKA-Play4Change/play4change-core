@@ -5,12 +5,16 @@ import com.ureka.play4change.core.network.TokenStorage
 import com.ureka.play4change.core.network.networkErrorFromStatus
 import com.ureka.play4change.features.home.domain.model.HomeData
 import com.ureka.play4change.features.home.domain.model.TaskSummary
+import com.ureka.play4change.features.home.domain.model.TaskSummaryWithTopic
 import com.ureka.play4change.features.home.domain.repository.HomeRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -31,6 +35,7 @@ private data class UserProfileDto(
 @Serializable
 private data class TopicSummaryDto(
     val id: String,
+    val title: String = "",
     val isEnrolled: Boolean = false
 )
 
@@ -50,12 +55,11 @@ private data class TodayTaskDto(
  *
  * Composes two server calls:
  * - `GET /profile` — supplies user name, streak, points, level, and XP progress.
- * - `GET /tasks/today` — supplies today's task summary (optional; null if the
- *   user has no task today or has already completed it).
+ * - `GET /topics` + `GET /tasks/today?topicId=...` (one call per enrolled topic,
+ *   executed in parallel) — supplies each topic's daily task summary.
  *
  * UI-only fields ([HomeData.weekProgress] and [HomeData.roadmapNodes]) are not
- * yet served by a dedicated endpoint and default to empty lists. They will be
- * populated in a future phase when the corresponding API endpoints are added.
+ * yet served by a dedicated endpoint and default to empty lists.
  */
 class HttpHomeRepository(
     private val client: HttpClient,
@@ -71,34 +75,21 @@ class HttpHomeRepository(
         }
         val profile = json.decodeFromString<UserProfileDto>(profileResponse.bodyAsText())
 
-        var todayTask: TaskSummary? = null
-        var todayCompleted = false
+        var todayTasks: List<TaskSummaryWithTopic> = emptyList()
         var isEnrolled = false
         try {
             val topicsResponse = client.get("/topics")
             val topics = json.decodeFromString<List<TopicSummaryDto>>(topicsResponse.bodyAsText())
-            val enrolledTopicId = topics.firstOrNull { it.isEnrolled }?.id
-            isEnrolled = enrolledTopicId != null
-            if (enrolledTopicId != null) {
-                val taskResponse = client.get("/tasks/today") {
-                    parameter("topicId", enrolledTopicId)
-                }
-                when (taskResponse.status) {
-                    HttpStatusCode.OK -> {
-                        val dto = json.decodeFromString<TodayTaskDto>(taskResponse.bodyAsText())
-                        todayTask = TaskSummary(
-                            id = dto.assignmentId,
-                            title = dto.title,
-                            domain = "",
-                            pointsReward = dto.pointsReward
-                        )
-                    }
-                    HttpStatusCode.NotFound -> todayCompleted = true
-                    else -> { /* keep todayTask = null */ }
-                }
+            val enrolledTopics = topics.filter { it.isEnrolled }
+            isEnrolled = enrolledTopics.isNotEmpty()
+
+            todayTasks = coroutineScope {
+                enrolledTopics.map { topic ->
+                    async { fetchTodayTask(topic) }
+                }.awaitAll()
             }
         } catch (_: Exception) {
-            // Task fetch is best-effort; a failed call does not block the home screen.
+            // Topic/task fetch is best-effort; a failed call does not block the home screen.
         }
 
         return HomeData(
@@ -109,9 +100,46 @@ class HttpHomeRepository(
             xpProgress = profile.currentDay.toFloat() / maxOf(profile.totalDays, 1),
             weekProgress = emptyList(),
             roadmapNodes = emptyList(),
-            todayTask = todayTask,
-            todayCompleted = todayCompleted,
+            todayTasks = todayTasks,
             isEnrolled = isEnrolled
         )
+    }
+
+    private suspend fun fetchTodayTask(topic: TopicSummaryDto): TaskSummaryWithTopic {
+        return try {
+            val taskResponse = client.get("/tasks/today") {
+                parameter("topicId", topic.id)
+            }
+            when (taskResponse.status) {
+                HttpStatusCode.OK -> {
+                    val dto = json.decodeFromString<TodayTaskDto>(taskResponse.bodyAsText())
+                    TaskSummaryWithTopic(
+                        topicId = topic.id,
+                        topicTitle = topic.title,
+                        task = TaskSummary(
+                            id = dto.assignmentId,
+                            title = dto.title,
+                            domain = "",
+                            pointsReward = dto.pointsReward
+                        ),
+                        completed = false
+                    )
+                }
+                HttpStatusCode.NotFound -> TaskSummaryWithTopic(
+                    topicId = topic.id,
+                    topicTitle = topic.title,
+                    task = null,
+                    completed = true
+                )
+                else -> TaskSummaryWithTopic(
+                    topicId = topic.id,
+                    topicTitle = topic.title,
+                    task = null,
+                    completed = false
+                )
+            }
+        } catch (_: Exception) {
+            TaskSummaryWithTopic(topicId = topic.id, topicTitle = topic.title, task = null, completed = false)
+        }
     }
 }

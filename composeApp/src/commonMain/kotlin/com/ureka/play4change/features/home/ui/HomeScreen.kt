@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ExitToApp
 import androidx.compose.material.icons.rounded.AccountCircle
@@ -300,10 +301,44 @@ fun HomeScreen(component: DefaultHomeComponent) {
                         }
                     }
 
-                    // Today's task card
-                    if (!data.todayCompleted) {
-                        data.todayTask?.let { task ->
-                            item {
+                    // One task card per enrolled topic
+                    items(data.todayTasks, key = { it.topicId }) { entry ->
+                        if (entry.completed) {
+                            ElevatedCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = MaterialTheme.shapes.large,
+                                colors = CardDefaults.elevatedCardColors(
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                )
+                            ) {
+                                Row(
+                                    Modifier.padding(Spacing.l),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.CheckCircle, null,
+                                        tint = MaterialTheme.colorScheme.secondary,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(Modifier.width(Spacing.xs))
+                                    Column {
+                                        if (entry.topicTitle.isNotEmpty()) {
+                                            Text(
+                                                entry.topicTitle,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                        Text(
+                                            stringResource(Res.string.home_completed_today),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            entry.task?.let { task ->
                                 ElevatedCard(
                                     modifier = Modifier.fillMaxWidth(),
                                     shape = MaterialTheme.shapes.large,
@@ -319,7 +354,8 @@ fun HomeScreen(component: DefaultHomeComponent) {
                                                 onClick = {},
                                                 label = {
                                                     Text(
-                                                        stringResource(Res.string.home_todays_challenge),
+                                                        if (entry.topicTitle.isNotEmpty()) entry.topicTitle
+                                                        else stringResource(Res.string.home_todays_challenge),
                                                         style = MaterialTheme.typography.labelSmall
                                                     )
                                                 },
@@ -358,33 +394,6 @@ fun HomeScreen(component: DefaultHomeComponent) {
                                             )
                                         }
                                     }
-                                }
-                            }
-                        }
-                    } else {
-                        item {
-                            ElevatedCard(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = MaterialTheme.shapes.large,
-                                colors = CardDefaults.elevatedCardColors(
-                                    containerColor = MaterialTheme.colorScheme.secondaryContainer
-                                )
-                            ) {
-                                Row(
-                                    Modifier.padding(Spacing.l),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        Icons.Rounded.CheckCircle, null,
-                                        tint = MaterialTheme.colorScheme.secondary,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Spacer(Modifier.width(Spacing.xs))
-                                    Text(
-                                        stringResource(Res.string.home_completed_today),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                                    )
                                 }
                             }
                         }
