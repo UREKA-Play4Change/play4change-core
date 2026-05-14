@@ -9,7 +9,11 @@ data class TaskDetail(
     val correctIndex: Int = 0,
     val pointsReward: Int,
     val domain: String,
-    val content: TaskContent? = null
+    val content: TaskContent? = null,
+    /** ISO-8601 deadline returned by the server (e.g. "2026-05-08T12:00:00Z"). */
+    val dueAt: String = "",
+    /** Number of wrong submissions already made for this assignment. */
+    val wrongAttemptCount: Int = 0
 )
 
 data class SubmitResult(

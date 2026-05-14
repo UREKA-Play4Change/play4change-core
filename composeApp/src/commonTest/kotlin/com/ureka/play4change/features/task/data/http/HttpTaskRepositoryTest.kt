@@ -11,9 +11,13 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.test.runTest
+import com.ureka.play4change.core.network.NetworkError
+import com.ureka.play4change.core.network.NetworkException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class HttpTaskRepositoryTest {
@@ -126,5 +130,78 @@ class HttpTaskRepositoryTest {
 
         assertFalse(result.isCorrect)
         assertEquals(0, result.pointsAwarded)
+    }
+
+    // ---------------------------------------------------------------------------
+    // getTask — non-200 status handling (Bug 1, issue #71)
+    // ---------------------------------------------------------------------------
+
+    @Test
+    fun `getTask throws NetworkException with TaskGenerationPending when server responds 202`() =
+        runTest {
+            val engine = MockEngine { _ ->
+                respond(
+                    content = ByteReadChannel(""),
+                    status = HttpStatusCode.Accepted,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+            }
+
+            val ex = assertFailsWith<NetworkException> {
+                buildRepo(engine).getTask("sustainability")
+            }
+            assertIs<NetworkError.TaskGenerationPending>(ex.error)
+        }
+
+    @Test
+    fun `getTask throws NetworkException with NoTaskAvailable when server responds 404`() =
+        runTest {
+            val engine = MockEngine { _ ->
+                respond(
+                    content = ByteReadChannel(""),
+                    status = HttpStatusCode.NotFound,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+            }
+
+            val ex = assertFailsWith<NetworkException> {
+                buildRepo(engine).getTask("sustainability")
+            }
+            assertIs<NetworkError.NoTaskAvailable>(ex.error)
+        }
+
+    @Test
+    fun `getTask throws NetworkException with ServerError when server responds 500`() =
+        runTest {
+            val engine = MockEngine { _ ->
+                respond(
+                    content = ByteReadChannel(""),
+                    status = HttpStatusCode.InternalServerError,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+            }
+
+            val ex = assertFailsWith<NetworkException> {
+                buildRepo(engine).getTask("sustainability")
+            }
+            assertIs<NetworkError.ServerError>(ex.error)
+        }
+
+    @Test
+    fun `getTask maps dueAt and wrongAttemptCount from server response`() = runTest {
+        val engine = MockEngine { _ ->
+            respond(
+                content = ByteReadChannel(
+                    """{"assignmentId":"assign-abc","title":"T","description":"D","hint":null,"options":[],"pointsReward":50,"dueAt":"2026-05-08T12:00:00Z","wrongAttemptCount":1}"""
+                ),
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, "application/json")
+            )
+        }
+
+        val task = buildRepo(engine).getTask("some-topic")
+
+        assertEquals("2026-05-08T12:00:00Z", task.dueAt)
+        assertEquals(1, task.wrongAttemptCount)
     }
 }

@@ -196,6 +196,14 @@ class DefaultTaskComponent(
         val s = state.value
         val content = s.task?.content as? TaskContent.QuizContent ?: return
         val taskId = s.task.userTaskId
+        // NOTE (issue #71): This path is only reachable for locally-constructed QuizContent
+        // (e.g. mock data). HttpTaskRepository sets content = null, so HTTP-backed tasks
+        // always use submitLegacy() via the LegacyQuizContent branch in TaskScreen.
+        //
+        // If a multi-question QuizContent format is added to the HTTP API in the future,
+        // submitQuiz() must be redesigned: the server expects a single selectedOption index,
+        // not a score count. q.correctIndex is always 0 on the client (server never reveals
+        // it), so the score computed here would be incorrect. See DECISIONS.md for details.
         val score = content.questions.count { q ->
             s.answers[content.questions.indexOf(q)] == q.correctIndex
         }
