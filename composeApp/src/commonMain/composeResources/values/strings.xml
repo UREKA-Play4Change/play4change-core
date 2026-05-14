@@ -35,6 +35,9 @@
   <string name="home_no_task">No task available today. Check back tomorrow.</string>
   <string name="home_pts_suffix">pts</string>
   <string name="home_roadmap">Your Journey</string>
+  <string name="home_enroll_prompt_title">No topic selected</string>
+  <string name="home_enroll_prompt_body">Choose a topic to start receiving daily challenges.</string>
+  <string name="home_enroll_prompt_cta">Explore topics</string>
 
   <!-- Task -->
   <string name="task_question_label">Question</string>

@@ -73,10 +73,12 @@ class HttpHomeRepository(
 
         var todayTask: TaskSummary? = null
         var todayCompleted = false
+        var isEnrolled = false
         try {
             val topicsResponse = client.get("/topics")
             val topics = json.decodeFromString<List<TopicSummaryDto>>(topicsResponse.bodyAsText())
             val enrolledTopicId = topics.firstOrNull { it.isEnrolled }?.id
+            isEnrolled = enrolledTopicId != null
             if (enrolledTopicId != null) {
                 val taskResponse = client.get("/tasks/today") {
                     parameter("topicId", enrolledTopicId)
@@ -108,7 +110,8 @@ class HttpHomeRepository(
             weekProgress = emptyList(),
             roadmapNodes = emptyList(),
             todayTask = todayTask,
-            todayCompleted = todayCompleted
+            todayCompleted = todayCompleted,
+            isEnrolled = isEnrolled
         )
     }
 }

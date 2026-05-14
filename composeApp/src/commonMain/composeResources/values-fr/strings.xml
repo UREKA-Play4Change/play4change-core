@@ -31,6 +31,9 @@
   <string name="home_no_task">Aucune tâche disponible aujourd'hui. Revenez demain.</string>
   <string name="home_pts_suffix">pts</string>
   <string name="home_roadmap">Votre Parcours</string>
+  <string name="home_enroll_prompt_title">Aucun sujet sélectionné</string>
+  <string name="home_enroll_prompt_body">Choisissez un sujet pour commencer à recevoir des défis quotidiens.</string>
+  <string name="home_enroll_prompt_cta">Explorer les sujets</string>
 
   <!-- Task -->
   <string name="task_question_label">Question</string>

@@ -10,5 +10,6 @@ data class HomeState(
     override val error: AppError? = null,
     val homeData: HomeData? = null,
     val showLogOutDialog: Boolean = false,
+    val showEnrollPrompt: Boolean = false,
     val networkError: NetworkError? = null
 ) : ComponentState

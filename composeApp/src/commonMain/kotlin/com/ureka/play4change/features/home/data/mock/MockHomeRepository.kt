@@ -40,7 +40,8 @@ class MockHomeRepository : HomeRepository {
                 domain = "Sustainability",
                 pointsReward = 100
             ),
-            todayCompleted = false
+            todayCompleted = false,
+            isEnrolled = true
         )
     }
 }

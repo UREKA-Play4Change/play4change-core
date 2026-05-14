@@ -1,0 +1,99 @@
+package com.ureka.play4change.features.home.data.http
+
+import com.ureka.play4change.core.network.HttpClientFactory
+import com.ureka.play4change.core.network.NetworkConfig
+import com.ureka.play4change.core.network.TokenStorage
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.respond
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.headersOf
+import io.ktor.utils.io.ByteReadChannel
+import kotlinx.coroutines.test.runTest
+import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+
+class HttpHomeRepositoryTest {
+
+    private val storage = FakeTokenStorage()
+
+    private class FakeTokenStorage : TokenStorage {
+        override suspend fun getAccessToken(): String? = null
+        override suspend fun getRefreshToken(): String? = null
+        override suspend fun store(accessToken: String, refreshToken: String) = Unit
+        override suspend fun clear() = Unit
+    }
+
+    private val profileJson = """
+        {"name":"Radesh","streakDays":5,"totalPoints":500,"level":2,"currentDay":3,"totalDays":14}
+    """.trimIndent()
+
+    private fun buildRepo(engine: MockEngine): HttpHomeRepository =
+        HttpHomeRepository(
+            client = HttpClientFactory.create(
+                tokenStorage = storage,
+                networkConfig = NetworkConfig("http://localhost"),
+                onSessionExpired = {},
+                engine = engine
+            ),
+            tokenStorage = storage
+        )
+
+    // ---------------------------------------------------------------------------
+    // isEnrolled flag
+    // ---------------------------------------------------------------------------
+
+    @Test
+    fun `getHomeData returns isEnrolled=false when no topic has isEnrolled=true`() = runTest {
+        var requestCount = 0
+        val engine = MockEngine { request ->
+            requestCount++
+            when (request.url.encodedPath) {
+                "/profile" -> respond(
+                    content = ByteReadChannel(profileJson),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+                "/topics" -> respond(
+                    content = ByteReadChannel("""[{"id":"t1","isEnrolled":false}]"""),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+                else -> respond(content = ByteReadChannel(""), status = HttpStatusCode.NotFound)
+            }
+        }
+
+        val data = buildRepo(engine).getHomeData("user-1")
+
+        assertFalse(data.isEnrolled)
+    }
+
+    @Test
+    fun `getHomeData returns isEnrolled=true when at least one topic has isEnrolled=true`() = runTest {
+        val engine = MockEngine { request ->
+            when (request.url.encodedPath) {
+                "/profile" -> respond(
+                    content = ByteReadChannel(profileJson),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+                "/topics" -> respond(
+                    content = ByteReadChannel("""[{"id":"t1","isEnrolled":true}]"""),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+                "/tasks/today" -> respond(
+                    content = ByteReadChannel("""{"assignmentId":"a1","title":"Quiz","pointsReward":50}"""),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+                else -> respond(content = ByteReadChannel(""), status = HttpStatusCode.NotFound)
+            }
+        }
+
+        val data = buildRepo(engine).getHomeData("user-1")
+
+        assertTrue(data.isEnrolled)
+    }
+}

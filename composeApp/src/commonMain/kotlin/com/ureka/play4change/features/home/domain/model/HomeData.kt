@@ -12,7 +12,8 @@ data class HomeData(
     val weekProgress: List<DayStatus>,
     val roadmapNodes: List<RoadmapNode>,
     val todayTask: TaskSummary?,
-    val todayCompleted: Boolean
+    val todayCompleted: Boolean,
+    val isEnrolled: Boolean = true
 )
 
 data class TaskSummary(
