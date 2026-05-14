@@ -21,6 +21,30 @@ hard-to-reverse choices) — write a full ADR in `docs/adr/` instead.
 
 ---
 
+## [2026-05-14] [mobile/task] — submitQuiz() is unreachable from HTTP; multi-question contract gap
+
+**Context:** `DefaultTaskComponent.submitQuiz()` computes a score (count of locally-correct answers)
+and sends it as `selectedOption` to `POST /tasks/{id}/submit`. This is wrong: the server expects
+the index of the chosen option (0–3), not a score. Additionally, `q.correctIndex` is always 0 on the
+client because `HttpTaskRepository` never receives the correct index from the server.
+
+**Decision:** Leave `submitQuiz()` as-is with a prominent guard comment. The path is currently
+unreachable from HTTP: `HttpTaskRepository.getTask()` always sets `content = null`, which routes
+all HTTP-backed tasks to `LegacyQuizContent` and `submitLegacy()`. `submitQuiz()` is only reachable
+from mock data where `QuizContent` is constructed with real `correctIndex` values.
+
+**Why not fix the score calculation now:** Fixing requires agreement on the multi-question task
+API contract (how does the client report multiple answers?) and a server-side change to the submit
+endpoint. That is out of scope for the Phase 04 bug fix. The guard comment ensures the next developer
+cannot inadvertently enable this path without noticing the problem.
+
+**Why not delete submitQuiz():** The multi-question quiz UI (skip/review queue, auto-advance
+countdown) is a product direction worth preserving. Deleting it would require rebuilding it later.
+
+**Phase:** 04, fix/phase-04-issue-71-task-screen
+
+---
+
 ## [2026-05-09] [auth] — Magic link GET /auth/verify redirects to play4change:// instead of returning JSON
 
 **Context:** The email magic link URL is `https://radesh-govind.com/auth/verify?token=...`. When
