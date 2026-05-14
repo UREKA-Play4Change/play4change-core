@@ -26,4 +26,10 @@ sealed class NetworkError {
 
     /** Any other error not covered by the cases above. */
     data class Unknown(val message: String) : NetworkError()
+
+    /** 202 — topic content generation is still in progress; no task is ready yet. */
+    data object TaskGenerationPending : NetworkError()
+
+    /** 404 on GET /tasks/today — the user has no task available today (already completed or not yet due). */
+    data object NoTaskAvailable : NetworkError()
 }

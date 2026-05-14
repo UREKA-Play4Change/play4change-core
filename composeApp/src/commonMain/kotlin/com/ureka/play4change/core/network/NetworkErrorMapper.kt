@@ -50,4 +50,6 @@ fun NetworkError.toAppError(): AppError = when (this) {
     NetworkError.NoConnection -> AppError.ClientError.NetworkUnavailable
     NetworkError.Timeout -> AppError.ClientError.NetworkUnavailable
     is NetworkError.Unknown -> AppError.ServerError.Unexpected(this.message)
+    NetworkError.TaskGenerationPending -> AppError.ServerError.ServiceUnavailable
+    NetworkError.NoTaskAvailable -> AppError.ServerError.NotFound
 }
