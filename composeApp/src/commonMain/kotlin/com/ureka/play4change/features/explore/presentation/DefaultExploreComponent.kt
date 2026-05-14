@@ -26,20 +26,20 @@ class DefaultExploreComponent(
     override fun onEvent(event: ExploreEvents) {
         when (event) {
             ExploreEvents.LoadTopics         -> loadTopics()
-            is ExploreEvents.RequestSwitch   -> updateState { copy(pendingSwitch = event.topic) }
-            ExploreEvents.ConfirmSwitch      -> confirmSwitch()
-            ExploreEvents.DismissSwitch      -> updateState { copy(pendingSwitch = null) }
+            is ExploreEvents.RequestEnroll   -> updateState { copy(pendingEnroll = event.topic) }
+            ExploreEvents.ConfirmEnroll      -> confirmEnroll()
+            ExploreEvents.DismissEnroll      -> updateState { copy(pendingEnroll = null) }
             ExploreEvents.NavigateBack       -> emitEffect(ExploreEffect.NavigateBack)
         }
     }
 
-    private fun confirmSwitch() {
-        val topic = state.value.pendingSwitch ?: return
+    private fun confirmEnroll() {
+        val topic = state.value.pendingEnroll ?: return
         safeLaunch(scope) {
-            repository.switchTopic("current-user", topic.id)
+            repository.enrollTopic("current-user", topic.id)
             val updated = state.value.topics.map { it.copy(isActive = it.id == topic.id) }
-            updateState { copy(topics = updated, pendingSwitch = null, switched = true) }
-            emitEffect(ExploreEffect.TopicSwitched)
+            updateState { copy(topics = updated, pendingEnroll = null, enrolled = true) }
+            emitEffect(ExploreEffect.TopicEnrolled)
         }
     }
 

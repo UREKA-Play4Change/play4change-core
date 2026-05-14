@@ -90,9 +90,9 @@
   <string name="explore_subtitle">Escolhe um tópico para te focares. Só podes estar inscrito num de cada vez.</string>
   <string name="explore_join">Aderir ao tópico</string>
   <string name="explore_active">Ativo</string>
-  <string name="explore_switch_confirm_title">Mudar de tópico?</string>
-  <string name="explore_switch_confirm_body">Vais sair do curso atual. O teu progresso será guardado mas pausado.</string>
-  <string name="explore_switch_confirm">Mudar</string>
+  <string name="explore_enroll_confirm_title">Aderir a este tópico?</string>
+  <string name="explore_enroll_confirm_body">Receberás uma nova tarefa por dia.</string>
+  <string name="explore_enroll_confirm">Aderir</string>
   <string name="explore_topics_loading">A carregar tópicos…</string>
   <string name="explore_joined">Inscrito!</string>
 

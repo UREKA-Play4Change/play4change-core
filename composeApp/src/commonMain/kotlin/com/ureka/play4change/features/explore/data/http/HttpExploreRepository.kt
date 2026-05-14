@@ -44,8 +44,8 @@ class HttpExploreRepository(
         return dtos.map { it.toTopic() }
     }
 
-    override suspend fun switchTopic(userId: String, newTopicId: String): Boolean {
-        val response = client.post("/topics/$newTopicId/enroll") {
+    override suspend fun enrollTopic(userId: String, topicId: String): Boolean {
+        val response = client.post("/topics/$topicId/enroll") {
             contentType(ContentType.Application.Json)
         }
         return response.status.isSuccess()

@@ -51,9 +51,9 @@ import play4change.composeapp.generated.resources.cancel
 import play4change.composeapp.generated.resources.explore_active
 import play4change.composeapp.generated.resources.explore_join
 import play4change.composeapp.generated.resources.explore_subtitle
-import play4change.composeapp.generated.resources.explore_switch_confirm
-import play4change.composeapp.generated.resources.explore_switch_confirm_body
-import play4change.composeapp.generated.resources.explore_switch_confirm_title
+import play4change.composeapp.generated.resources.explore_enroll_confirm
+import play4change.composeapp.generated.resources.explore_enroll_confirm_body
+import play4change.composeapp.generated.resources.explore_enroll_confirm_title
 import play4change.composeapp.generated.resources.explore_title
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -102,29 +102,29 @@ fun ExploreScreen(component: DefaultExploreComponent) {
                 items(state.topics) { topic ->
                     TopicCard(
                         topic = topic,
-                        onSwitch = { onEvent(ExploreEvents.RequestSwitch(topic)) }
+                        onEnroll = { onEvent(ExploreEvents.RequestEnroll(topic)) }
                     )
                 }
             }
         }
 
-        // Confirm switch dialog
-        state.pendingSwitch?.let {
+        // Confirm enroll dialog
+        state.pendingEnroll?.let {
             AlertDialog(
-                onDismissRequest = { onEvent(ExploreEvents.DismissSwitch) },
-                title = { Text(stringResource(Res.string.explore_switch_confirm_title)) },
-                text = { Text(stringResource(Res.string.explore_switch_confirm_body)) },
+                onDismissRequest = { onEvent(ExploreEvents.DismissEnroll) },
+                title = { Text(stringResource(Res.string.explore_enroll_confirm_title)) },
+                text = { Text(stringResource(Res.string.explore_enroll_confirm_body)) },
                 confirmButton = {
-                    Button(onClick = { onEvent(ExploreEvents.ConfirmSwitch) }) {
+                    Button(onClick = { onEvent(ExploreEvents.ConfirmEnroll) }) {
                         if (state.isLoading) {
                             CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
                         } else {
-                            Text(stringResource(Res.string.explore_switch_confirm))
+                            Text(stringResource(Res.string.explore_enroll_confirm))
                         }
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { onEvent(ExploreEvents.DismissSwitch) }) {
+                    TextButton(onClick = { onEvent(ExploreEvents.DismissEnroll) }) {
                         Text(stringResource(Res.string.cancel))
                     }
                 }
@@ -134,7 +134,7 @@ fun ExploreScreen(component: DefaultExploreComponent) {
 }
 
 @Composable
-private fun TopicCard(topic: Topic, onSwitch: () -> Unit) {
+private fun TopicCard(topic: Topic, onEnroll: () -> Unit) {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large
@@ -174,7 +174,7 @@ private fun TopicCard(topic: Topic, onSwitch: () -> Unit) {
                     )
                 )
             } else {
-                FilledTonalButton(onClick = onSwitch) {
+                FilledTonalButton(onClick = onEnroll) {
                     Text(stringResource(Res.string.explore_join))
                 }
             }

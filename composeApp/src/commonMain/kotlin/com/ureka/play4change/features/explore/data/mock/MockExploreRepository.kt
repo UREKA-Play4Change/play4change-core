@@ -20,9 +20,8 @@ class MockExploreRepository : ExploreRepository {
         )
     }
 
-    override suspend fun switchTopic(userId: String, newTopicId: String): Boolean {
+    override suspend fun enrollTopic(userId: String, topicId: String): Boolean {
         delay(800)
-        // TODO: call real API
         return true
     }
 }
