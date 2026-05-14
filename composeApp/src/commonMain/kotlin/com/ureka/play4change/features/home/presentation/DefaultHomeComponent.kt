@@ -27,7 +27,7 @@ class DefaultHomeComponent(
         scope.launch {
             try {
                 val data = repository.getHomeData(userId = "current-user")
-                updateState { copy(isLoading = false, homeData = data) }
+                updateState { copy(isLoading = false, homeData = data, showEnrollPrompt = !data.isEnrolled) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: NetworkException) {
@@ -52,7 +52,8 @@ class DefaultHomeComponent(
                 profileRepository.signOut()
                 emitEffect(HomeEffect.LoggedOut)
             }
-            HomeEvents.RetryLoad     -> loadHome()
+            HomeEvents.RetryLoad            -> loadHome()
+            HomeEvents.DismissEnrollPrompt  -> updateState { copy(showEnrollPrompt = false) }
         }
     }
 

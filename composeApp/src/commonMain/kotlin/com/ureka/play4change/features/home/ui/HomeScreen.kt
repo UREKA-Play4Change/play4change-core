@@ -73,6 +73,9 @@ import play4change.composeapp.generated.resources.home_greeting_evening
 import play4change.composeapp.generated.resources.home_greeting_morning
 import play4change.composeapp.generated.resources.home_greeting_night
 import play4change.composeapp.generated.resources.home_no_task
+import play4change.composeapp.generated.resources.home_enroll_prompt_body
+import play4change.composeapp.generated.resources.home_enroll_prompt_cta
+import play4change.composeapp.generated.resources.home_enroll_prompt_title
 import play4change.composeapp.generated.resources.home_roadmap
 import play4change.composeapp.generated.resources.home_start_challenge
 import play4change.composeapp.generated.resources.home_this_week
@@ -190,6 +193,28 @@ fun HomeScreen(component: DefaultHomeComponent) {
                 },
                 dismissButton = {
                     TextButton(onClick = { onEvent(HomeEvents.DismissLogOut) }) {
+                        Text(stringResource(Res.string.cancel))
+                    }
+                }
+            )
+        }
+
+        // Enroll prompt dialog — shown once after load when user has no active enrollment
+        if (state.showEnrollPrompt) {
+            AlertDialog(
+                onDismissRequest = { onEvent(HomeEvents.DismissEnrollPrompt) },
+                title = { Text(stringResource(Res.string.home_enroll_prompt_title)) },
+                text  = { Text(stringResource(Res.string.home_enroll_prompt_body)) },
+                confirmButton = {
+                    Button(onClick = {
+                        onEvent(HomeEvents.DismissEnrollPrompt)
+                        onEvent(HomeEvents.OpenExplore)
+                    }) {
+                        Text(stringResource(Res.string.home_enroll_prompt_cta))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { onEvent(HomeEvents.DismissEnrollPrompt) }) {
                         Text(stringResource(Res.string.cancel))
                     }
                 }

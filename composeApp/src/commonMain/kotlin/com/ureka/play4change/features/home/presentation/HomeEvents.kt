@@ -10,5 +10,6 @@ sealed interface HomeEvents : ComponentEvents {
     data object RequestLogOut : HomeEvents
     data object ConfirmLogOut : HomeEvents
     data object DismissLogOut : HomeEvents
-    data object RetryLoad     : HomeEvents
+    data object RetryLoad          : HomeEvents
+    data object DismissEnrollPrompt : HomeEvents
 }
