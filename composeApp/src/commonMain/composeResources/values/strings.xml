@@ -94,9 +94,9 @@
   <string name="explore_subtitle">Choose a topic to focus on. You can only be enrolled in one at a time.</string>
   <string name="explore_join">Join topic</string>
   <string name="explore_active">Active</string>
-  <string name="explore_switch_confirm_title">Switch topic?</string>
-  <string name="explore_switch_confirm_body">You will leave your current course. Your progress will be saved but paused.</string>
-  <string name="explore_switch_confirm">Switch</string>
+  <string name="explore_enroll_confirm_title">Join this topic?</string>
+  <string name="explore_enroll_confirm_body">You will receive one new task per day.</string>
+  <string name="explore_enroll_confirm">Join</string>
   <string name="explore_topics_loading">Loading topics…</string>
   <string name="explore_joined">Joined!</string>
 

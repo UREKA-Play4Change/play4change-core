@@ -90,9 +90,9 @@
   <string name="explore_subtitle">Choisissez un sujet sur lequel vous concentrer. Vous ne pouvez être inscrit qu'à un seul à la fois.</string>
   <string name="explore_join">Rejoindre le sujet</string>
   <string name="explore_active">Actif</string>
-  <string name="explore_switch_confirm_title">Changer de sujet ?</string>
-  <string name="explore_switch_confirm_body">Vous quitterez votre cours actuel. Votre progression sera sauvegardée mais mise en pause.</string>
-  <string name="explore_switch_confirm">Changer</string>
+  <string name="explore_enroll_confirm_title">Rejoindre ce sujet ?</string>
+  <string name="explore_enroll_confirm_body">Vous recevrez une nouvelle tâche par jour.</string>
+  <string name="explore_enroll_confirm">Rejoindre</string>
   <string name="explore_topics_loading">Chargement des sujets…</string>
   <string name="explore_joined">Inscrit !</string>
 

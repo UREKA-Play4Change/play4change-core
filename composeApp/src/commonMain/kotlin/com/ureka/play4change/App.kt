@@ -130,7 +130,7 @@ fun App(root: RootComponent) {
                             child.component.effects.collect { effect ->
                                 when (effect as ExploreEffect) {
                                     ExploreEffect.NavigateBack  -> root.navigateBack()
-                                    ExploreEffect.TopicSwitched -> { /* optional: show snackbar */ }
+                                    ExploreEffect.TopicEnrolled -> { /* optional: show snackbar */ }
                                 }
                             }
                         }

@@ -89,11 +89,11 @@ class HttpExploreRepositoryTest {
     }
 
     // ---------------------------------------------------------------------------
-    // switchTopic
+    // enrollTopic
     // ---------------------------------------------------------------------------
 
     @Test
-    fun `switchTopic calls POST topics topicId enroll and returns true on 201`() = runTest {
+    fun `enrollTopic calls POST topics topicId enroll and returns true on 201`() = runTest {
         val engine = MockEngine { request ->
             assertEquals(HttpMethod.Post, request.method)
             assertEquals("/topics/digital/enroll", request.url.encodedPath)
@@ -106,18 +106,18 @@ class HttpExploreRepositoryTest {
             )
         }
 
-        val result = buildRepo(engine).switchTopic("user-1", "digital")
+        val result = buildRepo(engine).enrollTopic("user-1", "digital")
 
         assertTrue(result)
     }
 
     @Test
-    fun `switchTopic returns false on server error`() = runTest {
+    fun `enrollTopic returns false on server error`() = runTest {
         val engine = MockEngine { _ ->
             respond(content = ByteReadChannel(""), status = HttpStatusCode.InternalServerError)
         }
 
-        val result = buildRepo(engine).switchTopic("user-1", "unknown-topic")
+        val result = buildRepo(engine).enrollTopic("user-1", "unknown-topic")
 
         assertFalse(result)
     }
