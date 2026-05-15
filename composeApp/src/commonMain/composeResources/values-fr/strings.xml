@@ -34,6 +34,8 @@
   <string name="home_enroll_prompt_title">Aucun sujet sélectionné</string>
   <string name="home_enroll_prompt_body">Choisissez un sujet pour commencer à recevoir des défis quotidiens.</string>
   <string name="home_enroll_prompt_cta">Explorer les sujets</string>
+  <string name="home_daily_reviews">Révisions du Jour</string>
+  <string name="home_review_cta">Réviser →</string>
 
   <!-- Task -->
   <string name="task_question_label">Question</string>

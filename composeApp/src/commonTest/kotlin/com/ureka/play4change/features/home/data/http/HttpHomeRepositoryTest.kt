@@ -180,4 +180,76 @@ class HttpHomeRepositoryTest {
         assertTrue(entry.completed)
         assertNull(entry.task)
     }
+
+    // ---------------------------------------------------------------------------
+    // pendingReviews
+    // ---------------------------------------------------------------------------
+
+    @Test
+    fun `getHomeData returns pending reviews from GET reviews pending`() = runTest {
+        val engine = MockEngine { request ->
+            when {
+                request.url.encodedPath == "/profile" -> respond(
+                    content = ByteReadChannel(profileJson),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+                request.url.encodedPath == "/topics" -> respond(
+                    content = ByteReadChannel("""[{"id":"t1","title":"Sustainability","isEnrolled":true}]"""),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+                request.url.encodedPath == "/tasks/today" -> respond(
+                    content = ByteReadChannel(""),
+                    status = HttpStatusCode.NotFound
+                )
+                request.url.encodedPath == "/reviews/pending" -> respond(
+                    content = ByteReadChannel("""[{"reviewId":"r1","submissionPhotoUrl":"https://example.com/photo.jpg"}]"""),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+                else -> respond(content = ByteReadChannel(""), status = HttpStatusCode.NotFound)
+            }
+        }
+
+        val data = buildRepo(engine).getHomeData("user-1")
+
+        assertEquals(1, data.pendingReviews.size)
+        val review = data.pendingReviews.first()
+        assertEquals("r1", review.reviewId)
+        assertEquals("Sustainability", review.topicTitle)
+        assertEquals("https://example.com/photo.jpg", review.photoUrl)
+    }
+
+    @Test
+    fun `getHomeData returns empty pendingReviews when reviews endpoint returns empty list`() = runTest {
+        val engine = MockEngine { request ->
+            when (request.url.encodedPath) {
+                "/profile" -> respond(
+                    content = ByteReadChannel(profileJson),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+                "/topics" -> respond(
+                    content = ByteReadChannel("""[{"id":"t1","title":"Sustainability","isEnrolled":true}]"""),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+                "/tasks/today" -> respond(
+                    content = ByteReadChannel(""),
+                    status = HttpStatusCode.NotFound
+                )
+                "/reviews/pending" -> respond(
+                    content = ByteReadChannel("[]"),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+                else -> respond(content = ByteReadChannel(""), status = HttpStatusCode.NotFound)
+            }
+        }
+
+        val data = buildRepo(engine).getHomeData("user-1")
+
+        assertTrue(data.pendingReviews.isEmpty())
+    }
 }

@@ -77,6 +77,8 @@ import play4change.composeapp.generated.resources.home_no_task
 import play4change.composeapp.generated.resources.home_enroll_prompt_body
 import play4change.composeapp.generated.resources.home_enroll_prompt_cta
 import play4change.composeapp.generated.resources.home_enroll_prompt_title
+import play4change.composeapp.generated.resources.home_daily_reviews
+import play4change.composeapp.generated.resources.home_review_cta
 import play4change.composeapp.generated.resources.home_roadmap
 import play4change.composeapp.generated.resources.home_start_challenge
 import play4change.composeapp.generated.resources.home_this_week
@@ -393,6 +395,42 @@ fun HomeScreen(component: DefaultHomeComponent) {
                                                 style = MaterialTheme.typography.labelLarge
                                             )
                                         }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Daily Reviews section — only shown when there are pending reviews
+                    if (data.pendingReviews.isNotEmpty()) {
+                        item {
+                            SectionHeader(stringResource(Res.string.home_daily_reviews))
+                        }
+                        items(data.pendingReviews, key = { it.reviewId }) { review ->
+                            ElevatedCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = MaterialTheme.shapes.large,
+                                colors = CardDefaults.elevatedCardColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                                )
+                            ) {
+                                Row(
+                                    Modifier.padding(Spacing.m),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(Modifier.weight(1f)) {
+                                        if (review.topicTitle.isNotEmpty()) {
+                                            Text(
+                                                review.topicTitle,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                                            )
+                                        }
+                                        Text(
+                                            stringResource(Res.string.home_review_cta),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                                        )
                                     }
                                 }
                             }
