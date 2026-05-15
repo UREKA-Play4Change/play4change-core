@@ -100,6 +100,10 @@
   <string name="explore_enroll_confirm">Rejoindre</string>
   <string name="explore_topics_loading">Chargement des sujets…</string>
   <string name="explore_joined">Inscrit !</string>
+  <string name="explore_leave">Quitter le sujet</string>
+  <string name="explore_leave_confirm_title">Quitter ce sujet ?</string>
+  <string name="explore_leave_confirm_body">Votre progression sera mise en pause. Vous pouvez vous réinscrire plus tard.</string>
+  <string name="explore_leave_confirm">Quitter</string>
 
   <!-- Badges -->
   <string name="badges_title">Badges</string>

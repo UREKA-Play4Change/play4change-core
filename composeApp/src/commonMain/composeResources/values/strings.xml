@@ -104,6 +104,10 @@
   <string name="explore_enroll_confirm">Join</string>
   <string name="explore_topics_loading">Loading topics…</string>
   <string name="explore_joined">Joined!</string>
+  <string name="explore_leave">Leave topic</string>
+  <string name="explore_leave_confirm_title">Leave this topic?</string>
+  <string name="explore_leave_confirm_body">Your progress will be paused. You can re-enroll later.</string>
+  <string name="explore_leave_confirm">Leave</string>
 
   <!-- Badges -->
   <string name="badges_title">Badges</string>

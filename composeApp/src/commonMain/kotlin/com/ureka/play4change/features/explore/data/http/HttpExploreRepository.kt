@@ -4,9 +4,10 @@ import com.ureka.play4change.features.explore.domain.model.Topic
 import com.ureka.play4change.features.explore.domain.model.TopicIconType
 import com.ureka.play4change.features.explore.domain.repository.ExploreRepository
 import io.ktor.client.HttpClient
-import io.ktor.client.request.post
-import io.ktor.client.statement.bodyAsText
 import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.put
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
@@ -48,6 +49,11 @@ class HttpExploreRepository(
         val response = client.post("/topics/$topicId/enroll") {
             contentType(ContentType.Application.Json)
         }
+        return response.status.isSuccess()
+    }
+
+    override suspend fun deactivateEnrollment(userId: String, topicId: String): Boolean {
+        val response = client.put("/topics/$topicId/enrollment/deactivate")
         return response.status.isSuccess()
     }
 

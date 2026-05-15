@@ -33,6 +33,16 @@ class EnrollmentController(private val enrollmentUseCase: EnrollmentUseCase) {
             ifRight = { ResponseEntity.ok(EnrollmentResponse.from(it)) }
         )
 
+    @PutMapping("/{topicId}/enrollment/deactivate")
+    fun deactivateEnrollment(
+        @PathVariable topicId: String,
+        @AuthenticationPrincipal userId: String
+    ): ResponseEntity<Unit> =
+        enrollmentUseCase.deactivateEnrollment(userId, topicId).fold(
+            ifLeft = { it.toErrorResponse() },
+            ifRight = { ResponseEntity.noContent().build() }
+        )
+
     @Suppress("UNCHECKED_CAST")
     private fun <T> AppError.toErrorResponse(): ResponseEntity<T> =
         ResponseEntity.status(httpStatus).build()

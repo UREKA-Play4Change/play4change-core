@@ -100,6 +100,10 @@
   <string name="explore_enroll_confirm">Aderir</string>
   <string name="explore_topics_loading">A carregar tópicos…</string>
   <string name="explore_joined">Inscrito!</string>
+  <string name="explore_leave">Sair do tópico</string>
+  <string name="explore_leave_confirm_title">Sair deste tópico?</string>
+  <string name="explore_leave_confirm_body">O seu progresso ficará em pausa. Pode voltar a inscrever-se mais tarde.</string>
+  <string name="explore_leave_confirm">Sair</string>
 
   <!-- Badges -->
   <string name="badges_title">Conquistas</string>
