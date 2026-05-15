@@ -37,7 +37,7 @@ class EnrollmentController(private val enrollmentUseCase: EnrollmentUseCase) {
     fun deactivateEnrollment(
         @PathVariable topicId: String,
         @AuthenticationPrincipal userId: String
-    ): ResponseEntity<Void> =
+    ): ResponseEntity<Unit> =
         enrollmentUseCase.deactivateEnrollment(userId, topicId).fold(
             ifLeft = { it.toErrorResponse() },
             ifRight = { ResponseEntity.noContent().build() }
