@@ -29,6 +29,9 @@ class DefaultExploreComponent(
             is ExploreEvents.RequestEnroll   -> updateState { copy(pendingEnroll = event.topic) }
             ExploreEvents.ConfirmEnroll      -> confirmEnroll()
             ExploreEvents.DismissEnroll      -> updateState { copy(pendingEnroll = null) }
+            is ExploreEvents.RequestLeave    -> updateState { copy(pendingLeave = event.topic) }
+            ExploreEvents.ConfirmLeave       -> confirmLeave()
+            ExploreEvents.DismissLeave       -> updateState { copy(pendingLeave = null) }
             ExploreEvents.NavigateBack       -> emitEffect(ExploreEffect.NavigateBack)
         }
     }
@@ -40,6 +43,15 @@ class DefaultExploreComponent(
             val updated = state.value.topics.map { it.copy(isActive = it.id == topic.id) }
             updateState { copy(topics = updated, pendingEnroll = null, enrolled = true) }
             emitEffect(ExploreEffect.TopicEnrolled)
+        }
+    }
+
+    private fun confirmLeave() {
+        val topic = state.value.pendingLeave ?: return
+        safeLaunch(scope) {
+            repository.deactivateEnrollment("current-user", topic.id)
+            val updated = state.value.topics.map { it.copy(isActive = false) }
+            updateState { copy(topics = updated, pendingLeave = null) }
         }
     }
 

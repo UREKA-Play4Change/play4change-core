@@ -27,8 +27,6 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -48,12 +46,15 @@ import com.ureka.play4change.features.explore.presentation.ExploreEvents
 import org.jetbrains.compose.resources.stringResource
 import play4change.composeapp.generated.resources.Res
 import play4change.composeapp.generated.resources.cancel
-import play4change.composeapp.generated.resources.explore_active
-import play4change.composeapp.generated.resources.explore_join
-import play4change.composeapp.generated.resources.explore_subtitle
 import play4change.composeapp.generated.resources.explore_enroll_confirm
 import play4change.composeapp.generated.resources.explore_enroll_confirm_body
 import play4change.composeapp.generated.resources.explore_enroll_confirm_title
+import play4change.composeapp.generated.resources.explore_join
+import play4change.composeapp.generated.resources.explore_leave
+import play4change.composeapp.generated.resources.explore_leave_confirm
+import play4change.composeapp.generated.resources.explore_leave_confirm_body
+import play4change.composeapp.generated.resources.explore_leave_confirm_title
+import play4change.composeapp.generated.resources.explore_subtitle
 import play4change.composeapp.generated.resources.explore_title
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -102,7 +103,8 @@ fun ExploreScreen(component: DefaultExploreComponent) {
                 items(state.topics) { topic ->
                     TopicCard(
                         topic = topic,
-                        onEnroll = { onEvent(ExploreEvents.RequestEnroll(topic)) }
+                        onEnroll = { onEvent(ExploreEvents.RequestEnroll(topic)) },
+                        onLeave = { onEvent(ExploreEvents.RequestLeave(topic)) }
                     )
                 }
             }
@@ -130,11 +132,30 @@ fun ExploreScreen(component: DefaultExploreComponent) {
                 }
             )
         }
+
+        // Confirm leave dialog
+        state.pendingLeave?.let {
+            AlertDialog(
+                onDismissRequest = { onEvent(ExploreEvents.DismissLeave) },
+                title = { Text(stringResource(Res.string.explore_leave_confirm_title)) },
+                text = { Text(stringResource(Res.string.explore_leave_confirm_body)) },
+                confirmButton = {
+                    Button(onClick = { onEvent(ExploreEvents.ConfirmLeave) }) {
+                        Text(stringResource(Res.string.explore_leave_confirm))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { onEvent(ExploreEvents.DismissLeave) }) {
+                        Text(stringResource(Res.string.cancel))
+                    }
+                }
+            )
+        }
     }
 }
 
 @Composable
-private fun TopicCard(topic: Topic, onEnroll: () -> Unit) {
+private fun TopicCard(topic: Topic, onEnroll: () -> Unit, onLeave: () -> Unit) {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large
@@ -165,14 +186,12 @@ private fun TopicCard(topic: Topic, onEnroll: () -> Unit) {
             }
             Spacer(Modifier.width(Spacing.xs))
             if (topic.isActive) {
-                SuggestionChip(
-                    onClick = {},
-                    label = { Text(stringResource(Res.string.explore_active)) },
-                    colors = SuggestionChipDefaults.suggestionChipColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        labelColor = MaterialTheme.colorScheme.onSecondaryContainer
+                TextButton(onClick = onLeave) {
+                    Text(
+                        stringResource(Res.string.explore_leave),
+                        color = MaterialTheme.colorScheme.error
                     )
-                )
+                }
             } else {
                 FilledTonalButton(onClick = onEnroll) {
                     Text(stringResource(Res.string.explore_join))

@@ -5,4 +5,5 @@ import com.ureka.play4change.features.explore.domain.model.Topic
 interface ExploreRepository {
     suspend fun getTopics(userId: String): List<Topic>
     suspend fun enrollTopic(userId: String, topicId: String): Boolean
+    suspend fun deactivateEnrollment(userId: String, topicId: String): Boolean
 }

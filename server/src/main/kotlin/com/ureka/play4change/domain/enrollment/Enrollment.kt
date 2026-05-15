@@ -34,4 +34,7 @@ data class Enrollment(
 
     fun resetStreak(): Enrollment =
         copy(streakDays = 0)
+
+    fun deactivate(): Enrollment =
+        copy(status = EnrollmentStatus.PAUSED, lastActivityAt = OffsetDateTime.now())
 }

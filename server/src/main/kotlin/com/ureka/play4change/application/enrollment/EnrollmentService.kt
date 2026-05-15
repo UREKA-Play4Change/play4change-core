@@ -121,4 +121,12 @@ class EnrollmentService(
 
     override fun getActiveEnrollments(userId: String): List<Enrollment> =
         enrollmentRepository.findActiveByUserId(userId)
+
+    override fun deactivateEnrollment(userId: String, topicId: String): Either<AppError, Unit> = either {
+        val enrollment = ensureNotNull(enrollmentRepository.findByUserIdAndTopicId(userId, topicId)) {
+            NotFound.ResourceNotFound("Enrollment", "$userId/$topicId")
+        }
+        enrollmentRepository.save(enrollment.deactivate())
+        log.info("User {} deactivated enrollment in topic {}", userId, topicId)
+    }
 }

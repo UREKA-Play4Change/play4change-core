@@ -24,4 +24,9 @@ class MockExploreRepository : ExploreRepository {
         delay(800)
         return true
     }
+
+    override suspend fun deactivateEnrollment(userId: String, topicId: String): Boolean {
+        delay(400)
+        return true
+    }
 }

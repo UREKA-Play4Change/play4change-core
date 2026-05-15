@@ -8,5 +8,8 @@ sealed interface ExploreEvents : ComponentEvents {
     data class RequestEnroll(val topic: Topic) : ExploreEvents
     data object ConfirmEnroll : ExploreEvents
     data object DismissEnroll : ExploreEvents
+    data class RequestLeave(val topic: Topic) : ExploreEvents
+    data object ConfirmLeave : ExploreEvents
+    data object DismissLeave : ExploreEvents
     data object NavigateBack : ExploreEvents
 }
