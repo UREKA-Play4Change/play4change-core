@@ -12,7 +12,15 @@ data class HomeData(
     val weekProgress: List<DayStatus>,
     val roadmapNodes: List<RoadmapNode>,
     val todayTasks: List<TaskSummaryWithTopic>,
+    val pendingReviews: List<PendingReviewSummary> = emptyList(),
     val isEnrolled: Boolean = true
+)
+
+/** A peer-review assignment waiting for the learner's verdict. */
+data class PendingReviewSummary(
+    val reviewId: String,
+    val topicTitle: String,
+    val photoUrl: String?
 )
 
 /** Per-topic daily task entry shown on the home screen. */

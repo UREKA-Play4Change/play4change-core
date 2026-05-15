@@ -38,6 +38,8 @@
   <string name="home_enroll_prompt_title">No topic selected</string>
   <string name="home_enroll_prompt_body">Choose a topic to start receiving daily challenges.</string>
   <string name="home_enroll_prompt_cta">Explore topics</string>
+  <string name="home_daily_reviews">Daily Reviews</string>
+  <string name="home_review_cta">Review →</string>
 
   <!-- Task -->
   <string name="task_question_label">Question</string>

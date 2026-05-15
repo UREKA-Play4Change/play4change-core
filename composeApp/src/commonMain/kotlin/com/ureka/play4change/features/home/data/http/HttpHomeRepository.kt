@@ -5,6 +5,7 @@ import com.ureka.play4change.core.network.TokenStorage
 import com.ureka.play4change.core.network.networkErrorFromStatus
 import com.ureka.play4change.features.home.domain.model.HomeData
 import com.ureka.play4change.features.home.domain.model.TaskSummary
+import com.ureka.play4change.features.home.domain.model.PendingReviewSummary
 import com.ureka.play4change.features.home.domain.model.TaskSummaryWithTopic
 import com.ureka.play4change.features.home.domain.repository.HomeRepository
 import io.ktor.client.HttpClient
@@ -46,6 +47,12 @@ private data class TodayTaskDto(
     val pointsReward: Int
 )
 
+@Serializable
+private data class PendingReviewDto(
+    val reviewId: String,
+    val submissionPhotoUrl: String? = null
+)
+
 // ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
@@ -76,6 +83,7 @@ class HttpHomeRepository(
         val profile = json.decodeFromString<UserProfileDto>(profileResponse.bodyAsText())
 
         var todayTasks: List<TaskSummaryWithTopic> = emptyList()
+        var pendingReviews: List<PendingReviewSummary> = emptyList()
         var isEnrolled = false
         try {
             val topicsResponse = client.get("/topics")
@@ -83,13 +91,18 @@ class HttpHomeRepository(
             val enrolledTopics = topics.filter { it.isEnrolled }
             isEnrolled = enrolledTopics.isNotEmpty()
 
-            todayTasks = coroutineScope {
-                enrolledTopics.map { topic ->
+            coroutineScope {
+                val tasksDeferred = enrolledTopics.map { topic ->
                     async { fetchTodayTask(topic) }
-                }.awaitAll()
+                }
+                val reviewsDeferred = enrolledTopics.map { topic ->
+                    async { fetchPendingReviews(topic) }
+                }
+                todayTasks = tasksDeferred.awaitAll()
+                pendingReviews = reviewsDeferred.awaitAll().flatten()
             }
         } catch (_: Exception) {
-            // Topic/task fetch is best-effort; a failed call does not block the home screen.
+            // Topic/task/review fetch is best-effort; a failed call does not block the home screen.
         }
 
         return HomeData(
@@ -101,6 +114,7 @@ class HttpHomeRepository(
             weekProgress = emptyList(),
             roadmapNodes = emptyList(),
             todayTasks = todayTasks,
+            pendingReviews = pendingReviews,
             isEnrolled = isEnrolled
         )
     }
@@ -140,6 +154,25 @@ class HttpHomeRepository(
             }
         } catch (_: Exception) {
             TaskSummaryWithTopic(topicId = topic.id, topicTitle = topic.title, task = null, completed = false)
+        }
+    }
+
+    private suspend fun fetchPendingReviews(topic: TopicSummaryDto): List<PendingReviewSummary> {
+        return try {
+            val response = client.get("/reviews/pending") {
+                parameter("topicId", topic.id)
+            }
+            if (response.status.value !in 200..299) return emptyList()
+            json.decodeFromString<List<PendingReviewDto>>(response.bodyAsText())
+                .map { dto ->
+                    PendingReviewSummary(
+                        reviewId = dto.reviewId,
+                        topicTitle = topic.title,
+                        photoUrl = dto.submissionPhotoUrl
+                    )
+                }
+        } catch (_: Exception) {
+            emptyList()
         }
     }
 }
