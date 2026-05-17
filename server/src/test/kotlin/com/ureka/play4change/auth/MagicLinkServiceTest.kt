@@ -15,7 +15,6 @@ import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -30,14 +29,11 @@ class MagicLinkServiceTest {
     private val emailPort: EmailPort = mockk()
     private val tokenService: TokenService = mockk()
 
-    private val baseUrl = "http://localhost:8080"
-
     private val service = MagicLinkService(
         magicLinkTokenRepository = magicLinkTokenRepository,
         userRepository = userRepository,
         emailPort = emailPort,
         tokenService = tokenService,
-        baseUrl = baseUrl
     )
 
     private val existingUser = User(
@@ -65,20 +61,19 @@ class MagicLinkServiceTest {
     // ── requestMagicLink ─────────────────────────────────────────────────────
 
     @Test
-    fun `requestMagicLink saves a token and calls EmailPort with the correct link`() {
+    fun `requestMagicLink saves a token and calls EmailPort with the raw token`() {
         val tokenSlot = slot<MagicLinkToken>()
-        val emailUrlSlot = slot<String>()
+        val emailTokenSlot = slot<String>()
         every { magicLinkTokenRepository.save(capture(tokenSlot)) } answers { firstArg() }
-        every { emailPort.sendMagicLink(any(), capture(emailUrlSlot)) } returns Unit
+        every { emailPort.sendMagicLink(any(), capture(emailTokenSlot)) } returns Unit
 
         service.requestMagicLink("demo@example.com")
 
         val savedToken = tokenSlot.captured
         assertEquals("demo@example.com", savedToken.email)
-        assertTrue(emailUrlSlot.captured.startsWith("$baseUrl/auth/verify?token="))
 
         // The DB must store the SHA-256 hash, never the raw token that was emailed
-        val rawTokenInEmail = emailUrlSlot.captured.substringAfter("?token=")
+        val rawTokenInEmail = emailTokenSlot.captured
         assertEquals(sha256(rawTokenInEmail), savedToken.token, "DB column must store SHA-256 hash, not raw token")
         assertNotEquals(rawTokenInEmail, savedToken.token, "Raw token must NOT be stored in DB")
     }

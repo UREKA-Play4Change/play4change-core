@@ -21,7 +21,7 @@ class ResendEmailAdapter(private val props: ResendProperties) : EmailPort {
     private val log = LoggerFactory.getLogger(ResendEmailAdapter::class.java)
     private val restTemplate = RestTemplate()
 
-    override fun sendMagicLink(toEmail: String, magicLink: String) {
+    override fun sendMagicLink(toEmail: String, token: String) {
         val headers = HttpHeaders().apply {
             contentType = MediaType.APPLICATION_JSON
             setBearerAuth(props.apiKey)
@@ -29,16 +29,18 @@ class ResendEmailAdapter(private val props: ResendProperties) : EmailPort {
         val body = mapOf(
             "from" to props.from,
             "to" to listOf(toEmail),
-            "subject" to "Your Play4Change login link",
+            "subject" to "Your Play4Change sign-in code",
             "text" to """
                 Hello!
 
-                Click the link below to sign in to Play4Change.
-                This link expires in 15 minutes and can only be used once.
+                Your Play4Change sign-in code:
 
-                $magicLink
+                    $token
 
-                If you did not request this, ignore this email.
+                Open the Play4Change app, go to the sign-in screen, and paste this code.
+                It expires in 15 minutes and can only be used once.
+
+                If you did not request this, you can safely ignore this email.
             """.trimIndent()
         )
         try {

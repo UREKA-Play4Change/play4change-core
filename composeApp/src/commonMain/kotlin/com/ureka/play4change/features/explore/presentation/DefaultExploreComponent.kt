@@ -40,7 +40,9 @@ class DefaultExploreComponent(
         val topic = state.value.pendingEnroll ?: return
         safeLaunch(scope) {
             repository.enrollTopic("current-user", topic.id)
-            val updated = state.value.topics.map { it.copy(isActive = it.id == topic.id) }
+            val updated = state.value.topics.map { t ->
+                if (t.id == topic.id) t.copy(isActive = true) else t
+            }
             updateState { copy(topics = updated, pendingEnroll = null, enrolled = true) }
             emitEffect(ExploreEffect.TopicEnrolled)
         }
@@ -50,7 +52,9 @@ class DefaultExploreComponent(
         val topic = state.value.pendingLeave ?: return
         safeLaunch(scope) {
             repository.deactivateEnrollment("current-user", topic.id)
-            val updated = state.value.topics.map { it.copy(isActive = false) }
+            val updated = state.value.topics.map { t ->
+                if (t.id == topic.id) t.copy(isActive = false) else t
+            }
             updateState { copy(topics = updated, pendingLeave = null) }
         }
     }

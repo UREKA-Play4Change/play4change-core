@@ -4,6 +4,7 @@ data class RoadmapNode(
     val dayIndex: Int,
     val title: String,
     val status: NodeStatus,
+    val topicId: String = "",
     val isAdaptiveBranch: Boolean = false,
     val pointsReward: Int = 0
 )
