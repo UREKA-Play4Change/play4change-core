@@ -47,6 +47,7 @@ attack surface, a STRIDE analysis is added as a subsection.
 | ✔ Refresh tokens stored as SHA-256 hash, never raw | A02 Cryptographic Failures | `TokenService.kt` — `hashToken()` before persistence | ADR-011 |
 | ✔ Public routes do not 401 on stale Bearer tokens | A07 Auth Failures | `JwtAuthFilter.kt` — exception caught on public routes | ADR-016 G7 |
 | ✔ All auth error responses use unified `MessageResponse` shape | A09 Logging Failures | `AuthExceptionHandler.kt` — consistent error contract | ADR-016 G8 |
+| ✔ Device tokens associated with userId; all tokens revoked on logout | A07 Auth Failures | `DeviceTokenRepositoryAdapter.deleteAllByUserId()` called in `AuthController` logout handlers | Phase 05, Task 5.1 |
 
 ---
 
