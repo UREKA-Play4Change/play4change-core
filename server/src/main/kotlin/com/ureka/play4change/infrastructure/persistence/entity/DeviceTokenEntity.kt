@@ -12,6 +12,7 @@ import java.util.UUID
 class DeviceTokenEntity(
 
     @Id
+    @Column(columnDefinition = "uuid")
     val id: String = UUID.randomUUID().toString(),
 
     @Column(name = "user_id", nullable = false, length = 36)
