@@ -10,12 +10,14 @@ import com.ureka.play4change.features.home.domain.model.TaskSummaryWithTopic
 import com.ureka.play4change.features.home.domain.repository.HomeRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.datetime.TimeZone
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -123,6 +125,7 @@ class HttpHomeRepository(
         return try {
             val taskResponse = client.get("/tasks/today") {
                 parameter("topicId", topic.id)
+                header("X-Timezone", TimeZone.currentSystemDefault().id)
             }
             when (taskResponse.status) {
                 HttpStatusCode.OK -> {

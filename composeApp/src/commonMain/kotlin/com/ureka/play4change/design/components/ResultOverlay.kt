@@ -50,6 +50,7 @@ import org.jetbrains.compose.resources.stringResource
 import play4change.composeapp.generated.resources.Res
 import play4change.composeapp.generated.resources.task_continue
 import play4change.composeapp.generated.resources.task_result_correct
+import play4change.composeapp.generated.resources.task_result_struggle
 import play4change.composeapp.generated.resources.task_result_wrong
 
 @Composable
@@ -60,6 +61,7 @@ fun ResultOverlay(
     onContinue: () -> Unit,
     modifier: Modifier = Modifier,
     totalPoints: Int = 0,
+    struggleTriggered: Boolean = false,
 ) {
     AnimatedVisibility(
         visible = visible,
@@ -97,6 +99,16 @@ fun ResultOverlay(
                             else MaterialTheme.colorScheme.onErrorContainer,
                     textAlign = TextAlign.Center
                 )
+
+                if (!isCorrect && struggleTriggered) {
+                    Spacer(Modifier.height(Spacing.s))
+                    Text(
+                        text = stringResource(Res.string.task_result_struggle),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f),
+                        textAlign = TextAlign.Center
+                    )
+                }
 
                 if (isCorrect && pointsAwarded > 0) {
                     Spacer(Modifier.height(Spacing.m))

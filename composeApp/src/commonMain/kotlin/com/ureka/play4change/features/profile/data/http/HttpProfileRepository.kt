@@ -97,17 +97,17 @@ class HttpProfileRepository(
         id = microCompetenceName,
         titleKey = microCompetenceName,
         descriptionKey = description,
-        iconType = topicTitle.toIconType(),
+        iconType = microCompetenceName.toIconType(),
         isUnlocked = true,
         unlockedAt = runCatching { Instant.parse(earnedAt).toEpochMilliseconds() }.getOrNull()
     )
 
-    private fun String.toIconType(): BadgeIconType = when (uppercase()) {
-        "SUSTAINABILITY" -> BadgeIconType.COMPASS
-        "DIGITAL" -> BadgeIconType.STAR
-        "HEALTH" -> BadgeIconType.FLAME
-        "ECONOMY" -> BadgeIconType.CALENDAR
-        "CULTURE" -> BadgeIconType.FIRST_STEP
+    private fun String.toIconType(): BadgeIconType = when (lowercase()) {
+        "badge_first_task" -> BadgeIconType.FIRST_STEP
+        "badge_streak_3", "badge_streak_7" -> BadgeIconType.FLAME
+        "badge_perfect_quiz" -> BadgeIconType.STAR
+        "badge_first_photo" -> BadgeIconType.CAMERA
+        "badge_explorer" -> BadgeIconType.COMPASS
         else -> BadgeIconType.COMPASS
     }
 }

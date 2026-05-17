@@ -162,6 +162,7 @@ fun TaskScreen(component: DefaultTaskComponent) {
                 isCorrect = state.isCorrect,
                 pointsAwarded = state.pointsAwarded,
                 totalPoints = state.totalPoints,
+                struggleTriggered = state.struggleTriggered,
                 onContinue = { onEvent(TaskEvents.Continue) }
             )
         }
@@ -435,14 +436,16 @@ private fun LegacyQuizContent(
 ) {
     ElevatedCard(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
         Column(Modifier.padding(Spacing.l)) {
-            SuggestionChip(
-                onClick = {},
-                label = { Text(task.domain, style = MaterialTheme.typography.labelSmall) },
-                colors = SuggestionChipDefaults.suggestionChipColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+            if (task.domain.isNotBlank()) {
+                SuggestionChip(
+                    onClick = {},
+                    label = { Text(task.domain, style = MaterialTheme.typography.labelSmall) },
+                    colors = SuggestionChipDefaults.suggestionChipColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
                 )
-            )
-            Spacer(Modifier.height(Spacing.s))
+                Spacer(Modifier.height(Spacing.s))
+            }
             Text(
                 text = stringResource(Res.string.task_question_label),
                 style = MaterialTheme.typography.labelMedium,

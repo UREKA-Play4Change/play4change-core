@@ -90,6 +90,8 @@ import play4change.composeapp.generated.resources.home_pts_suffix
 import play4change.composeapp.generated.resources.home_review_cta
 import play4change.composeapp.generated.resources.home_start_challenge
 import play4change.composeapp.generated.resources.home_todays_challenge
+import play4change.composeapp.generated.resources.home_todays_challenges
+import play4change.composeapp.generated.resources.home_your_score
 import play4change.composeapp.generated.resources.nav_about
 import play4change.composeapp.generated.resources.nav_drawer_menu
 import play4change.composeapp.generated.resources.nav_log_out
@@ -311,7 +313,7 @@ fun HomeScreen(component: DefaultHomeComponent) {
                             ) {
                                 Column {
                                     Text(
-                                        text = "Your score",
+                                        text = stringResource(Res.string.home_your_score),
                                         style = MaterialTheme.typography.labelMedium.copy(
                                             letterSpacing = 0.8.sp
                                         ),
@@ -349,7 +351,7 @@ fun HomeScreen(component: DefaultHomeComponent) {
                     // ── TODAY'S CHALLENGES ────────────────────────────────────────────
                     item {
                         SectionHeader(
-                            title = "Today's challenges",
+                            title = stringResource(Res.string.home_todays_challenges),
                             modifier = Modifier.padding(horizontal = Spacing.l)
                         )
                     }

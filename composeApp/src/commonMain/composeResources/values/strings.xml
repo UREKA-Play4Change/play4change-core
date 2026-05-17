@@ -41,6 +41,8 @@
   <string name="home_daily_reviews">Daily Reviews</string>
   <string name="home_review_cta">Review →</string>
   <string name="home_task_generating">Your task is being prepared — check back in a moment.</string>
+  <string name="home_your_score">Your score</string>
+  <string name="home_todays_challenges">Today\'s challenges</string>
 
   <!-- Task -->
   <string name="task_question_label">Question</string>
@@ -54,6 +56,7 @@
   <string name="task_exit_cancel">Keep going</string>
   <string name="task_result_correct">Correct!</string>
   <string name="task_result_wrong">Not quite — review the hint and try again tomorrow.</string>
+  <string name="task_result_struggle">Keep at it — a tailored practice session has been added to your reviews.</string>
 
   <!-- Profile -->
   <string name="profile_title">Profile</string>
