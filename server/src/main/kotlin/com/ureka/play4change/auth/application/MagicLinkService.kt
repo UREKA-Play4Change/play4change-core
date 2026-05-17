@@ -8,7 +8,6 @@ import com.ureka.play4change.auth.port.inbound.AuthUseCase
 import com.ureka.play4change.auth.port.outbound.EmailPort
 import com.ureka.play4change.auth.port.outbound.MagicLinkTokenRepository
 import com.ureka.play4change.auth.port.outbound.UserRepository
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.crypto.codec.Hex
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -23,7 +22,6 @@ class MagicLinkService(
     private val userRepository: UserRepository,
     private val emailPort: EmailPort,
     private val tokenService: TokenService,
-    @Value("\${app.base-url}") private val baseUrl: String
 ) : AuthUseCase {
 
     override fun requestMagicLink(email: String) {
@@ -41,7 +39,7 @@ class MagicLinkService(
                 createdAt = OffsetDateTime.now()
             )
         )
-        emailPort.sendMagicLink(normalised, "$baseUrl/auth/verify?token=$rawToken")
+        emailPort.sendMagicLink(normalised, rawToken)
     }
 
     @Transactional

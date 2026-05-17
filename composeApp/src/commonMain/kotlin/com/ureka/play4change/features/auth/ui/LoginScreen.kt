@@ -65,7 +65,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ureka.play4change.core.BaseView
-import com.ureka.play4change.core.isDebugBuild
 import com.ureka.play4change.design.Spacing
 import com.ureka.play4change.design.components.LogoSize
 import com.ureka.play4change.design.components.UrekaLogo
@@ -396,35 +395,33 @@ private fun LinkSentContent(
             }
         }
 
-        if (isDebugBuild) {
-            Spacer(Modifier.height(Spacing.xl))
-            HorizontalDivider()
-            Spacer(Modifier.height(Spacing.m))
-            OutlinedTextField(
-                value = tokenInput,
-                onValueChange = onTokenChange,
-                label = { Text(stringResource(Res.string.login_debug_token_label)) },
-                supportingText = { Text(stringResource(Res.string.login_debug_token_helper)) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                shape = MaterialTheme.shapes.medium
-            )
-            Spacer(Modifier.height(Spacing.s))
-            Button(
-                onClick = onVerifyToken,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = tokenInput.isNotBlank() && !isTokenVerifying,
-                shape = MaterialTheme.shapes.medium
-            ) {
-                if (isTokenVerifying) {
-                    CircularProgressIndicator(
-                        Modifier.size(20.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text(stringResource(Res.string.login_debug_verify))
-                }
+        Spacer(Modifier.height(Spacing.xl))
+        HorizontalDivider()
+        Spacer(Modifier.height(Spacing.m))
+        OutlinedTextField(
+            value = tokenInput,
+            onValueChange = onTokenChange,
+            label = { Text(stringResource(Res.string.login_debug_token_label)) },
+            supportingText = { Text(stringResource(Res.string.login_debug_token_helper)) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            shape = MaterialTheme.shapes.medium
+        )
+        Spacer(Modifier.height(Spacing.s))
+        Button(
+            onClick = onVerifyToken,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = tokenInput.isNotBlank() && !isTokenVerifying,
+            shape = MaterialTheme.shapes.medium
+        ) {
+            if (isTokenVerifying) {
+                CircularProgressIndicator(
+                    Modifier.size(20.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text(stringResource(Res.string.login_debug_verify))
             }
         }
 

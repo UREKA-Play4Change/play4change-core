@@ -348,7 +348,7 @@ fun HomeScreen(component: DefaultHomeComponent) {
                                         containerColor = MaterialTheme.colorScheme.secondaryContainer
                                     ),
                                     elevation = CardDefaults.elevatedCardElevation(defaultElevation = 6.dp),
-                                    onClick = { onEvent(HomeEvents.StartTask(task.id)) }
+                                    onClick = { onEvent(HomeEvents.StartTask(entry.topicId)) }
                                 ) {
                                     Column(Modifier.padding(Spacing.l)) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -384,7 +384,7 @@ fun HomeScreen(component: DefaultHomeComponent) {
                                         )
                                         Spacer(Modifier.height(Spacing.m))
                                         Button(
-                                            onClick = { onEvent(HomeEvents.StartTask(task.id)) },
+                                            onClick = { onEvent(HomeEvents.StartTask(entry.topicId)) },
                                             modifier = Modifier.fillMaxWidth(),
                                             colors = ButtonDefaults.buttonColors(
                                                 containerColor = MaterialTheme.colorScheme.secondary
@@ -445,7 +445,7 @@ fun HomeScreen(component: DefaultHomeComponent) {
                         RoadmapView(
                             nodes = data.roadmapNodes,
                             onNodeClick = { node ->
-                                onEvent(HomeEvents.StartTask(node.dayIndex.toString()))
+                                onEvent(HomeEvents.StartTask(node.topicId))
                             }
                         )
                     }

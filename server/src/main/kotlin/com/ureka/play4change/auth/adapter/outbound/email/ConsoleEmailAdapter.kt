@@ -9,10 +9,10 @@ class ConsoleEmailAdapter : EmailPort {
 
     private val log = LoggerFactory.getLogger(ConsoleEmailAdapter::class.java)
 
-    override fun sendMagicLink(toEmail: String, magicLink: String) {
-        log.info("=== MAGIC LINK (dev mode — no real email sent) ===")
+    override fun sendMagicLink(toEmail: String, token: String) {
+        log.info("=== SIGN-IN TOKEN (dev mode — no real email sent) ===")
         log.info("To: $toEmail")
-        log.info("Link: $magicLink")
-        log.info("===================================================")
+        log.info("Token: $token")
+        log.info("=====================================================")
     }
 }
