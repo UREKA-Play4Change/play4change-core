@@ -109,11 +109,12 @@ class TokenService(
         return TokenPair(accessToken, rawRefresh, accessExpirySeconds)
     }
 
-    override fun revoke(rawRefreshToken: String) {
+    override fun revoke(rawRefreshToken: String): String? {
         val hash = sha256(rawRefreshToken)
-        val stored = refreshTokenRepository.findByTokenHash(hash) ?: return
+        val stored = refreshTokenRepository.findByTokenHash(hash) ?: return null
         // Revoke all tokens in the family so stolen tokens from the same session are also invalidated
         refreshTokenRepository.revokeAllByFamilyId(stored.familyId)
+        return stored.userId
     }
 
     fun parseAccessToken(token: String): AccessTokenClaims {

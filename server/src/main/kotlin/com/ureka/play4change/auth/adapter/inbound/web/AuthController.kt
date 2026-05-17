@@ -1,5 +1,6 @@
 package com.ureka.play4change.auth.adapter.inbound.web
 
+import com.ureka.play4change.application.port.DeviceTokenUseCase
 import com.ureka.play4change.auth.domain.model.TokenPair
 import com.ureka.play4change.auth.port.inbound.AuthUseCase
 import com.ureka.play4change.auth.port.inbound.OAuthUseCase
@@ -14,7 +15,8 @@ import org.springframework.web.bind.annotation.*
 class AuthController(
     private val authUseCase: AuthUseCase,
     private val oAuthUseCase: OAuthUseCase,
-    private val tokenUseCase: TokenUseCase
+    private val tokenUseCase: TokenUseCase,
+    private val deviceTokenUseCase: DeviceTokenUseCase
 ) {
     @PostMapping("/magic-link")
     fun requestMagicLink(@RequestBody request: MagicLinkRequest): ResponseEntity<MessageResponse> {
@@ -50,14 +52,16 @@ class AuthController(
 
     @DeleteMapping("/logout")
     fun logout(@RequestBody request: RefreshRequest): ResponseEntity<Void> {
-        tokenUseCase.revoke(request.refreshToken)
+        val userId = tokenUseCase.revoke(request.refreshToken)
+        if (userId != null) deviceTokenUseCase.deleteForUser(userId)
         return ResponseEntity.noContent().build()
     }
 
     /** Web frontend sends POST; DELETE is kept for demo/CLI clients. */
     @PostMapping("/logout")
     fun logoutPost(@RequestBody request: RefreshRequest): ResponseEntity<Void> {
-        tokenUseCase.revoke(request.refreshToken)
+        val userId = tokenUseCase.revoke(request.refreshToken)
+        if (userId != null) deviceTokenUseCase.deleteForUser(userId)
         return ResponseEntity.noContent().build()
     }
 
