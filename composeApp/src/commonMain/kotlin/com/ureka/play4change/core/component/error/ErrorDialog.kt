@@ -11,7 +11,10 @@ import com.ureka.play4change.core.component.stateful.clearError
 import com.ureka.play4change.core.error.AppError
 import org.jetbrains.compose.resources.stringResource
 import play4change.composeapp.generated.resources.Res
+import play4change.composeapp.generated.resources.error_auth_required
 import play4change.composeapp.generated.resources.error_network
+import play4change.composeapp.generated.resources.error_not_found
+import play4change.composeapp.generated.resources.error_service_unavailable
 import play4change.composeapp.generated.resources.error_unexpected
 import play4change.composeapp.generated.resources.ok
 import play4change.composeapp.generated.resources.retry
@@ -26,9 +29,9 @@ fun <E : ComponentEvents, S : ComponentState> ErrorDialog(
     val message = when (error) {
         is AppError.ClientError.NetworkUnavailable -> stringResource(Res.string.error_network)
         is AppError.ClientError.ValidationError -> stringResource(Res.string.error_unexpected)
-        is AppError.ClientError.Unauthorised -> stringResource(Res.string.error_unexpected)
-        is AppError.ServerError.ServiceUnavailable -> stringResource(Res.string.error_unexpected)
-        is AppError.ServerError.NotFound -> stringResource(Res.string.error_unexpected)
+        is AppError.ClientError.Unauthorised -> stringResource(Res.string.error_auth_required)
+        is AppError.ServerError.ServiceUnavailable -> stringResource(Res.string.error_service_unavailable)
+        is AppError.ServerError.NotFound -> stringResource(Res.string.error_not_found)
         is AppError.ServerError.Unexpected -> stringResource(Res.string.error_unexpected)
     }
     AlertDialog(
