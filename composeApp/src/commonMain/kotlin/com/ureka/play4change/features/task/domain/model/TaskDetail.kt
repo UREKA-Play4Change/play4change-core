@@ -18,5 +18,8 @@ data class TaskDetail(
 
 data class SubmitResult(
     val isCorrect: Boolean,
-    val pointsAwarded: Int
+    val pointsAwarded: Int,
+    val totalPoints: Int = 0,
+    val streakDays: Int = 0,
+    val struggleTriggered: Boolean = false
 )

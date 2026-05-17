@@ -21,6 +21,30 @@ hard-to-reverse choices) — write a full ADR in `docs/adr/` instead.
 
 ---
 
+## [2026-05-17] [mobile/android] — Firebase initialized without google-services plugin; credentials via BuildConfig
+
+**Context:** The `google-services` Gradle plugin transforms `google-services.json` into Android resources and auto-configures `FirebaseApp`. The plugin is added to the project but a placeholder `composeApp/google-services.json` is committed (with zeroed-out project number and `REPLACE_WITH_REAL_API_KEY`). At runtime FCM will not work until the real credentials are provided.
+
+**Decision:** Firebase is initialized automatically via the `google-services` plugin and the `google-services.json` file. For production, replace `composeApp/google-services.json` with the real file from Firebase Console for the `com.ureka.play4change` Android app. Add `FIREBASE_APP_ID`, `FIREBASE_PROJECT_ID`, `FIREBASE_API_KEY`, `FIREBASE_SENDER_ID` to `gradle.properties` (not committed) if manual `FirebaseApp.initializeApp()` is preferred over the plugin approach.
+
+**Why not BOM:** KMP 2.3+ removed `platform()` from KMP source set DSL. Firebase messaging is added with an explicit version (`firebase-messaging = "24.1.1"` in version catalog) to avoid the BOM `platform()` call inside `androidMain.dependencies`.
+
+**Phase:** 05, Task 5.1
+
+---
+
+## [2026-05-17] [mobile/ios] — APNs token registration via exposed Kotlin function in MainViewController
+
+**Context:** The KMP composeApp has no Swift AppDelegate file in this repo. APNs registration requires Swift `UIApplicationDelegate` callbacks. The KMP Kotlin side cannot directly implement `UIApplicationDelegate`.
+
+**Decision:** `fun handleAPNsToken(tokenHex: String)` is exposed as a top-level function in `MainViewController.kt`. The Swift AppDelegate (in the Xcode project) calls this function from `application(_:didRegisterForRemoteNotificationsWithDeviceToken:)` after converting the `Data` token to a hex string. APNs capability must be enabled in Xcode project settings (Signing & Capabilities → Push Notifications).
+
+**Why not an expect/actual:** The token receipt is a one-way fire-and-forget call from Swift to Kotlin. A top-level function (exported to Objective-C as `handleAPNsToken`) is simpler than a Kotlin interface with an expect/actual bridge.
+
+**Phase:** 05, Task 5.1
+
+---
+
 ## [2026-05-14] [mobile/task] — submitQuiz() is unreachable from HTTP; multi-question contract gap
 
 **Context:** `DefaultTaskComponent.submitQuiz()` computes a score (count of locally-correct answers)

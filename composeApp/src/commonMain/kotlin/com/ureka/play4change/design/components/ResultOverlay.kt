@@ -50,6 +50,7 @@ import org.jetbrains.compose.resources.stringResource
 import play4change.composeapp.generated.resources.Res
 import play4change.composeapp.generated.resources.task_continue
 import play4change.composeapp.generated.resources.task_result_correct
+import play4change.composeapp.generated.resources.task_result_struggle
 import play4change.composeapp.generated.resources.task_result_wrong
 
 @Composable
@@ -58,7 +59,9 @@ fun ResultOverlay(
     isCorrect: Boolean,
     pointsAwarded: Int,
     onContinue: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    totalPoints: Int = 0,
+    struggleTriggered: Boolean = false,
 ) {
     AnimatedVisibility(
         visible = visible,
@@ -97,6 +100,16 @@ fun ResultOverlay(
                     textAlign = TextAlign.Center
                 )
 
+                if (!isCorrect && struggleTriggered) {
+                    Spacer(Modifier.height(Spacing.s))
+                    Text(
+                        text = stringResource(Res.string.task_result_struggle),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f),
+                        textAlign = TextAlign.Center
+                    )
+                }
+
                 if (isCorrect && pointsAwarded > 0) {
                     Spacer(Modifier.height(Spacing.m))
                     val animatedPoints by animateIntAsState(pointsAwarded, tween(800), label = "pts")
@@ -106,6 +119,15 @@ fun ResultOverlay(
                         color = MaterialTheme.colorScheme.tertiary,
                         fontWeight = FontWeight.Bold
                     )
+                    if (totalPoints > 0) {
+                        Spacer(Modifier.height(Spacing.xs))
+                        val animatedTotal by animateIntAsState(totalPoints, tween(900), label = "total")
+                        Text(
+                            "Total: $animatedTotal pts",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(Spacing.xxl))

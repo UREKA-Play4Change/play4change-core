@@ -1,6 +1,7 @@
 package com.ureka.play4change.features.profile.ui
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,9 +21,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,10 +33,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ureka.play4change.core.BaseView
 import com.ureka.play4change.core.model.Badge
 import com.ureka.play4change.core.model.BadgeIconType
@@ -91,9 +93,9 @@ fun ProfileScreen(component: DefaultProfileComponent) {
                     .padding(Spacing.l),
                 verticalArrangement = Arrangement.spacedBy(Spacing.m)
             ) {
-                ShimmerBox(modifier = Modifier.fillMaxWidth().height(Spacing.huge))
-                ShimmerBox(modifier = Modifier.fillMaxWidth().height(Spacing.huge))
+                ShimmerBox(modifier = Modifier.fillMaxWidth().height(160.dp))
                 ShimmerBox(modifier = Modifier.fillMaxWidth().height(Spacing.xxxl))
+                ShimmerBox(modifier = Modifier.fillMaxWidth().height(Spacing.huge))
             }
         } else {
             val profile = state.profile
@@ -109,105 +111,111 @@ fun ProfileScreen(component: DefaultProfileComponent) {
                     modifier = Modifier.fillMaxSize()
                 ) {
 
-                    // ── Stats row ────────────────────────────────────────────
+                    // ── Gradient hero card ────────────────────────────────────
                     item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                        val heroGradient = listOf(
+                            MaterialTheme.colorScheme.primaryContainer,
+                            MaterialTheme.colorScheme.secondaryContainer
+                        )
+                        val animatedPoints by animateIntAsState(
+                            targetValue = profile.totalPoints,
+                            animationSpec = tween(900),
+                            label = "pts"
+                        )
+                        val xpProgress by animateFloatAsState(
+                            targetValue = profile.currentDay.toFloat() / profile.totalDays.toFloat(),
+                            animationSpec = tween(800),
+                            label = "xp"
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(MaterialTheme.shapes.extraLarge)
+                                .background(Brush.linearGradient(heroGradient))
+                                .padding(Spacing.xl)
                         ) {
-                            listOf(
-                                Triple(
-                                    "${profile.streakDays}d",
-                                    stringResource(Res.string.profile_streak_label),
-                                    "🔥"
-                                ),
-                                Triple(
-                                    profile.totalPoints.toString(),
-                                    stringResource(Res.string.profile_points_label),
-                                    "⚡"
-                                ),
-                                Triple(
-                                    "${(profile.accuracy * 100).roundToInt()}%",
-                                    stringResource(Res.string.profile_accuracy_label),
-                                    "🎯"
-                                )
-                            ).forEach { (value, label, icon) ->
-                                ElevatedCard(
-                                    modifier = Modifier.weight(1f),
-                                    colors = CardDefaults.elevatedCardColors(
-                                        containerColor = MaterialTheme.colorScheme.secondaryContainer
-                                    )
+                            Column {
+                                // Stats row
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceEvenly
                                 ) {
-                                    Column(
-                                        Modifier.padding(Spacing.s),
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Text(icon, style = MaterialTheme.typography.titleLarge)
-                                        Text(
-                                            value,
-                                            style = MaterialTheme.typography.headlineSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                                        )
-                                        Text(
-                                            label,
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                                                .copy(alpha = 0.7f)
-                                        )
-                                    }
+                                    StatColumn(
+                                        emoji = "🔥",
+                                        value = "${profile.streakDays}d",
+                                        label = stringResource(Res.string.profile_streak_label),
+                                        valueColor = MaterialTheme.colorScheme.tertiary
+                                    )
+                                    StatColumn(
+                                        emoji = "⚡",
+                                        value = "$animatedPoints",
+                                        label = stringResource(Res.string.profile_points_label),
+                                        valueColor = MaterialTheme.colorScheme.primary
+                                    )
+                                    StatColumn(
+                                        emoji = "🎯",
+                                        value = "${(profile.accuracy * 100).roundToInt()}%",
+                                        label = stringResource(Res.string.profile_accuracy_label),
+                                        valueColor = MaterialTheme.colorScheme.secondary
+                                    )
                                 }
+
+                                Spacer(Modifier.height(Spacing.l))
+
+                                // Level + XP bar
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = stringResource(Res.string.profile_level_label, profile.level),
+                                        style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 0.5.sp),
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                    Text(
+                                        text = stringResource(
+                                            Res.string.profile_course_day,
+                                            profile.currentDay,
+                                            profile.totalDays
+                                        ),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                                    )
+                                }
+                                Spacer(Modifier.height(Spacing.xs))
+                                XpBar(progress = xpProgress, modifier = Modifier.fillMaxWidth())
                             }
                         }
                     }
 
-                    // ── XP bar ───────────────────────────────────────────────
-                    item {
-                        ElevatedCard(Modifier.fillMaxWidth()) {
-                            Column(Modifier.padding(Spacing.m)) {
-                                Text(
-                                    stringResource(Res.string.profile_level_label, profile.level),
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                                Spacer(Modifier.height(Spacing.xs))
-                                val xpProgress by animateFloatAsState(
-                                    profile.currentDay.toFloat() / profile.totalDays.toFloat(),
-                                    tween(800),
-                                    label = "xp"
-                                )
-                                XpBar(
-                                    progress = xpProgress,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                Spacer(Modifier.height(Spacing.xs))
-                                Text(
-                                    stringResource(
-                                        Res.string.profile_course_day,
-                                        profile.currentDay,
-                                        profile.totalDays
-                                    ),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
-
-                    // ── Badges section ───────────────────────────────────────
+                    // ── Badges section ────────────────────────────────────────
                     if (profile.badges.isNotEmpty()) {
                         item {
-                            Text(
-                                stringResource(Res.string.badges_title),
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.padding(top = Spacing.xs)
-                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = Spacing.xs),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+                            ) {
+                                Text(
+                                    text = stringResource(Res.string.badges_title).uppercase(),
+                                    style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.2.sp),
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                HorizontalDivider(modifier = Modifier.weight(1f))
+                            }
                         }
 
                         val badgeRows = profile.badges.chunked(3)
                         items(badgeRows) { row ->
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.m)
                             ) {
                                 row.forEach { badge ->
                                     BadgeItem(badge, Modifier.weight(1f))
@@ -225,18 +233,39 @@ fun ProfileScreen(component: DefaultProfileComponent) {
 }
 
 @Composable
+private fun StatColumn(
+    emoji: String,
+    value: String,
+    label: String,
+    valueColor: Color
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(emoji, style = MaterialTheme.typography.titleLarge)
+        Spacer(Modifier.height(Spacing.xxs))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.ExtraBold,
+            color = valueColor
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
 private fun BadgeItem(badge: Badge, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
-            modifier = Modifier.size(56.dp),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(modifier = Modifier.size(60.dp)) {
             Box(
                 Modifier
-                    .size(56.dp)
+                    .size(60.dp)
                     .clip(CircleShape)
                     .background(
                         if (badge.isUnlocked) MaterialTheme.colorScheme.tertiaryContainer
@@ -250,21 +279,16 @@ private fun BadgeItem(badge: Badge, modifier: Modifier = Modifier) {
                 )
             }
             if (!badge.isUnlocked) {
-                Box(
-                    Modifier
-                        .size(56.dp)
-                        .clip(CircleShape)
-                        .background(Color.Black.copy(alpha = 0.3f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Rounded.Lock, null,
-                        Modifier.size(16.dp), tint = Color.White.copy(alpha = 0.8f)
-                    )
-                }
+                Icon(
+                    Icons.Rounded.Lock, null,
+                    modifier = Modifier
+                        .size(18.dp)
+                        .align(Alignment.BottomEnd),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(Spacing.xs))
         Text(
             text = resolveBadgeTitle(badge.titleKey),
             style = MaterialTheme.typography.labelSmall,

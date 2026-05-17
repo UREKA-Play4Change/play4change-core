@@ -185,6 +185,8 @@ class DefaultTaskComponent(
                     submitted = true,
                     isCorrect = result.isCorrect,
                     pointsAwarded = result.pointsAwarded,
+                    totalPoints = result.totalPoints,
+                    struggleTriggered = result.struggleTriggered,
                     submission = SubmissionState.Resolved(result.isCorrect),
                     isBackBlocked = false
                 )
@@ -215,6 +217,8 @@ class DefaultTaskComponent(
                     quizSubmitted = true,
                     quizScore = score,
                     pointsAwarded = result.pointsAwarded,
+                    totalPoints = result.totalPoints,
+                    struggleTriggered = result.struggleTriggered,
                     submission = SubmissionState.Resolved(result.isCorrect),
                     isCorrect = result.isCorrect,
                     submitted = true,
@@ -226,13 +230,17 @@ class DefaultTaskComponent(
 
     private fun submitStepTask() {
         val taskId = state.value.task?.userTaskId ?: return
+        val photoPath = state.value.capturedPhotoUri ?: return
         safeLaunch(scope) {
-            val result = repository.submitAnswer(taskId, -1)
+            val photoUrl = repository.uploadPhoto(photoPath)
+            val result = repository.submitPhoto(taskId, photoUrl)
             unlockBack()
             updateState {
                 copy(
                     submission = SubmissionState.Resolved(result.isCorrect),
                     pointsAwarded = result.pointsAwarded,
+                    totalPoints = result.totalPoints,
+                    struggleTriggered = result.struggleTriggered,
                     isCorrect = result.isCorrect,
                     submitted = true,
                     isBackBlocked = false

@@ -10,12 +10,14 @@ import com.ureka.play4change.features.home.domain.model.TaskSummaryWithTopic
 import com.ureka.play4change.features.home.domain.repository.HomeRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.datetime.TimeZone
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -123,6 +125,7 @@ class HttpHomeRepository(
         return try {
             val taskResponse = client.get("/tasks/today") {
                 parameter("topicId", topic.id)
+                header("X-Timezone", TimeZone.currentSystemDefault().id)
             }
             when (taskResponse.status) {
                 HttpStatusCode.OK -> {
@@ -139,12 +142,27 @@ class HttpHomeRepository(
                         completed = false
                     )
                 }
-                HttpStatusCode.NotFound -> TaskSummaryWithTopic(
+                // 202 Accepted: server is still generating the AI task content.
+                HttpStatusCode.Accepted -> TaskSummaryWithTopic(
                     topicId = topic.id,
                     topicTitle = topic.title,
                     task = null,
-                    completed = true
+                    completed = false,
+                    isGenerating = true
                 )
+                // 404 with X-Task-Available-At: today's assignment is submitted (server confirms this
+                // is an expected state, not a missing resource). Treat as completed.
+                // 404 without the header: enrollment/topic not found or other error — don't falsely
+                // show as completed; render nothing.
+                HttpStatusCode.NotFound -> {
+                    val hasAvailableAtHeader = taskResponse.headers["X-Task-Available-At"] != null
+                    TaskSummaryWithTopic(
+                        topicId = topic.id,
+                        topicTitle = topic.title,
+                        task = null,
+                        completed = hasAvailableAtHeader
+                    )
+                }
                 else -> TaskSummaryWithTopic(
                     topicId = topic.id,
                     topicTitle = topic.title,

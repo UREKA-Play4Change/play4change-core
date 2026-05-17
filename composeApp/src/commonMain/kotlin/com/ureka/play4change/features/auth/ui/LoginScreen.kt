@@ -27,10 +27,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -118,70 +116,51 @@ fun LoginScreen(component: DefaultLoginComponent) {
         ) {
             Spacer(Modifier.height(Spacing.xxl))
 
-            // ── Form card — elevated surface, slightly darker than background ──
-            ElevatedCard(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.extraLarge,
-                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
-                colors = CardDefaults.elevatedCardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(Spacing.l),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    AnimatedContent(
-                        targetState = state.linkSent,
-                        transitionSpec = {
-                            slideInVertically { it / 2 } + fadeIn() togetherWith
-                            slideOutVertically { -it / 2 } + fadeOut()
-                        },
-                        label = "login_stage"
-                    ) { linkSent ->
-                        if (linkSent) {
-                            LinkSentContent(
-                                email = state.email,
-                                countdown = state.resendCountdown,
-                                isLoading = state.isEmailLoading,
-                                onResend = { onEvent(LoginEvents.Resend) },
-                                tokenInput = state.tokenInput,
-                                onTokenChange = { onEvent(LoginEvents.TokenChanged(it)) },
-                                onVerifyToken = { onEvent(LoginEvents.VerifyToken) },
-                                isTokenVerifying = state.loadingAction is LoginLoadingAction.Token
-                            )
-                        } else {
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                LoginFormContent(
-                                    state = state,
-                                    onEmailChange = { onEvent(LoginEvents.EmailChanged(it)) },
-                                    onSubmit = { onEvent(LoginEvents.Submit) }
-                                )
+            AnimatedContent(
+                targetState = state.linkSent,
+                transitionSpec = {
+                    slideInVertically { it / 2 } + fadeIn() togetherWith
+                    slideOutVertically { -it / 2 } + fadeOut()
+                },
+                label = "login_stage"
+            ) { linkSent ->
+                if (linkSent) {
+                    LinkSentContent(
+                        email = state.email,
+                        countdown = state.resendCountdown,
+                        isLoading = state.isEmailLoading,
+                        onResend = { onEvent(LoginEvents.Resend) },
+                        tokenInput = state.tokenInput,
+                        onTokenChange = { onEvent(LoginEvents.TokenChanged(it)) },
+                        onVerifyToken = { onEvent(LoginEvents.VerifyToken) },
+                        isTokenVerifying = state.loadingAction is LoginLoadingAction.Token
+                    )
+                } else {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        LoginFormContent(
+                            state = state,
+                            onEmailChange = { onEvent(LoginEvents.EmailChanged(it)) },
+                            onSubmit = { onEvent(LoginEvents.Submit) }
+                        )
 
-                                Spacer(Modifier.height(Spacing.l))
-                                OrDivider()
-                                Spacer(Modifier.height(Spacing.m))
-                                val anyLoading = state.loadingAction != null
-                                GoogleSignInButton(
-                                    onClick = { onEvent(LoginEvents.SocialLogin(SocialProvider.GOOGLE)) },
-                                    isLoading = state.loadingProvider == SocialProvider.GOOGLE,
-                                    enabled = !anyLoading || state.loadingProvider == SocialProvider.GOOGLE
-                                )
-                                Spacer(Modifier.height(Spacing.xs))
-                                FacebookSignInButton(
-                                    onClick = { onEvent(LoginEvents.SocialLogin(SocialProvider.FACEBOOK)) },
-                                    isLoading = state.loadingProvider == SocialProvider.FACEBOOK,
-                                    enabled = !anyLoading || state.loadingProvider == SocialProvider.FACEBOOK
-                                )
-                                Spacer(Modifier.height(Spacing.xl))
-                            }
-                        }
+                        Spacer(Modifier.height(Spacing.xl))
+                        OrDivider()
+                        Spacer(Modifier.height(Spacing.m))
+                        val anyLoading = state.loadingAction != null
+                        GoogleSignInButton(
+                            onClick = { onEvent(LoginEvents.SocialLogin(SocialProvider.GOOGLE)) },
+                            isLoading = state.loadingProvider == SocialProvider.GOOGLE,
+                            enabled = !anyLoading || state.loadingProvider == SocialProvider.GOOGLE
+                        )
+                        Spacer(Modifier.height(Spacing.s))
+                        FacebookSignInButton(
+                            onClick = { onEvent(LoginEvents.SocialLogin(SocialProvider.FACEBOOK)) },
+                            isLoading = state.loadingProvider == SocialProvider.FACEBOOK,
+                            enabled = !anyLoading || state.loadingProvider == SocialProvider.FACEBOOK
+                        )
                     }
                 }
             }
-            // ── End of card ────────────────────────────────────────────────
 
             Spacer(Modifier.height(Spacing.xxl))
         }
@@ -200,9 +179,9 @@ private fun LoginFormContent(
     ) {
         Text(
             text = stringResource(Res.string.login_welcome),
-            style = MaterialTheme.typography.headlineLarge,
+            style = MaterialTheme.typography.displaySmall,
             color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.ExtraBold
         )
         Spacer(Modifier.height(Spacing.xs))
         Text(

@@ -161,6 +161,8 @@ fun TaskScreen(component: DefaultTaskComponent) {
                 visible = state.submitted || isResolved,
                 isCorrect = state.isCorrect,
                 pointsAwarded = state.pointsAwarded,
+                totalPoints = state.totalPoints,
+                struggleTriggered = state.struggleTriggered,
                 onContinue = { onEvent(TaskEvents.Continue) }
             )
         }
@@ -197,7 +199,7 @@ private fun QuizModeContent(
                 }
                 Box(
                     Modifier
-                        .height(5.dp)
+                        .height(7.dp)
                         .weight(1f)
                         .clip(CircleShape)
                         .background(color)
@@ -434,14 +436,16 @@ private fun LegacyQuizContent(
 ) {
     ElevatedCard(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
         Column(Modifier.padding(Spacing.l)) {
-            SuggestionChip(
-                onClick = {},
-                label = { Text(task.domain, style = MaterialTheme.typography.labelSmall) },
-                colors = SuggestionChipDefaults.suggestionChipColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+            if (task.domain.isNotBlank()) {
+                SuggestionChip(
+                    onClick = {},
+                    label = { Text(task.domain, style = MaterialTheme.typography.labelSmall) },
+                    colors = SuggestionChipDefaults.suggestionChipColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
                 )
-            )
-            Spacer(Modifier.height(Spacing.s))
+                Spacer(Modifier.height(Spacing.s))
+            }
             Text(
                 text = stringResource(Res.string.task_question_label),
                 style = MaterialTheme.typography.labelMedium,
@@ -503,9 +507,8 @@ private fun LegacyQuizContent(
     task.options.forEachIndexed { index, option ->
         val optionState = when {
             !state.submitted && state.selectedIndex == index -> OptionState.Selected
-            state.submitted && index == task.correctIndex    -> OptionState.Correct
-            state.submitted && state.selectedIndex == index &&
-                    index != task.correctIndex               -> OptionState.Wrong
+            state.submitted && state.selectedIndex == index  ->
+                if (state.isCorrect) OptionState.Correct else OptionState.Wrong
             else                                             -> OptionState.Idle
         }
         TaskOptionButton(

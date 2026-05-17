@@ -85,11 +85,19 @@ class MockTaskRepository : TaskRepository {
     override suspend fun submitAnswer(userTaskId: String, selectedIndex: Int): SubmitResult {
         delay(400)
         val task = tasks[userTaskId] ?: tasks.values.first()
-        val isCorrect = when {
-            selectedIndex == -1 -> true // photo task always correct
-            task.content is TaskContent.QuizContent -> selectedIndex >= 0
-            else -> selectedIndex == task.correctIndex
-        }
+        val isCorrect = if (task.content is TaskContent.QuizContent) selectedIndex >= 0
+                        else selectedIndex == task.correctIndex
         return SubmitResult(isCorrect = isCorrect, pointsAwarded = if (isCorrect) task.pointsReward else 0)
+    }
+
+    override suspend fun uploadPhoto(localPath: String): String {
+        delay(300)
+        return "https://mock.example.com/photos/mock-photo.jpg"
+    }
+
+    override suspend fun submitPhoto(taskId: String, photoUrl: String): SubmitResult {
+        delay(300)
+        val task = tasks[taskId] ?: tasks.values.first()
+        return SubmitResult(isCorrect = true, pointsAwarded = task.pointsReward)
     }
 }
