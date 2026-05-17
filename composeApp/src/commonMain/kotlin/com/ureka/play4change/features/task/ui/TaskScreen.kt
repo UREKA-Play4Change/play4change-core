@@ -161,6 +161,7 @@ fun TaskScreen(component: DefaultTaskComponent) {
                 visible = state.submitted || isResolved,
                 isCorrect = state.isCorrect,
                 pointsAwarded = state.pointsAwarded,
+                totalPoints = state.totalPoints,
                 onContinue = { onEvent(TaskEvents.Continue) }
             )
         }
@@ -197,7 +198,7 @@ private fun QuizModeContent(
                 }
                 Box(
                     Modifier
-                        .height(5.dp)
+                        .height(7.dp)
                         .weight(1f)
                         .clip(CircleShape)
                         .background(color)
@@ -503,9 +504,8 @@ private fun LegacyQuizContent(
     task.options.forEachIndexed { index, option ->
         val optionState = when {
             !state.submitted && state.selectedIndex == index -> OptionState.Selected
-            state.submitted && index == task.correctIndex    -> OptionState.Correct
-            state.submitted && state.selectedIndex == index &&
-                    index != task.correctIndex               -> OptionState.Wrong
+            state.submitted && state.selectedIndex == index  ->
+                if (state.isCorrect) OptionState.Correct else OptionState.Wrong
             else                                             -> OptionState.Idle
         }
         TaskOptionButton(

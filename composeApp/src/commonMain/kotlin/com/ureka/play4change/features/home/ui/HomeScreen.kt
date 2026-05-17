@@ -1,10 +1,15 @@
 package com.ureka.play4change.features.home.ui
 
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,15 +19,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.automirrored.rounded.ExitToApp
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Menu
+import androidx.compose.material.icons.rounded.RateReview
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DrawerValue
@@ -33,35 +42,33 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import com.ureka.play4change.core.currentHour
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ureka.play4change.core.BaseView
+import com.ureka.play4change.core.currentHour
 import com.ureka.play4change.design.Spacing
 import com.ureka.play4change.design.components.BadgeSize
-import com.ureka.play4change.design.components.DayDots
+import com.ureka.play4change.design.components.HeroCardShimmer
 import com.ureka.play4change.design.components.LogoSize
-import com.ureka.play4change.design.components.PointsDisplay
-import com.ureka.play4change.design.components.RoadmapView
 import com.ureka.play4change.design.components.StreakBadge
 import com.ureka.play4change.design.components.TaskCardShimmer
-import com.ureka.play4change.design.components.HeroCardShimmer
-import com.ureka.play4change.design.components.RoadmapNodeShimmer
 import com.ureka.play4change.design.components.UrekaLogo
-import com.ureka.play4change.design.components.XpBar
+import com.ureka.play4change.features.home.domain.model.PendingReviewSummary
+import com.ureka.play4change.features.home.domain.model.TaskSummary
 import com.ureka.play4change.features.home.presentation.DefaultHomeComponent
 import com.ureka.play4change.features.home.presentation.HomeEvents
 import kotlinx.coroutines.launch
@@ -69,19 +76,19 @@ import org.jetbrains.compose.resources.stringResource
 import play4change.composeapp.generated.resources.Res
 import play4change.composeapp.generated.resources.cancel
 import play4change.composeapp.generated.resources.home_completed_today
+import play4change.composeapp.generated.resources.home_daily_reviews
+import play4change.composeapp.generated.resources.home_task_generating
+import play4change.composeapp.generated.resources.home_enroll_prompt_body
+import play4change.composeapp.generated.resources.home_enroll_prompt_cta
+import play4change.composeapp.generated.resources.home_enroll_prompt_title
 import play4change.composeapp.generated.resources.home_greeting_afternoon
 import play4change.composeapp.generated.resources.home_greeting_evening
 import play4change.composeapp.generated.resources.home_greeting_morning
 import play4change.composeapp.generated.resources.home_greeting_night
 import play4change.composeapp.generated.resources.home_no_task
-import play4change.composeapp.generated.resources.home_enroll_prompt_body
-import play4change.composeapp.generated.resources.home_enroll_prompt_cta
-import play4change.composeapp.generated.resources.home_enroll_prompt_title
-import play4change.composeapp.generated.resources.home_daily_reviews
+import play4change.composeapp.generated.resources.home_pts_suffix
 import play4change.composeapp.generated.resources.home_review_cta
-import play4change.composeapp.generated.resources.home_roadmap
 import play4change.composeapp.generated.resources.home_start_challenge
-import play4change.composeapp.generated.resources.home_this_week
 import play4change.composeapp.generated.resources.home_todays_challenge
 import play4change.composeapp.generated.resources.nav_about
 import play4change.composeapp.generated.resources.nav_drawer_menu
@@ -202,7 +209,7 @@ fun HomeScreen(component: DefaultHomeComponent) {
             )
         }
 
-        // Enroll prompt dialog — shown once after load when user has no active enrollment
+        // Enroll prompt dialog
         if (state.showEnrollPrompt) {
             AlertDialog(
                 onDismissRequest = { onEvent(HomeEvents.DismissEnrollPrompt) },
@@ -246,214 +253,411 @@ fun HomeScreen(component: DefaultHomeComponent) {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(innerPadding)
-                        .padding(horizontal = Spacing.l),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(Spacing.l)
+                        .padding(innerPadding),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.m)
                 ) {
-                    item {
-                        // Hero card
 
-                        Spacer(Modifier.height(Spacing.xxl))
-                        ElevatedCard(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = MaterialTheme.shapes.extraLarge,
-                            colors = CardDefaults.elevatedCardColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer
-                            ),
-                            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
-                        ) {
-                            Column(Modifier.padding(Spacing.l)) {
-                                val greetingRes = remember {
-                                    val hour = currentHour()
-                                    when (hour) {
-                                        in 5..11  -> Res.string.home_greeting_morning
-                                        in 12..17 -> Res.string.home_greeting_afternoon
-                                        in 18..21 -> Res.string.home_greeting_evening
-                                        else      -> Res.string.home_greeting_night
-                                    }
-                                }
+                    // ── HERO ─────────────────────────────────────────────────────────
+                    item {
+                        val greetingRes = remember {
+                            val hour = currentHour()
+                            when (hour) {
+                                in 5..11  -> Res.string.home_greeting_morning
+                                in 12..17 -> Res.string.home_greeting_afternoon
+                                in 18..21 -> Res.string.home_greeting_evening
+                                else      -> Res.string.home_greeting_night
+                            }
+                        }
+                        val animatedPoints by animateIntAsState(
+                            targetValue = data.totalPoints,
+                            animationSpec = tween(durationMillis = 900),
+                            label = "points"
+                        )
+                        Column(modifier = Modifier.padding(horizontal = Spacing.l)) {
+                            Spacer(Modifier.height(Spacing.xl))
+
+                            // Greeting row with optional streak pill
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Text(
                                     text = stringResource(greetingRes, greetingName(data.userName)),
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    modifier = Modifier.weight(1f, fill = false)
                                 )
-                                Spacer(Modifier.height(Spacing.s))
-                                PointsDisplay(points = data.totalPoints)
-                                Spacer(Modifier.height(Spacing.xs))
-                                Text(
-                                    text = "Level ${data.level}",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                                Spacer(Modifier.height(Spacing.xs))
-                                XpBar(
-                                    progress = data.xpProgress,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                Spacer(Modifier.height(Spacing.m))
-                                Text(
-                                    text = stringResource(Res.string.home_this_week),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                                Spacer(Modifier.height(Spacing.xs))
-                                DayDots(weekProgress = data.weekProgress)
+                                if (data.streakDays > 0) {
+                                    Spacer(Modifier.width(Spacing.s))
+                                    StreakBadge(streakDays = data.streakDays, size = BadgeSize.Compact)
+                                }
                             }
-                        }
-                    }
 
-                    // One task card per enrolled topic
-                    items(data.todayTasks, key = { it.topicId }) { entry ->
-                        if (entry.completed) {
-                            ElevatedCard(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = MaterialTheme.shapes.large,
-                                colors = CardDefaults.elevatedCardColors(
-                                    containerColor = MaterialTheme.colorScheme.secondaryContainer
-                                )
+                            Spacer(Modifier.height(Spacing.l))
+
+                            // Score card — violet → teal gradient
+                            val scoreGradient = listOf(
+                                MaterialTheme.colorScheme.primaryContainer,
+                                MaterialTheme.colorScheme.secondaryContainer
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(MaterialTheme.shapes.extraLarge)
+                                    .background(brush = Brush.linearGradient(colors = scoreGradient))
+                                    .padding(horizontal = Spacing.xl, vertical = Spacing.xl)
                             ) {
-                                Row(
-                                    Modifier.padding(Spacing.l),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        Icons.Rounded.CheckCircle, null,
-                                        tint = MaterialTheme.colorScheme.secondary,
-                                        modifier = Modifier.size(24.dp)
+                                Column {
+                                    Text(
+                                        text = "Your score",
+                                        style = MaterialTheme.typography.labelMedium.copy(
+                                            letterSpacing = 0.8.sp
+                                        ),
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
                                     )
-                                    Spacer(Modifier.width(Spacing.xs))
-                                    Column {
-                                        if (entry.topicTitle.isNotEmpty()) {
-                                            Text(
-                                                entry.topicTitle,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
+                                    Spacer(Modifier.height(Spacing.xs))
+                                    Row(verticalAlignment = Alignment.Bottom) {
                                         Text(
-                                            stringResource(Res.string.home_completed_today),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                                            text = "$animatedPoints",
+                                            style = MaterialTheme.typography.displaySmall,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = MaterialTheme.colorScheme.tertiary
+                                        )
+                                        Spacer(Modifier.width(Spacing.xs))
+                                        Text(
+                                            text = stringResource(Res.string.home_pts_suffix),
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.padding(bottom = 6.dp)
                                         )
                                     }
                                 }
-                            }
-                        } else {
-                            entry.task?.let { task ->
-                                ElevatedCard(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = MaterialTheme.shapes.large,
-                                    colors = CardDefaults.elevatedCardColors(
-                                        containerColor = MaterialTheme.colorScheme.secondaryContainer
-                                    ),
-                                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 6.dp),
-                                    onClick = { onEvent(HomeEvents.StartTask(entry.topicId)) }
-                                ) {
-                                    Column(Modifier.padding(Spacing.l)) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            SuggestionChip(
-                                                onClick = {},
-                                                label = {
-                                                    Text(
-                                                        if (entry.topicTitle.isNotEmpty()) entry.topicTitle
-                                                        else stringResource(Res.string.home_todays_challenge),
-                                                        style = MaterialTheme.typography.labelSmall
-                                                    )
-                                                },
-                                                colors = SuggestionChipDefaults.suggestionChipColors(
-                                                    containerColor = MaterialTheme.colorScheme.secondary,
-                                                    labelColor = MaterialTheme.colorScheme.onSecondary
-                                                )
-                                            )
-                                            Spacer(Modifier.weight(1f))
-                                            Text(
-                                                "+${task.pointsReward} pts",
-                                                style = MaterialTheme.typography.titleMedium,
-                                                color = MaterialTheme.colorScheme.tertiary,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        }
-                                        Spacer(Modifier.height(Spacing.xs))
-                                        Text(
-                                            task.title,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                            maxLines = 2,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                        Spacer(Modifier.height(Spacing.m))
-                                        Button(
-                                            onClick = { onEvent(HomeEvents.StartTask(entry.topicId)) },
-                                            modifier = Modifier.fillMaxWidth(),
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = MaterialTheme.colorScheme.secondary
-                                            )
-                                        ) {
-                                            Text(
-                                                stringResource(Res.string.home_start_challenge),
-                                                style = MaterialTheme.typography.labelLarge
-                                            )
-                                        }
-                                    }
-                                }
+                                // Decorative star — semi-transparent watermark
+                                Text(
+                                    text = "⭐",
+                                    style = MaterialTheme.typography.displayMedium,
+                                    modifier = Modifier
+                                        .align(Alignment.CenterEnd)
+                                        .padding(end = Spacing.s)
+                                )
                             }
                         }
                     }
 
-                    // Daily Reviews section — only shown when there are pending reviews
+                    // ── TODAY'S CHALLENGES ────────────────────────────────────────────
+                    item {
+                        SectionHeader(
+                            title = "Today's challenges",
+                            modifier = Modifier.padding(horizontal = Spacing.l)
+                        )
+                    }
+
+                    items(data.todayTasks, key = { it.topicId }) { entry ->
+                        when {
+                            entry.completed -> CompletedTaskCard(
+                                topicTitle = entry.topicTitle,
+                                modifier = Modifier.padding(horizontal = Spacing.l)
+                            )
+                            entry.isGenerating -> GeneratingTaskCard(
+                                topicTitle = entry.topicTitle,
+                                modifier = Modifier.padding(horizontal = Spacing.l)
+                            )
+                            entry.task != null -> PendingTaskCard(
+                                task = entry.task,
+                                topicTitle = entry.topicTitle,
+                                onStart = { onEvent(HomeEvents.StartTask(entry.topicId)) },
+                                modifier = Modifier.padding(horizontal = Spacing.l)
+                            )
+                        }
+                    }
+
+                    // ── PEER REVIEWS (conditional) ────────────────────────────────────
                     if (data.pendingReviews.isNotEmpty()) {
                         item {
-                            SectionHeader(stringResource(Res.string.home_daily_reviews))
+                            SectionHeader(
+                                title = stringResource(Res.string.home_daily_reviews),
+                                modifier = Modifier.padding(horizontal = Spacing.l)
+                            )
                         }
                         items(data.pendingReviews, key = { it.reviewId }) { review ->
-                            ElevatedCard(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = MaterialTheme.shapes.large,
-                                colors = CardDefaults.elevatedCardColors(
-                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                                )
-                            ) {
-                                Row(
-                                    Modifier.padding(Spacing.m),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(Modifier.weight(1f)) {
-                                        if (review.topicTitle.isNotEmpty()) {
-                                            Text(
-                                                review.topicTitle,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onTertiaryContainer
-                                            )
-                                        }
-                                        Text(
-                                            stringResource(Res.string.home_review_cta),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onTertiaryContainer
-                                        )
-                                    }
-                                }
-                            }
+                            ReviewCard(
+                                review = review,
+                                modifier = Modifier.padding(horizontal = Spacing.l)
+                            )
                         }
-                    }
-
-                    item {
-                        SectionHeader(stringResource(Res.string.home_roadmap))
-                    }
-
-                    item {
-                        RoadmapView(
-                            nodes = data.roadmapNodes,
-                            onNodeClick = { node ->
-                                onEvent(HomeEvents.StartTask(node.topicId))
-                            }
-                        )
                     }
 
                     item { Spacer(Modifier.height(Spacing.xxl)) }
                 }
             }
         }
+    }
+}
+
+// ── Private card composables ──────────────────────────────────────────────────
+
+@Composable
+private fun PendingTaskCard(
+    task: TaskSummary,
+    topicTitle: String,
+    onStart: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    ElevatedCard(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        onClick = onStart
+    ) {
+        Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+            // Left accent bar in brand teal
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.secondary)
+            )
+            Column(modifier = Modifier.padding(Spacing.l)) {
+                // Topic + points reward
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (topicTitle.isNotEmpty()) topicTitle
+                               else stringResource(Res.string.home_todays_challenge),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Text(
+                        text = "+${task.pointsReward} pts",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+                Spacer(Modifier.height(Spacing.s))
+                Text(
+                    text = task.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(Spacing.m))
+                Button(
+                    onClick = onStart,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
+                    Text(
+                        text = stringResource(Res.string.home_start_challenge),
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                    Spacer(Modifier.weight(1f))
+                    Icon(
+                        Icons.AutoMirrored.Rounded.ArrowForward,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CompletedTaskCard(
+    topicTitle: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.secondary)
+            )
+            Row(
+                modifier = Modifier
+                    .padding(Spacing.l)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+            ) {
+                Icon(
+                    Icons.Rounded.CheckCircle,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.secondary
+                )
+                Column(Modifier.weight(1f)) {
+                    if (topicTitle.isNotEmpty()) {
+                        Text(
+                            text = topicTitle,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Text(
+                        text = stringResource(Res.string.home_completed_today),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GeneratingTaskCard(
+    topicTitle: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.outline)
+            )
+            Row(
+                modifier = Modifier
+                    .padding(Spacing.l)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Column(Modifier.weight(1f)) {
+                    if (topicTitle.isNotEmpty()) {
+                        Text(
+                            text = topicTitle,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Text(
+                        text = stringResource(Res.string.home_task_generating),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReviewCard(
+    review: PendingReviewSummary,
+    modifier: Modifier = Modifier
+) {
+    ElevatedCard(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+            // Left accent bar in brand amber
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.tertiary)
+            )
+            Row(
+                modifier = Modifier
+                    .padding(Spacing.l)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+            ) {
+                Icon(
+                    Icons.Rounded.RateReview,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.tertiary
+                )
+                Column(Modifier.weight(1f)) {
+                    if (review.topicTitle.isNotEmpty()) {
+                        Text(
+                            text = review.topicTitle,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Text(
+                        text = stringResource(Res.string.home_review_cta),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Icon(
+                    Icons.AutoMirrored.Rounded.ArrowForward,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+// ── Support composables ───────────────────────────────────────────────────────
+
+/**
+ * Section header with uppercase label + full-width trailing divider line.
+ */
+@Composable
+private fun SectionHeader(title: String, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = Spacing.s, bottom = Spacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+    ) {
+        Text(
+            text = title.uppercase(),
+            style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.2.sp),
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        HorizontalDivider(modifier = Modifier.weight(1f))
     }
 }
 
@@ -475,34 +679,21 @@ internal fun greetingName(userName: String): String {
 }
 
 @Composable
-private fun SectionHeader(title: String) {
-    Text(
-        title,
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = Spacing.m, bottom = Spacing.xs)
-    )
-}
-
-@Composable
 private fun HomeShimmer(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(Spacing.l),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .padding(horizontal = Spacing.l),
         verticalArrangement = Arrangement.spacedBy(Spacing.m)
     ) {
-        ElevatedCard(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge) {
-            HeroCardShimmer(Modifier.padding(Spacing.l))
-        }
+        Spacer(Modifier.height(Spacing.xl))
+        HeroCardShimmer(Modifier.padding(vertical = Spacing.s))
+        Spacer(Modifier.height(Spacing.xs))
         ElevatedCard(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
             TaskCardShimmer()
         }
-        repeat(3) {
-            RoadmapNodeShimmer(Modifier.padding(vertical = Spacing.xs))
+        ElevatedCard(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
+            TaskCardShimmer()
         }
     }
 }

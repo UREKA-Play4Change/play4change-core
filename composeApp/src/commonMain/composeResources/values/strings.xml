@@ -40,6 +40,7 @@
   <string name="home_enroll_prompt_cta">Explore topics</string>
   <string name="home_daily_reviews">Daily Reviews</string>
   <string name="home_review_cta">Review →</string>
+  <string name="home_task_generating">Your task is being prepared — check back in a moment.</string>
 
   <!-- Task -->
   <string name="task_question_label">Question</string>

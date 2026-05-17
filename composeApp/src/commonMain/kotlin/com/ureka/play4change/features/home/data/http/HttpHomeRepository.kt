@@ -139,12 +139,27 @@ class HttpHomeRepository(
                         completed = false
                     )
                 }
-                HttpStatusCode.NotFound -> TaskSummaryWithTopic(
+                // 202 Accepted: server is still generating the AI task content.
+                HttpStatusCode.Accepted -> TaskSummaryWithTopic(
                     topicId = topic.id,
                     topicTitle = topic.title,
                     task = null,
-                    completed = true
+                    completed = false,
+                    isGenerating = true
                 )
+                // 404 with X-Task-Available-At: today's assignment is submitted (server confirms this
+                // is an expected state, not a missing resource). Treat as completed.
+                // 404 without the header: enrollment/topic not found or other error — don't falsely
+                // show as completed; render nothing.
+                HttpStatusCode.NotFound -> {
+                    val hasAvailableAtHeader = taskResponse.headers["X-Task-Available-At"] != null
+                    TaskSummaryWithTopic(
+                        topicId = topic.id,
+                        topicTitle = topic.title,
+                        task = null,
+                        completed = hasAvailableAtHeader
+                    )
+                }
                 else -> TaskSummaryWithTopic(
                     topicId = topic.id,
                     topicTitle = topic.title,

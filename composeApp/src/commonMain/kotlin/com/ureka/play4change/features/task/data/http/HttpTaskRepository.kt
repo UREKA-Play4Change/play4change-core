@@ -41,6 +41,8 @@ private data class SubmitAnswerRequestDto(val selectedOption: Int)
 private data class SubmitResultDto(
     val isCorrect: Boolean,
     val pointsAwarded: Int,
+    val totalPoints: Int = 0,
+    val streakDays: Int = 0,
 )
 
 // ---------------------------------------------------------------------------
@@ -95,6 +97,11 @@ class HttpTaskRepository(
             setBody(SubmitAnswerRequestDto(selectedOption = selectedIndex))
         }
         val dto = json.decodeFromString<SubmitResultDto>(response.bodyAsText())
-        return SubmitResult(isCorrect = dto.isCorrect, pointsAwarded = dto.pointsAwarded)
+        return SubmitResult(
+            isCorrect = dto.isCorrect,
+            pointsAwarded = dto.pointsAwarded,
+            totalPoints = dto.totalPoints,
+            streakDays = dto.streakDays
+        )
     }
 }

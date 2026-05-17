@@ -43,6 +43,7 @@ data class TaskState(
     // Shared
     val submission: SubmissionState = SubmissionState.Idle,
     val pointsAwarded: Int = 0,
+    val totalPoints: Int = 0,
     val showHint: Boolean = false,
 
     // Back navigation is BLOCKED during an active quiz/task.

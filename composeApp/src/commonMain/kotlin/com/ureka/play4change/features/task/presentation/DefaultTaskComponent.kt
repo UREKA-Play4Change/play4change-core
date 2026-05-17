@@ -185,6 +185,7 @@ class DefaultTaskComponent(
                     submitted = true,
                     isCorrect = result.isCorrect,
                     pointsAwarded = result.pointsAwarded,
+                    totalPoints = result.totalPoints,
                     submission = SubmissionState.Resolved(result.isCorrect),
                     isBackBlocked = false
                 )
@@ -215,6 +216,7 @@ class DefaultTaskComponent(
                     quizSubmitted = true,
                     quizScore = score,
                     pointsAwarded = result.pointsAwarded,
+                    totalPoints = result.totalPoints,
                     submission = SubmissionState.Resolved(result.isCorrect),
                     isCorrect = result.isCorrect,
                     submitted = true,
@@ -233,6 +235,7 @@ class DefaultTaskComponent(
                 copy(
                     submission = SubmissionState.Resolved(result.isCorrect),
                     pointsAwarded = result.pointsAwarded,
+                    totalPoints = result.totalPoints,
                     isCorrect = result.isCorrect,
                     submitted = true,
                     isBackBlocked = false

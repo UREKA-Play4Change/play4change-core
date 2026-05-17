@@ -36,6 +36,7 @@
   <string name="home_enroll_prompt_cta">Explorer les sujets</string>
   <string name="home_daily_reviews">Révisions du Jour</string>
   <string name="home_review_cta">Réviser →</string>
+  <string name="home_task_generating">Votre défi est en cours de préparation — revenez dans un instant.</string>
 
   <!-- Task -->
   <string name="task_question_label">Question</string>

@@ -58,7 +58,8 @@ fun ResultOverlay(
     isCorrect: Boolean,
     pointsAwarded: Int,
     onContinue: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    totalPoints: Int = 0,
 ) {
     AnimatedVisibility(
         visible = visible,
@@ -106,6 +107,15 @@ fun ResultOverlay(
                         color = MaterialTheme.colorScheme.tertiary,
                         fontWeight = FontWeight.Bold
                     )
+                    if (totalPoints > 0) {
+                        Spacer(Modifier.height(Spacing.xs))
+                        val animatedTotal by animateIntAsState(totalPoints, tween(900), label = "total")
+                        Text(
+                            "Total: $animatedTotal pts",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(Spacing.xxl))
