@@ -1,5 +1,6 @@
 package com.ureka.play4change.application.topic
 
+import com.ureka.play4change.application.port.TopicEventPublisher
 import com.ureka.play4change.domain.topic.GenerationPhase
 import com.ureka.play4change.domain.topic.TopicPhaseLog
 import com.ureka.play4change.domain.topic.TopicPhaseLogRepository
@@ -22,7 +23,8 @@ import java.util.UUID
 @Service
 class PhaseTransitionService(
     private val topicRepository: TopicRepository,
-    private val phaseLogRepository: TopicPhaseLogRepository
+    private val phaseLogRepository: TopicPhaseLogRepository,
+    private val eventPublisher: TopicEventPublisher
 ) {
     private val log = LoggerFactory.getLogger(PhaseTransitionService::class.java)
 
@@ -46,5 +48,6 @@ class PhaseTransitionService(
         )
         topicRepository.updatePhase(topicId, toPhase, now)
         log.info("Topic {} phase: {} → {} ({}ms)", topicId, topic.currentPhase, toPhase, durationMs)
+        eventPublisher.phaseChanged(topicId, toPhase, durationMs)
     }
 }

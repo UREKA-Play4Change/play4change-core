@@ -12,6 +12,7 @@ import com.ureka.play4change.domain.topic.Topic
 import com.ureka.play4change.domain.topic.TopicPhaseLog
 import com.ureka.play4change.domain.topic.TopicStatus
 import com.ureka.play4change.infra.config.SecurityConfig
+import com.ureka.play4change.web.admin.SseTopicEventPublisher
 import com.ureka.play4change.web.admin.TopicController
 import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every
@@ -43,6 +44,9 @@ class TopicControllerPhaseTest {
 
     @MockkBean
     private lateinit var meterRegistry: MeterRegistry
+
+    @MockkBean
+    private lateinit var ssePublisher: SseTopicEventPublisher
 
     private fun adminAuth() = authentication(
         UsernamePasswordAuthenticationToken("admin-1", null, listOf(SimpleGrantedAuthority("ROLE_ADMIN")))

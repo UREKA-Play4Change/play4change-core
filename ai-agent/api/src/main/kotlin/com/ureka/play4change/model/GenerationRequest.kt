@@ -10,5 +10,6 @@ data class GenerationRequest(
     val language: String,            // ISO 639-1: "en", "pt", "fr"
     val taskCount: Int,
     val moduleObjective: String,     // what the module aims to teach
-    val existingEmbeddings: List<FloatArray> = emptyList() // for deduplication
+    val existingEmbeddings: List<FloatArray> = emptyList(), // for deduplication
+    val onTaskGenerated: ((completed: Int, total: Int) -> Unit)? = null
 )

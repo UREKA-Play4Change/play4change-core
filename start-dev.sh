@@ -7,7 +7,7 @@ fi
 echo "### Cleaning containers and volumes..."
 docker compose down -v
 
-echo "### Building a clean new project..."
+echo "### Building a new project..."
 docker compose up --build -d
 
 echo "### Starting Cloudflare tunnel..."

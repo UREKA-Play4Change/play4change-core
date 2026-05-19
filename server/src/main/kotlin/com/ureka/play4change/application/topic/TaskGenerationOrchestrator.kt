@@ -2,6 +2,7 @@ package com.ureka.play4change.application.topic
 
 import com.ureka.play4change.application.port.ContentExtractorPort
 import com.ureka.play4change.application.port.FileStoragePort
+import com.ureka.play4change.application.port.TopicEventPublisher
 import com.ureka.play4change.domain.topic.ContentSourceType
 import com.ureka.play4change.domain.topic.GenerationPhase
 import com.ureka.play4change.domain.topic.TaskTemplate
@@ -38,6 +39,7 @@ class TaskGenerationOrchestrator(
     private val taskGenerationPort: TaskGenerationPort,
     private val batchInstanceGenerationService: BatchInstanceGenerationService,
     private val phaseTransitionService: PhaseTransitionService,
+    private val eventPublisher: TopicEventPublisher,
     private val registry: MeterRegistry,
     @Value("\${ai.mistral.timeout-seconds:60}") private val timeoutSeconds: Long
 ) {
@@ -46,6 +48,7 @@ class TaskGenerationOrchestrator(
     @Async("generationExecutor")
     fun generateAsync(topicId: String) {
         val sample = Timer.start(registry)
+        val startMs = System.currentTimeMillis()
         try {
             // --- INGESTION phase: fetch/validate content ---
             topicRepository.updateStatus(topicId, TopicStatus.GENERATING)
@@ -95,7 +98,10 @@ class TaskGenerationOrchestrator(
                 audienceLevel = com.ureka.play4change.domain.AudienceLevel.valueOf(topic.audienceLevel.name),
                 language = topic.language,
                 taskCount = topic.taskCount,
-                moduleObjective = topic.description.take(500)
+                moduleObjective = topic.description.take(500),
+                onTaskGenerated = { completed, total ->
+                    eventPublisher.generationProgress(topicId, completed, total)
+                }
             )
 
             // ANALYSIS → GENERATION
@@ -112,6 +118,7 @@ class TaskGenerationOrchestrator(
                 log.error("Task generation timed out ({}s) for topic {}", timeoutSeconds, topicId)
                 phaseTransitionService.transitionTo(topicId, GenerationPhase.FAILED)
                 topicRepository.updateStatus(topicId, TopicStatus.FAILED)
+                eventPublisher.failed(topicId, "AI generation timed out after ${timeoutSeconds}s")
                 sample.stop(registry.timer("task_generation_duration_seconds", "status", "timeout"))
                 return
             }
@@ -121,6 +128,7 @@ class TaskGenerationOrchestrator(
                     log.error("Task generation returned error for topic {}: {}", topicId, error)
                     phaseTransitionService.transitionTo(topicId, GenerationPhase.FAILED)
                     topicRepository.updateStatus(topicId, TopicStatus.FAILED)
+                    eventPublisher.failed(topicId, "AI generation failed: ${error.javaClass.simpleName}")
                     sample.stop(registry.timer("task_generation_duration_seconds", "status", "failed"))
                 },
                 ifRight = { generationResult ->
@@ -160,10 +168,12 @@ class TaskGenerationOrchestrator(
                     // INDEXING → ACTIVE
                     phaseTransitionService.transitionTo(topicId, GenerationPhase.ACTIVE)
                     topicRepository.updateStatus(topicId, TopicStatus.ACTIVE)
+                    val totalMs = System.currentTimeMillis() - startMs
                     log.info(
-                        "Topic {} generation complete — {} task(s) created",
-                        topicId, templates.size
+                        "Topic {} generation complete — {} task(s) created in {}ms",
+                        topicId, templates.size, totalMs
                     )
+                    eventPublisher.completed(topicId, totalMs)
                     sample.stop(registry.timer("task_generation_duration_seconds", "status", "success"))
                 }
             )
@@ -171,6 +181,7 @@ class TaskGenerationOrchestrator(
             log.error("Unexpected error during task generation for topic {}: {}", topicId, ex.message, ex)
             phaseTransitionService.transitionTo(topicId, GenerationPhase.FAILED)
             topicRepository.updateStatus(topicId, TopicStatus.FAILED)
+            eventPublisher.failed(topicId, "Unexpected error: ${ex.message ?: ex.javaClass.simpleName}")
             sample.stop(registry.timer("task_generation_duration_seconds", "status", "failed"))
         }
     }
