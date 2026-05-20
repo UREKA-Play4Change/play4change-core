@@ -5,7 +5,7 @@ if [ -f .env ]; then
 fi
 
 echo "### Cleaning containers and volumes..."
-docker compose down -v
+#docker compose down -v
 
 echo "### Building a new project..."
 docker compose up --build -d
