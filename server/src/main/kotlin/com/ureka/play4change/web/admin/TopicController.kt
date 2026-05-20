@@ -88,7 +88,7 @@ class TopicController(
         val result = topicUseCase.listAll(status, page, size)
         return ResponseEntity.ok(
             PageResponse(
-                content = result.content.map { TopicResponse.from(it) },
+                content = result.content.map { detail -> TopicResponse.from(detail) },
                 page = result.page,
                 size = result.size,
                 totalElements = result.totalElements,

@@ -22,10 +22,10 @@ class UserTopicController(
         @AuthenticationPrincipal userId: String
     ): ResponseEntity<List<UserTopicResponse>> {
         val topics = topicUseCase.listAll(statusFilter = "ACTIVE", page = 0, size = 50).content
-        val responses = topics.map { topic ->
-            val isEnrolled = enrollmentUseCase.getEnrollment(userId, topic.id)
+        val responses = topics.map { detail ->
+            val isEnrolled = enrollmentUseCase.getEnrollment(userId, detail.topic.id)
                 .fold(ifLeft = { false }, ifRight = { it.status == EnrollmentStatus.ACTIVE })
-            UserTopicResponse.from(topic, isEnrolled)
+            UserTopicResponse.from(detail.topic, isEnrolled)
         }
         return ResponseEntity.ok(responses)
     }
