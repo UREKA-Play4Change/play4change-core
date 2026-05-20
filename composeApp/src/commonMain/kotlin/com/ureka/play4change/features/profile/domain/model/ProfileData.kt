@@ -9,8 +9,6 @@ data class ProfileData(
     val streakDays: Int,
     val totalPoints: Int,
     val accuracy: Float,
-    val level: Int,
-    val currentDay: Int,
-    val totalDays: Int,
+    val preferredLanguage: String = "en",
     val badges: List<Badge> = emptyList()
 )

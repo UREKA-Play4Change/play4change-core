@@ -1,9 +1,9 @@
 package com.ureka.play4change.features.profile.ui
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,13 +20,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,6 +43,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ureka.play4change.core.BaseView
@@ -44,7 +51,6 @@ import com.ureka.play4change.core.model.Badge
 import com.ureka.play4change.core.model.BadgeIconType
 import com.ureka.play4change.design.Spacing
 import com.ureka.play4change.design.components.ShimmerBox
-import com.ureka.play4change.design.components.XpBar
 import com.ureka.play4change.features.profile.presentation.DefaultProfileComponent
 import com.ureka.play4change.features.profile.presentation.ProfileEvents
 import org.jetbrains.compose.resources.stringResource
@@ -58,9 +64,15 @@ import play4change.composeapp.generated.resources.badge_streak_7
 import play4change.composeapp.generated.resources.badges_title
 import play4change.composeapp.generated.resources.cancel
 import play4change.composeapp.generated.resources.profile_accuracy_label
-import play4change.composeapp.generated.resources.profile_course_day
-import play4change.composeapp.generated.resources.profile_level_label
+import play4change.composeapp.generated.resources.profile_edit_name
+import play4change.composeapp.generated.resources.profile_language_english
+import play4change.composeapp.generated.resources.profile_language_label
+import play4change.composeapp.generated.resources.profile_language_portuguese
+import play4change.composeapp.generated.resources.profile_language_spanish
+import play4change.composeapp.generated.resources.profile_name_hint
 import play4change.composeapp.generated.resources.profile_points_label
+import play4change.composeapp.generated.resources.profile_preferences_section
+import play4change.composeapp.generated.resources.profile_save
 import play4change.composeapp.generated.resources.profile_streak_label
 import play4change.composeapp.generated.resources.profile_title
 import kotlin.math.roundToInt
@@ -85,6 +97,14 @@ fun ProfileScreen(component: DefaultProfileComponent) {
         }
     ) { state, _, innerPadding ->
 
+        if (state.languagePickerVisible) {
+            LanguagePickerDialog(
+                currentLanguage = state.profile?.preferredLanguage ?: "en",
+                onSelect = { component.onEvent(ProfileEvents.LanguageSelected(it)) },
+                onDismiss = { component.onEvent(ProfileEvents.DismissLanguagePicker) }
+            )
+        }
+
         if (state.isLoading) {
             Column(
                 modifier = Modifier
@@ -93,7 +113,7 @@ fun ProfileScreen(component: DefaultProfileComponent) {
                     .padding(Spacing.l),
                 verticalArrangement = Arrangement.spacedBy(Spacing.m)
             ) {
-                ShimmerBox(modifier = Modifier.fillMaxWidth().height(160.dp))
+                ShimmerBox(modifier = Modifier.fillMaxWidth().height(200.dp))
                 ShimmerBox(modifier = Modifier.fillMaxWidth().height(Spacing.xxxl))
                 ShimmerBox(modifier = Modifier.fillMaxWidth().height(Spacing.huge))
             }
@@ -111,7 +131,7 @@ fun ProfileScreen(component: DefaultProfileComponent) {
                     modifier = Modifier.fillMaxSize()
                 ) {
 
-                    // ── Gradient hero card ────────────────────────────────────
+                    // ── Gradient hero card ─────────────────────────────────────
                     item {
                         val heroGradient = listOf(
                             MaterialTheme.colorScheme.primaryContainer,
@@ -122,11 +142,6 @@ fun ProfileScreen(component: DefaultProfileComponent) {
                             animationSpec = tween(900),
                             label = "pts"
                         )
-                        val xpProgress by animateFloatAsState(
-                            targetValue = profile.currentDay.toFloat() / profile.totalDays.toFloat(),
-                            animationSpec = tween(800),
-                            label = "xp"
-                        )
 
                         Box(
                             modifier = Modifier
@@ -136,6 +151,69 @@ fun ProfileScreen(component: DefaultProfileComponent) {
                                 .padding(Spacing.xl)
                         ) {
                             Column {
+                                // Name / edit row
+                                if (state.isEditingName) {
+                                    OutlinedTextField(
+                                        value = state.nameInput,
+                                        onValueChange = {
+                                            component.onEvent(ProfileEvents.NameInputChanged(it))
+                                        },
+                                        label = { Text(stringResource(Res.string.profile_name_hint)) },
+                                        singleLine = true,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        enabled = !state.isSavingName
+                                    )
+                                    Spacer(Modifier.height(Spacing.s))
+                                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                                        TextButton(
+                                            onClick = { component.onEvent(ProfileEvents.CancelEditName) },
+                                            enabled = !state.isSavingName
+                                        ) {
+                                            Text(stringResource(Res.string.cancel))
+                                        }
+                                        TextButton(
+                                            onClick = { component.onEvent(ProfileEvents.SaveName) },
+                                            enabled = state.nameInput.trim().length >= 2 && !state.isSavingName
+                                        ) {
+                                            Text(stringResource(Res.string.profile_save))
+                                        }
+                                    }
+                                } else {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = profile.name,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Text(
+                                                text = profile.email,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                        IconButton(
+                                            onClick = { component.onEvent(ProfileEvents.EditName) }
+                                        ) {
+                                            Icon(
+                                                Icons.Rounded.Edit,
+                                                contentDescription = stringResource(Res.string.profile_edit_name),
+                                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Spacer(Modifier.height(Spacing.l))
+
                                 // Stats row
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
@@ -160,38 +238,65 @@ fun ProfileScreen(component: DefaultProfileComponent) {
                                         valueColor = MaterialTheme.colorScheme.secondary
                                     )
                                 }
-
-                                Spacer(Modifier.height(Spacing.l))
-
-                                // Level + XP bar
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = stringResource(Res.string.profile_level_label, profile.level),
-                                        style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 0.5.sp),
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                                    )
-                                    Text(
-                                        text = stringResource(
-                                            Res.string.profile_course_day,
-                                            profile.currentDay,
-                                            profile.totalDays
-                                        ),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
-                                    )
-                                }
-                                Spacer(Modifier.height(Spacing.xs))
-                                XpBar(progress = xpProgress, modifier = Modifier.fillMaxWidth())
                             }
                         }
                     }
 
-                    // ── Badges section ────────────────────────────────────────
+                    // ── Preferences section ────────────────────────────────────
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = Spacing.xs),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.profile_preferences_section).uppercase(),
+                                style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.2.sp),
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            HorizontalDivider(modifier = Modifier.weight(1f))
+                        }
+                    }
+
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(MaterialTheme.shapes.medium)
+                                .clickable { component.onEvent(ProfileEvents.ShowLanguagePicker) }
+                                .padding(vertical = Spacing.m, horizontal = Spacing.s),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("🌐", style = MaterialTheme.typography.titleMedium)
+                            Spacer(Modifier.size(Spacing.m))
+                            Text(
+                                text = stringResource(Res.string.profile_language_label),
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = languageDisplayName(
+                                    profile.preferredLanguage,
+                                    stringResource(Res.string.profile_language_english),
+                                    stringResource(Res.string.profile_language_portuguese),
+                                    stringResource(Res.string.profile_language_spanish)
+                                ),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(Modifier.size(Spacing.xs))
+                            Icon(
+                                Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    // ── Badges section ─────────────────────────────────────────
                     if (profile.badges.isNotEmpty()) {
                         item {
                             Row(
@@ -230,6 +335,55 @@ fun ProfileScreen(component: DefaultProfileComponent) {
             }
         }
     }
+}
+
+@Composable
+private fun LanguagePickerDialog(
+    currentLanguage: String,
+    onSelect: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val english = stringResource(Res.string.profile_language_english)
+    val portuguese = stringResource(Res.string.profile_language_portuguese)
+    val spanish = stringResource(Res.string.profile_language_spanish)
+    val languages = listOf("en" to english, "pt-PT" to portuguese, "es-ES" to spanish)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.profile_language_label)) },
+        text = {
+            Column {
+                languages.forEach { (code, label) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(code) }
+                            .padding(vertical = Spacing.xs),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = code == currentLanguage,
+                            onClick = { onSelect(code) }
+                        )
+                        Text(label, style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+            }
+        },
+        confirmButton = {}
+    )
+}
+
+private fun languageDisplayName(
+    code: String,
+    english: String,
+    portuguese: String,
+    spanish: String
+): String = when (code) {
+    "en" -> english
+    "pt-PT" -> portuguese
+    "es-ES" -> spanish
+    else -> code
 }
 
 @Composable

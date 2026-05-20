@@ -7,5 +7,9 @@ import com.ureka.play4change.features.profile.domain.model.ProfileData
 data class ProfileState(
     override val isLoading: Boolean = true,
     override val error: AppError? = null,
-    val profile: ProfileData? = null
+    val profile: ProfileData? = null,
+    val isEditingName: Boolean = false,
+    val nameInput: String = "",
+    val isSavingName: Boolean = false,
+    val languagePickerVisible: Boolean = false
 ) : ComponentState

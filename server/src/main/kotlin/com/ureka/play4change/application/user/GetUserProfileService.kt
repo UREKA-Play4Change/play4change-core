@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.ureka.play4change.application.port.EnrollmentUseCase
-import com.ureka.play4change.application.port.TopicUseCase
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
 import com.ureka.play4change.domain.identity.UserRepository
 import com.ureka.play4change.error.AppError
@@ -15,8 +14,7 @@ import org.springframework.stereotype.Service
 class GetUserProfileService(
     private val userRepository: UserRepository,
     private val enrollmentUseCase: EnrollmentUseCase,
-    private val enrollmentRepository: EnrollmentRepository,
-    private val topicUseCase: TopicUseCase
+    private val enrollmentRepository: EnrollmentRepository
 ) : GetUserProfileUseCase {
 
     override fun execute(userId: String): Either<AppError, UserProfile> {
@@ -27,10 +25,6 @@ class GetUserProfileService(
 
         val totalPoints = enrollment?.totalPointsEarned ?: 0
         val streakDays = enrollment?.streakDays ?: 0
-        val currentDay = if (enrollment != null) enrollment.currentDayIndex + 1 else 0
-        val totalDays = enrollment?.let {
-            topicUseCase.getById(it.topicId).fold(ifLeft = { 0 }, ifRight = { t -> t.taskCount })
-        } ?: 0
 
         val accuracy = enrollment?.let { e ->
             val assignments = enrollmentRepository.findAssignmentsByEnrollmentId(e.id)
@@ -39,8 +33,6 @@ class GetUserProfileService(
             else submitted.count { it.isCorrect == true }.toFloat() / submitted.size.toFloat()
         } ?: 0.0f
 
-        val level = totalPoints / POINTS_PER_LEVEL + 1
-
         return UserProfile(
             userId = user.id,
             name = user.name ?: user.email,
@@ -48,13 +40,7 @@ class GetUserProfileService(
             streakDays = streakDays,
             totalPoints = totalPoints,
             accuracy = accuracy,
-            level = level,
-            currentDay = currentDay,
-            totalDays = totalDays
+            preferredLanguage = user.preferredLanguage
         ).right()
-    }
-
-    companion object {
-        private const val POINTS_PER_LEVEL = 100
     }
 }

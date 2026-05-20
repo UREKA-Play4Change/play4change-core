@@ -9,9 +9,7 @@ data class UserProfileResponse(
     val streakDays: Int,
     val totalPoints: Int,
     val accuracy: Float,
-    val level: Int,
-    val currentDay: Int,
-    val totalDays: Int
+    val preferredLanguage: String
 ) {
     companion object {
         fun from(profile: UserProfile) = UserProfileResponse(
@@ -21,9 +19,7 @@ data class UserProfileResponse(
             streakDays = profile.streakDays,
             totalPoints = profile.totalPoints,
             accuracy = profile.accuracy,
-            level = profile.level,
-            currentDay = profile.currentDay,
-            totalDays = profile.totalDays
+            preferredLanguage = profile.preferredLanguage
         )
     }
 }
