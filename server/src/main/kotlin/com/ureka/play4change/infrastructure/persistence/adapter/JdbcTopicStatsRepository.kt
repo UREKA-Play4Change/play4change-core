@@ -70,6 +70,7 @@ class JdbcTopicStatsRepository(private val jdbc: JdbcTemplate) : TopicStatsRepos
         if (topicIds.isEmpty()) return emptyMap()
         return jdbc.query(
             batchSql(topicIds.size),
+            topicIds.toTypedArray(),
             { rs, _ ->
                 rs.getString("topic_id") to TopicStats(
                     enrolledUsers = rs.getInt("enrolled_users"),
@@ -77,8 +78,7 @@ class JdbcTopicStatsRepository(private val jdbc: JdbcTemplate) : TopicStatsRepos
                     averageScore = rs.getDouble("average_score"),
                     activeUsers = rs.getInt("active_users")
                 )
-            },
-            *topicIds.toTypedArray()
+            }
         ).toMap()
     }
 }
