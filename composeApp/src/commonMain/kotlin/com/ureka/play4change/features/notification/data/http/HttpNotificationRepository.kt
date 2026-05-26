@@ -15,7 +15,7 @@ class HttpNotificationRepository(private val client: HttpClient) : NotificationR
 
     override suspend fun registerDeviceToken(token: String, platform: String) {
         runCatching {
-            client.post("/notifications/device-token") {
+            client.post("notifications/device-token") {
                 contentType(ContentType.Application.Json)
                 setBody(RegisterDeviceTokenRequest(token, platform))
             }
