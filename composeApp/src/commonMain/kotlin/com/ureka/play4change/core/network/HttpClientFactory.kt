@@ -113,7 +113,7 @@ object HttpClientFactory {
         }
 
         defaultRequest {
-            url(networkConfig.baseUrl)
+            url("${networkConfig.baseUrl.trimEnd('/')}/")
             header("X-Request-ID", Uuid.random().toString())
         }
     }
