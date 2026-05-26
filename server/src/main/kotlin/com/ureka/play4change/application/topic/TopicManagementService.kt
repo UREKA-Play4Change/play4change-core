@@ -172,25 +172,25 @@ class TopicManagementService(
     }
 
     override fun listAll(statusFilter: String?, page: Int, size: Int): PageResult<TopicDetail> {
-        val page = if (statusFilter != null) {
+        val pageResult = if (statusFilter != null) {
             val status = TopicStatus.valueOf(statusFilter.uppercase())
             topicRepository.findByStatus(status, page, size)
         } else {
             topicRepository.findAll(page, size)
         }
-        val activeIds = page.content.filter { it.status == TopicStatus.ACTIVE }.map { it.id }
+        val activeIds = pageResult.content.filter { it.status == TopicStatus.ACTIVE }.map { it.id }
         val statsMap: Map<String, TopicStats> = if (activeIds.isNotEmpty()) {
             val fetched = statsRepository.getForTopics(activeIds)
             activeIds.associateWith { id -> fetched[id] ?: TopicStats(0, 0.0, 0.0, 0) }
         } else emptyMap()
         return PageResult(
-            content = page.content.map { topic ->
+            content = pageResult.content.map { topic ->
                 TopicDetail(topic = topic, generationLog = emptyList(), stats = statsMap[topic.id])
             },
-            page = page.page,
-            size = page.size,
-            totalElements = page.totalElements,
-            totalPages = page.totalPages
+            page = pageResult.page,
+            size = pageResult.size,
+            totalElements = pageResult.totalElements,
+            totalPages = pageResult.totalPages
         )
     }
 
