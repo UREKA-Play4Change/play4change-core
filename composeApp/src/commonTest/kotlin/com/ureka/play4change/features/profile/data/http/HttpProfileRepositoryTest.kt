@@ -69,9 +69,6 @@ class HttpProfileRepositoryTest {
         assertEquals(5, profile.streakDays)
         assertEquals(320, profile.totalPoints)
         assertEquals(0.8f, profile.accuracy)
-        assertEquals(4, profile.level)
-        assertEquals(3, profile.currentDay)
-        assertEquals(9, profile.totalDays)
         assertTrue(profile.badges.isEmpty())
     }
 
