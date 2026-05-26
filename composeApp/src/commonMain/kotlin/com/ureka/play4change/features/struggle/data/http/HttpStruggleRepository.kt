@@ -58,7 +58,7 @@ class HttpStruggleRepository(
     private val json = Json { ignoreUnknownKeys = true }
 
     override suspend fun getSession(enrollmentId: String): StruggleSession? {
-        val response = client.get("/struggle/enrollment/$enrollmentId")
+        val response = client.get("struggle/enrollment/$enrollmentId")
         if (response.status == HttpStatusCode.NotFound) return null
         val dto = json.decodeFromString<StruggleSessionDto>(response.bodyAsText())
         return dto.toSession()
@@ -69,7 +69,7 @@ class HttpStruggleRepository(
         taskId: String,
         selectedOption: Int
     ): AdaptiveSubmitResult {
-        val response = client.post("/struggle/$sessionId/tasks/$taskId/submit") {
+        val response = client.post("struggle/$sessionId/tasks/$taskId/submit") {
             contentType(ContentType.Application.Json)
             setBody(SubmitAdaptiveTaskRequestDto(selectedOption))
         }
