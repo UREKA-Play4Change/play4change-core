@@ -62,26 +62,26 @@ class HttpProfileRepository(
     private val json = Json { ignoreUnknownKeys = true }
 
     override suspend fun getProfile(userId: String): ProfileData {
-        val profileResponse = client.get("/profile")
-        val badgesResponse = client.get("/profile/badges")
+        val profileResponse = client.get("profile")
+        val badgesResponse = client.get("profile/badges")
         val dto = json.decodeFromString<UserProfileDto>(profileResponse.bodyAsText())
         val badgeDtos = json.decodeFromString<List<UserBadgeDto>>(badgesResponse.bodyAsText())
         return dto.toProfileData(badgeDtos.map { it.toBadge() })
     }
 
     override suspend fun updateName(name: String): ProfileData {
-        val updateResponse = client.patch("/profile") {
+        val updateResponse = client.patch("profile") {
             contentType(ContentType.Application.Json)
             setBody(UpdateNameRequestDto(name))
         }
-        val badgesResponse = client.get("/profile/badges")
+        val badgesResponse = client.get("profile/badges")
         val dto = json.decodeFromString<UserProfileDto>(updateResponse.bodyAsText())
         val badgeDtos = json.decodeFromString<List<UserBadgeDto>>(badgesResponse.bodyAsText())
         return dto.toProfileData(badgeDtos.map { it.toBadge() })
     }
 
     override suspend fun updatePreferences(language: String) {
-        client.put("/profile/preferences") {
+        client.put("profile/preferences") {
             contentType(ContentType.Application.Json)
             setBody(UpdatePreferencesRequestDto(language))
         }
@@ -92,7 +92,7 @@ class HttpProfileRepository(
         tokenStorage.clear()
         if (refreshToken != null) {
             runCatching {
-                client.post("/auth/logout") {
+                client.post("auth/logout") {
                     contentType(ContentType.Application.Json)
                     setBody(LogoutRequestDto(refreshToken))
                 }
