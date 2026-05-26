@@ -217,14 +217,17 @@ private fun TopicCard(topic: Topic, onEnroll: () -> Unit, onLeave: () -> Unit) {
                 )
                 Spacer(Modifier.height(Spacing.m))
                 if (topic.isActive) {
-                    TextButton(
+                    Button(
                         onClick = onLeave,
-                        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp)
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
                     ) {
                         Text(
                             text = stringResource(Res.string.explore_leave),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.error
+                            style = MaterialTheme.typography.labelLarge
                         )
                     }
                 } else {
