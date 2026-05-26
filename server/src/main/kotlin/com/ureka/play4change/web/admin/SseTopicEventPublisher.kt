@@ -6,6 +6,7 @@ import com.ureka.play4change.domain.topic.GenerationPhase
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
+import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -24,12 +25,16 @@ class SseTopicEventPublisher(
     private val objectMapper: ObjectMapper
 ) : TopicEventPublisher {
 
+    companion object {
+        private const val TEN_MINUTES_MS = 10 * 60 * 1000L
+    }
+
     private val log = LoggerFactory.getLogger(SseTopicEventPublisher::class.java)
     private val emitters = ConcurrentHashMap<String, SseEmitter>()
 
     /** Called from [TopicController] when the admin opens the SSE stream. */
     fun register(topicId: String): SseEmitter {
-        val emitter = SseEmitter(10 * 60 * 1000L) // 10-minute ceiling
+        val emitter = SseEmitter(TEN_MINUTES_MS)
         emitters.put(topicId, emitter)?.complete() // close any stale emitter
         emitter.onCompletion { emitters.remove(topicId, emitter) }
         emitter.onTimeout { emitters.remove(topicId, emitter) }
@@ -61,7 +66,7 @@ class SseTopicEventPublisher(
                     .name(eventName)
                     .data(objectMapper.writeValueAsString(data))
             )
-        } catch (ex: Exception) {
+        } catch (ex: IOException) {
             log.debug("SSE send to topic {} dropped — client likely disconnected: {}", topicId, ex.message)
             emitters.remove(topicId, emitter)
         }
