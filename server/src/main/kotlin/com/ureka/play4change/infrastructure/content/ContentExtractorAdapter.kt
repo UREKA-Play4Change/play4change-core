@@ -32,7 +32,7 @@ class ContentExtractorAdapter : ContentExtractorPort {
         val html = response ?: throw IllegalStateException("Empty response from $url")
         val doc = Jsoup.parse(html, url)
         doc.select("script, style, nav, footer, header, aside, noscript").remove()
-        val text = doc.body().text().trim()
+        val text = doc.body().text().trim().replace("\u0000", "")
         log.debug("Extracted {} chars from URL {}", text.length, url)
         return text
     }
@@ -40,7 +40,7 @@ class ContentExtractorAdapter : ContentExtractorPort {
     override fun extractFromPdf(pdfBytes: ByteArray): String {
         return Loader.loadPDF(pdfBytes).use { doc ->
             val stripper = PDFTextStripper()
-            val text = stripper.getText(doc).trim()
+            val text = stripper.getText(doc).trim().replace("\u0000", "")
             log.debug("Extracted {} chars from PDF ({} pages)", text.length, doc.getNumberOfPages())
             text
         }
