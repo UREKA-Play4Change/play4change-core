@@ -30,9 +30,9 @@ private data class UserProfileDto(
     val name: String,
     val streakDays: Int,
     val totalPoints: Int,
-    val level: Int,
-    val currentDay: Int,
-    val totalDays: Int
+    val level: Int = 1,
+    val currentDay: Int = 0,
+    val totalDays: Int = 0
 )
 
 @Serializable
@@ -78,7 +78,7 @@ class HttpHomeRepository(
     private val json = Json { ignoreUnknownKeys = true }
 
     override suspend fun getHomeData(userId: String): HomeData {
-        val profileResponse = client.get("/profile")
+        val profileResponse = client.get("profile")
         if (profileResponse.status.value !in 200..299) {
             throw NetworkException(networkErrorFromStatus(profileResponse.status.value))
         }
@@ -88,7 +88,7 @@ class HttpHomeRepository(
         var pendingReviews: List<PendingReviewSummary> = emptyList()
         var isEnrolled = false
         try {
-            val topicsResponse = client.get("/topics")
+            val topicsResponse = client.get("topics")
             val topics = json.decodeFromString<List<TopicSummaryDto>>(topicsResponse.bodyAsText())
             val enrolledTopics = topics.filter { it.isEnrolled }
             isEnrolled = enrolledTopics.isNotEmpty()
@@ -123,7 +123,7 @@ class HttpHomeRepository(
 
     private suspend fun fetchTodayTask(topic: TopicSummaryDto): TaskSummaryWithTopic {
         return try {
-            val taskResponse = client.get("/tasks/today") {
+            val taskResponse = client.get("tasks/today") {
                 parameter("topicId", topic.id)
                 header("X-Timezone", TimeZone.currentSystemDefault().id)
             }
@@ -177,7 +177,7 @@ class HttpHomeRepository(
 
     private suspend fun fetchPendingReviews(topic: TopicSummaryDto): List<PendingReviewSummary> {
         return try {
-            val response = client.get("/reviews/pending") {
+            val response = client.get("reviews/pending") {
                 parameter("topicId", topic.id)
             }
             if (response.status.value !in 200..299) return emptyList()
