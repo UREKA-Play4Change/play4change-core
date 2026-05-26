@@ -78,7 +78,7 @@ class HttpTaskRepository(
     private val json = Json { ignoreUnknownKeys = true }
 
     override suspend fun getTask(userTaskId: String): TaskDetail {
-        val response = client.get("/tasks/today") {
+        val response = client.get("tasks/today") {
             parameter("topicId", userTaskId)
             header("X-Timezone", TimeZone.currentSystemDefault().id)
         }
@@ -107,7 +107,7 @@ class HttpTaskRepository(
     }
 
     override suspend fun submitAnswer(userTaskId: String, selectedIndex: Int): SubmitResult {
-        val response = client.post("/tasks/$userTaskId/submit") {
+        val response = client.post("tasks/$userTaskId/submit") {
             contentType(ContentType.Application.Json)
             setBody(SubmitAnswerRequestDto(selectedOption = selectedIndex))
             header("X-Timezone", TimeZone.currentSystemDefault().id)
@@ -125,7 +125,7 @@ class HttpTaskRepository(
     override suspend fun uploadPhoto(localPath: String): String {
         val bytes = readPhotoBytes(localPath)
             ?: throw NetworkException(NetworkError.Unknown("Could not read photo file"))
-        val response = client.post("/media/photo") {
+        val response = client.post("media/photo") {
             setBody(MultiPartFormDataContent(formData {
                 append("photo", bytes, Headers.build {
                     append(HttpHeaders.ContentType, "image/jpeg")
@@ -140,7 +140,7 @@ class HttpTaskRepository(
     }
 
     override suspend fun submitPhoto(taskId: String, photoUrl: String): SubmitResult {
-        val response = client.post("/tasks/$taskId/submit-photo") {
+        val response = client.post("tasks/$taskId/submit-photo") {
             contentType(ContentType.Application.Json)
             setBody(SubmitPhotoRequestDto(photoUrl = photoUrl))
             header("X-Timezone", TimeZone.currentSystemDefault().id)
