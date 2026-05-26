@@ -60,7 +60,7 @@ class HttpAuthRepository(
 ) : AuthRepository {
 
     override suspend fun sendMagicLink(email: String): MagicLinkResult {
-        val response = client.post("/auth/magic-link") {
+        val response = client.post("auth/magic-link") {
             contentType(ContentType.Application.Json)
             setBody(MagicLinkRequestBody(email))
         }
@@ -68,7 +68,7 @@ class HttpAuthRepository(
     }
 
     override suspend fun verifyMagicLink(token: String): AuthResult? {
-        val response = client.post("/auth/magic-link/verify") {
+        val response = client.post("auth/magic-link/verify") {
             contentType(ContentType.Application.Json)
             setBody(MagicLinkVerifyBody(token))
         }
@@ -91,7 +91,7 @@ class HttpAuthRepository(
 
     override suspend fun socialLogin(provider: SocialProvider, idToken: String): AuthResult? {
         if (idToken.isBlank()) return null
-        val response = client.post("/auth/oauth") {
+        val response = client.post("auth/oauth") {
             contentType(ContentType.Application.Json)
             setBody(OAuthRequestBody(provider.toAuthProvider(), idToken))
         }
@@ -102,7 +102,7 @@ class HttpAuthRepository(
     }
 
     override suspend fun refresh(refreshToken: String): AuthResult? {
-        val response = client.post("/auth/refresh") {
+        val response = client.post("auth/refresh") {
             contentType(ContentType.Application.Json)
             setBody(RefreshRequestBody(refreshToken))
         }
@@ -124,7 +124,7 @@ class HttpAuthRepository(
         tokenStorage.clear()
         if (refreshToken != null) {
             runCatching {
-                client.post("/auth/logout") {
+                client.post("auth/logout") {
                     contentType(ContentType.Application.Json)
                     setBody(RefreshRequestBody(refreshToken))
                 }
