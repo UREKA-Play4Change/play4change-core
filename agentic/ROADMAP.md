@@ -106,7 +106,7 @@ shows cache warm-up when device is plugged in and on WiFi.
 
 ## Phase 06 — Admin Web: Full Feature Parity
 
-**Status:** `PENDING`
+**Status:** `IN PROGRESS`
 **Phase file:** [phases/phase-06-admin-web.md](phases/phase-06-admin-web.md)
 
 **Goal:** React admin web covers all server admin endpoints — topic creation (URL+PDF),
