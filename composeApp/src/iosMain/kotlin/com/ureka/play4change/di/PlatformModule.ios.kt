@@ -7,7 +7,6 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 
 actual val platformModule: Module = module {
-    // iOS simulator connects to host machine via localhost; real device needs the LAN IP.
-    single { NetworkConfig("http://localhost:8080") }
+    single { NetworkConfig("https://radesh-govind.com/play4change-server") }
     single<TokenStorage> { KeychainTokenStorage() }
 }

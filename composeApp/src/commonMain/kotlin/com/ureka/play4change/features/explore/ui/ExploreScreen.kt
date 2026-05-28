@@ -4,9 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,15 +17,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,9 +36,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ureka.play4change.core.BaseView
 import com.ureka.play4change.design.Spacing
 import com.ureka.play4change.design.components.ShimmerBox
@@ -83,14 +87,14 @@ fun ExploreScreen(component: DefaultExploreComponent) {
                 verticalArrangement = Arrangement.spacedBy(Spacing.m)
             ) {
                 repeat(4) {
-                    ShimmerBox(modifier = Modifier.fillMaxWidth().height(96.dp))
+                    ShimmerBox(modifier = Modifier.fillMaxWidth().height(112.dp))
                 }
             }
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
                 contentPadding = PaddingValues(Spacing.l),
-                verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                verticalArrangement = Arrangement.spacedBy(Spacing.m)
             ) {
                 item {
                     Text(
@@ -98,7 +102,9 @@ fun ExploreScreen(component: DefaultExploreComponent) {
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Spacer(Modifier.height(Spacing.m))
+                    Spacer(Modifier.height(Spacing.xs))
+                    HorizontalDivider()
+                    Spacer(Modifier.height(Spacing.xs))
                 }
                 items(state.topics) { topic ->
                     TopicCard(
@@ -158,43 +164,86 @@ fun ExploreScreen(component: DefaultExploreComponent) {
 private fun TopicCard(topic: Topic, onEnroll: () -> Unit, onLeave: () -> Unit) {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.elevatedCardElevation(
+            defaultElevation = if (topic.isActive) 3.dp else 1.dp
+        )
     ) {
-        Row(
-            Modifier.padding(Spacing.m),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+            // Left accent: teal if enrolled, muted outline if not
             Box(
-                Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(topicEmoji(topic.iconType), style = MaterialTheme.typography.titleMedium)
-            }
-            Spacer(Modifier.width(Spacing.m))
-            Column(Modifier.weight(1f)) {
-                Text(topic.title, style = MaterialTheme.typography.titleMedium)
+                modifier = Modifier
+                    .width(4.dp)
+                    .fillMaxHeight()
+                    .background(
+                        if (topic.isActive) MaterialTheme.colorScheme.secondary
+                        else MaterialTheme.colorScheme.outlineVariant
+                    )
+            )
+            Column(modifier = Modifier.padding(Spacing.l)) {
+                // Title + emoji + active badge
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                ) {
+                    Text(
+                        text = topicEmoji(topic.iconType),
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text(
+                        text = topic.title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (topic.isActive) {
+                        Text(
+                            text = "Active",
+                            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.5.sp),
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    }
+                }
+                Spacer(Modifier.height(Spacing.xs))
                 Text(
-                    topic.description,
+                    text = topic.description,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-            }
-            Spacer(Modifier.width(Spacing.xs))
-            if (topic.isActive) {
-                TextButton(onClick = onLeave) {
-                    Text(
-                        stringResource(Res.string.explore_leave),
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            } else {
-                FilledTonalButton(onClick = onEnroll) {
-                    Text(stringResource(Res.string.explore_join))
+                Spacer(Modifier.height(Spacing.m))
+                if (topic.isActive) {
+                    Button(
+                        onClick = onLeave,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.explore_leave),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+                } else {
+                    Button(
+                        onClick = onEnroll,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.explore_join),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
                 }
             }
         }

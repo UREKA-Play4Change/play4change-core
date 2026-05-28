@@ -30,7 +30,9 @@ data class TaskSummaryWithTopic(
     /** Null when the task is still generating or unavailable. */
     val task: TaskSummary?,
     /** True when the learner already submitted their answer today. */
-    val completed: Boolean
+    val completed: Boolean,
+    /** True when the server returned 202 — AI generation is in progress. */
+    val isGenerating: Boolean = false
 )
 
 data class TaskSummary(

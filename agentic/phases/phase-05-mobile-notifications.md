@@ -1,6 +1,6 @@
 # Phase 05 — Mobile Client: Notifications & Smart Fetching
 
-**Status:** `PENDING`
+**Status:** `IN PROGRESS`
 **Goal:** Push notifications for daily task reminders at 8 PM user local time if task not done,
 WorkManager background fetch with battery/connectivity constraints, cache warm-up on
 charging + good WiFi.
@@ -12,7 +12,7 @@ charging + good WiFi.
 ## Tasks
 
 ### Task 5.1 — Push notification setup (FCM + APNs + device token registration)
-- [ ] **What:** Set up Firebase Cloud Messaging (FCM) for Android and Apple Push Notification
+- [x] **What:** Set up Firebase Cloud Messaging (FCM) for Android and Apple Push Notification
       service (APNs) for iOS. Add a server endpoint to register device tokens.
 - **Design constraints:**
   - **Android (FCM):**

@@ -4,21 +4,28 @@ import com.ureka.play4change.application.port.CreatePdfTopicCommand
 import com.ureka.play4change.application.port.CreateUrlTopicCommand
 import com.ureka.play4change.application.port.TopicUseCase
 import com.ureka.play4change.domain.topic.AudienceLevel
+import com.ureka.play4change.domain.topic.TopicStatus
 import com.ureka.play4change.error.AppError
 import com.ureka.play4change.web.admin.dto.CreatePdfTopicRequest
 import com.ureka.play4change.web.admin.dto.CreateUrlTopicRequest
 import com.ureka.play4change.web.admin.dto.PageResponse
 import com.ureka.play4change.web.admin.dto.TopicResponse
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.time.OffsetDateTime
 
 @RestController
 @RequestMapping("/admin/topics")
-class TopicController(private val topicUseCase: TopicUseCase) {
+class TopicController(
+    private val topicUseCase: TopicUseCase,
+    private val ssePublisher: SseTopicEventPublisher
+) {
 
     @PostMapping
     fun createFromUrl(
@@ -81,7 +88,7 @@ class TopicController(private val topicUseCase: TopicUseCase) {
         val result = topicUseCase.listAll(status, page, size)
         return ResponseEntity.ok(
             PageResponse(
-                content = result.content.map { TopicResponse.from(it) },
+                content = result.content.map { detail -> TopicResponse.from(detail) },
                 page = result.page,
                 size = result.size,
                 totalElements = result.totalElements,
@@ -96,6 +103,27 @@ class TopicController(private val topicUseCase: TopicUseCase) {
             ifLeft = { it.toErrorResponse() },
             ifRight = { ResponseEntity.ok(TopicResponse.from(it)) }
         )
+
+    @GetMapping("/{id}/progress", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
+    fun streamProgress(
+        @PathVariable id: String,
+        response: HttpServletResponse
+    ): SseEmitter {
+        response.setHeader("X-Accel-Buffering", "no")
+        response.setHeader("Cache-Control", "no-cache")
+        val emitter = ssePublisher.register(id)
+        topicUseCase.getByIdWithLog(id).fold(
+            ifLeft = { ssePublisher.failed(id, "Topic not found") },
+            ifRight = { detail ->
+                when (detail.topic.status) {
+                    TopicStatus.ACTIVE -> ssePublisher.completed(id, 0)
+                    TopicStatus.FAILED -> ssePublisher.failed(id, "Generation failed")
+                    else -> { /* pipeline running — orchestrator drives events */ }
+                }
+            }
+        )
+        return emitter
+    }
 
     @PostMapping("/{id}/regenerate")
     fun regenerate(

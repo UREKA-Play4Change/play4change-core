@@ -36,6 +36,9 @@
   <string name="home_enroll_prompt_cta">Explorer les sujets</string>
   <string name="home_daily_reviews">Révisions du Jour</string>
   <string name="home_review_cta">Réviser →</string>
+  <string name="home_task_generating">Votre défi est en cours de préparation — revenez dans un instant.</string>
+  <string name="home_your_score">Votre score</string>
+  <string name="home_todays_challenges">Défis du jour</string>
 
   <!-- Task -->
   <string name="task_question_label">Question</string>
@@ -49,17 +52,24 @@
   <string name="task_exit_cancel">Continuer</string>
   <string name="task_result_correct">Correct !</string>
   <string name="task_result_wrong">Pas tout à fait — révisez l'indice et réessayez demain.</string>
+  <string name="task_result_struggle">Continuez — une session de pratique personnalisée a été ajoutée à vos révisions.</string>
 
   <!-- Profile -->
   <string name="profile_title">Profil</string>
   <string name="profile_streak_label">Série</string>
   <string name="profile_points_label">Points</string>
   <string name="profile_accuracy_label">Précision</string>
-  <string name="profile_level_label">Niveau %1$d</string>
-  <string name="profile_course_day">Jour %1$d sur %2$d</string>
   <string name="profile_sign_out">Se déconnecter</string>
   <string name="profile_sign_out_confirm_title">Se déconnecter ?</string>
   <string name="profile_sign_out_confirm_body">Vous devrez vous reconnecter pour continuer.</string>
+  <string name="profile_name_hint">Nom affiché</string>
+  <string name="profile_edit_name">Modifier le nom</string>
+  <string name="profile_save">Enregistrer</string>
+  <string name="profile_preferences_section">Préférences</string>
+  <string name="profile_language_label">Langue</string>
+  <string name="profile_language_english">Anglais</string>
+  <string name="profile_language_portuguese">Portugais</string>
+  <string name="profile_language_spanish">Espagnol</string>
 
   <!-- About -->
   <string name="about_title">À propos</string>

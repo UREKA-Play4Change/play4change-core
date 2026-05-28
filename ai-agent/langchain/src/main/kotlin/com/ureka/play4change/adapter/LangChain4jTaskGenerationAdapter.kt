@@ -73,7 +73,7 @@ class LangChain4jTaskGenerationAdapter(
             val userMsg = UserMessage.from(TaskGenerationPrompt.user(request))
 
             var response = chatModel.generate(systemMsg, userMsg)
-            var tasks = parseTasksFromJson(response.content().text(), request.moduleId)
+            var tasks = parseTasksFromJson(response.content().text(), request.moduleId, request.onTaskGenerated, request.taskCount)
             var tokensUsed = response.tokenUsage()?.totalTokenCount()?.toLong() ?: 0L
 
             // Schema validation: retry once with a reminder if tasks are missing
@@ -89,7 +89,7 @@ class LangChain4jTaskGenerationAdapter(
                         TaskGenerationPrompt.schemaReminder(request.taskCount)
                 )
                 response = chatModel.generate(systemMsg, retryUserMsg)
-                tasks = parseTasksFromJson(response.content().text(), request.moduleId)
+                tasks = parseTasksFromJson(response.content().text(), request.moduleId, request.onTaskGenerated, request.taskCount)
                 tokensUsed += response.tokenUsage()?.totalTokenCount()?.toLong() ?: 0L
             }
 
@@ -245,13 +245,19 @@ class LangChain4jTaskGenerationAdapter(
         )
     }
 
-    private fun parseTasksFromJson(rawJson: String, moduleId: String): List<GeneratedTask> {
+    private fun parseTasksFromJson(
+        rawJson: String,
+        moduleId: String,
+        onTaskParsed: ((completed: Int, total: Int) -> Unit)? = null,
+        total: Int = 0
+    ): List<GeneratedTask> {
         val json = Json { ignoreUnknownKeys = true }
         val cleaned = rawJson.trim()
             .removePrefix("```json").removePrefix("```")
             .removeSuffix("```").trim()
         val array = json.parseToJsonElement(cleaned).jsonArray
 
+        var successCount = 0
         return array.mapNotNull { element ->
             runCatching {
                 val obj = element.jsonObject
@@ -269,6 +275,11 @@ class LangChain4jTaskGenerationAdapter(
                 }
 
                 val isDuplicate = deduplicationService.isDuplicate(embedding, moduleId)
+                val status = if (isDuplicate) GenerationStatus.DUPLICATE else GenerationStatus.SUCCESS
+                if (status == GenerationStatus.SUCCESS) {
+                    successCount++
+                    onTaskParsed?.invoke(successCount, total)
+                }
 
                 GeneratedTask(
                     externalId = UUID.randomUUID().toString(),
@@ -277,7 +288,7 @@ class LangChain4jTaskGenerationAdapter(
                     hint = hint,
                     pointsReward = points,
                     embedding = embedding,
-                    status = if (isDuplicate) GenerationStatus.DUPLICATE else GenerationStatus.SUCCESS,
+                    status = status,
                     optionsJson = optionsJsonStr,
                     correctAnswerIndex = correctIdx
                 )

@@ -48,7 +48,7 @@ class HttpPeerReviewRepository(
     private val json = Json { ignoreUnknownKeys = true }
 
     override suspend fun getPendingReviews(topicId: String): List<PendingReview> {
-        val response = client.get("/reviews/pending") {
+        val response = client.get("reviews/pending") {
             parameter("topicId", topicId)
         }
         return json.decodeFromString<List<PendingReviewDto>>(response.bodyAsText())
@@ -60,7 +60,7 @@ class HttpPeerReviewRepository(
         verdict: String,
         comment: String?
     ): VerdictResult {
-        val response = client.post("/reviews/$reviewId/verdict") {
+        val response = client.post("reviews/$reviewId/verdict") {
             contentType(ContentType.Application.Json)
             setBody(SubmitVerdictRequestDto(verdict = verdict, comment = comment))
         }

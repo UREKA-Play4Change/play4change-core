@@ -16,6 +16,8 @@ import com.ureka.play4change.domain.topic.PageResult
 import com.ureka.play4change.domain.topic.Topic
 import com.ureka.play4change.domain.topic.TopicPhaseLogRepository
 import com.ureka.play4change.domain.topic.TopicRepository
+import com.ureka.play4change.domain.topic.TopicStats
+import com.ureka.play4change.domain.topic.TopicStatsRepository
 import com.ureka.play4change.domain.topic.TopicStatus
 import com.ureka.play4change.error.AppError
 import com.ureka.play4change.error.client.BadRequest
@@ -34,7 +36,8 @@ class TopicManagementService(
     private val contentExtractorPort: ContentExtractorPort,
     private val orchestrator: TaskGenerationOrchestrator,
     private val phaseTransitionService: PhaseTransitionService,
-    private val phaseLogRepository: TopicPhaseLogRepository
+    private val phaseLogRepository: TopicPhaseLogRepository,
+    private val statsRepository: TopicStatsRepository
 ) : TopicUseCase {
 
     private val log = LoggerFactory.getLogger(TopicManagementService::class.java)
@@ -164,16 +167,31 @@ class TopicManagementService(
         val topic = ensureNotNull(topicRepository.findById(topicId)) {
             NotFound.ResourceNotFound("Topic", topicId)
         }
-        TopicDetail(topic, phaseLogRepository.findByTopicId(topicId))
+        val stats = if (topic.status == TopicStatus.ACTIVE) statsRepository.getForTopic(topicId) else null
+        TopicDetail(topic, phaseLogRepository.findByTopicId(topicId), stats)
     }
 
-    override fun listAll(statusFilter: String?, page: Int, size: Int): PageResult<Topic> {
-        return if (statusFilter != null) {
+    override fun listAll(statusFilter: String?, page: Int, size: Int): PageResult<TopicDetail> {
+        val pageResult = if (statusFilter != null) {
             val status = TopicStatus.valueOf(statusFilter.uppercase())
             topicRepository.findByStatus(status, page, size)
         } else {
             topicRepository.findAll(page, size)
         }
+        val activeIds = pageResult.content.filter { it.status == TopicStatus.ACTIVE }.map { it.id }
+        val statsMap: Map<String, TopicStats> = if (activeIds.isNotEmpty()) {
+            val fetched = statsRepository.getForTopics(activeIds)
+            activeIds.associateWith { id -> fetched[id] ?: TopicStats(0, 0.0, 0.0, 0) }
+        } else emptyMap()
+        return PageResult(
+            content = pageResult.content.map { topic ->
+                TopicDetail(topic = topic, generationLog = emptyList(), stats = statsMap[topic.id])
+            },
+            page = pageResult.page,
+            size = pageResult.size,
+            totalElements = pageResult.totalElements,
+            totalPages = pageResult.totalPages
+        )
     }
 
     override fun regenerate(topicId: String, adminId: String): Either<AppError, Topic> = either {

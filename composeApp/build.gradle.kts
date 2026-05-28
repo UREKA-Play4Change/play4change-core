@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.googleServices)
 }
 
 kotlin {
@@ -33,6 +34,7 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.koin.android)
             implementation(libs.androidx.security.crypto)
+            implementation(libs.firebase.messaging.ktx)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
@@ -108,6 +110,22 @@ android {
                 "Boolean", "USE_MOCKS",
                 "${project.findProperty("USE_MOCKS") ?: "false"}"
             )
+            buildConfigField(
+                "String", "FIREBASE_APP_ID",
+                "\"${project.findProperty("FIREBASE_APP_ID") ?: ""}\""
+            )
+            buildConfigField(
+                "String", "FIREBASE_PROJECT_ID",
+                "\"${project.findProperty("FIREBASE_PROJECT_ID") ?: ""}\""
+            )
+            buildConfigField(
+                "String", "FIREBASE_API_KEY",
+                "\"${project.findProperty("FIREBASE_API_KEY") ?: ""}\""
+            )
+            buildConfigField(
+                "String", "FIREBASE_SENDER_ID",
+                "\"${project.findProperty("FIREBASE_SENDER_ID") ?: ""}\""
+            )
         }
         release {
             isMinifyEnabled = false
@@ -116,6 +134,22 @@ android {
                 "\"${project.findProperty("BASE_URL") ?: "http://10.0.2.2:8080"}\""
             )
             buildConfigField("Boolean", "USE_MOCKS", "false")
+            buildConfigField(
+                "String", "FIREBASE_APP_ID",
+                "\"${project.findProperty("FIREBASE_APP_ID") ?: ""}\""
+            )
+            buildConfigField(
+                "String", "FIREBASE_PROJECT_ID",
+                "\"${project.findProperty("FIREBASE_PROJECT_ID") ?: ""}\""
+            )
+            buildConfigField(
+                "String", "FIREBASE_API_KEY",
+                "\"${project.findProperty("FIREBASE_API_KEY") ?: ""}\""
+            )
+            buildConfigField(
+                "String", "FIREBASE_SENDER_ID",
+                "\"${project.findProperty("FIREBASE_SENDER_ID") ?: ""}\""
+            )
         }
     }
     compileOptions {

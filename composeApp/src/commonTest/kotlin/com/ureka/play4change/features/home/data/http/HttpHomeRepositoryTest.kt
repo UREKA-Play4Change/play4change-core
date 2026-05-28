@@ -167,7 +167,8 @@ class HttpHomeRepositoryTest {
                 )
                 "/tasks/today" -> respond(
                     content = ByteReadChannel(""),
-                    status = HttpStatusCode.NotFound
+                    status = HttpStatusCode.NotFound,
+                    headers = headersOf("X-Task-Available-At", "2026-05-27T00:00:00Z")
                 )
                 else -> respond(content = ByteReadChannel(""), status = HttpStatusCode.NotFound)
             }

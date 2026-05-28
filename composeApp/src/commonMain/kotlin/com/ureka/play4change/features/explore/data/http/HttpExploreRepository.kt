@@ -39,21 +39,21 @@ class HttpExploreRepository(
     private val json = Json { ignoreUnknownKeys = true }
 
     override suspend fun getTopics(userId: String): List<Topic> {
-        val response = client.get("/topics")
+        val response = client.get("topics")
         if (!response.status.isSuccess()) return emptyList()
         val dtos = json.decodeFromString<List<UserTopicDto>>(response.bodyAsText())
         return dtos.map { it.toTopic() }
     }
 
     override suspend fun enrollTopic(userId: String, topicId: String): Boolean {
-        val response = client.post("/topics/$topicId/enroll") {
+        val response = client.post("topics/$topicId/enroll") {
             contentType(ContentType.Application.Json)
         }
         return response.status.isSuccess()
     }
 
     override suspend fun deactivateEnrollment(userId: String, topicId: String): Boolean {
-        val response = client.put("/topics/$topicId/enrollment/deactivate")
+        val response = client.put("topics/$topicId/enrollment/deactivate")
         return response.status.isSuccess()
     }
 

@@ -1,5 +1,6 @@
 package com.ureka.play4change.application.topic
 
+import com.ureka.play4change.application.port.TopicEventPublisher
 import com.ureka.play4change.domain.topic.AudienceLevel
 import com.ureka.play4change.domain.topic.ContentSourceType
 import com.ureka.play4change.domain.topic.GenerationPhase
@@ -10,7 +11,9 @@ import com.ureka.play4change.domain.topic.TopicRepository
 import com.ureka.play4change.domain.topic.TopicStatus
 import io.mockk.CapturingSlot
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.Runs
 import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -21,7 +24,8 @@ class GenerationPhaseTransitionTest {
 
     private val topicRepository = mockk<TopicRepository>()
     private val phaseLogRepository = mockk<TopicPhaseLogRepository>()
-    private val service = PhaseTransitionService(topicRepository, phaseLogRepository)
+    private val eventPublisher = mockk<TopicEventPublisher>(relaxed = true)
+    private val service = PhaseTransitionService(topicRepository, phaseLogRepository, eventPublisher)
 
     private val topicId = "topic-1"
 
