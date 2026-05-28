@@ -7,4 +7,5 @@ interface TaskTemplateRepository {
     fun findCurrentByModuleId(moduleId: String): List<TaskTemplate>
     fun findCurrentByModuleIdAndDayIndexAndLanguage(moduleId: String, dayIndex: Int, language: String): TaskTemplate?
     fun markAllSuperseded(moduleId: String)
+    fun findCurrentByTopicId(topicId: String): List<TaskTemplate>
 }
