@@ -330,4 +330,30 @@ strips tags entirely, which is the correct defence for a field that should conta
 
 ---
 
+## [2026-05-28] [topic/admin] — Per-question stats derived from task_assignments without a new schema
+
+**Context:** Phase 06 Task 6.0 added three admin endpoints to expose topic question content
+(`GET /admin/topics/{id}/tasks`, `GET /admin/topics/{id}/struggle-tasks`, `PUT /admin/tasks/{id}`).
+The task detail view needed per-question metrics (total attempts, success rate, avg points).
+Options considered: add a `task_template_stats` summary table; compute at query time from
+`task_assignments`.
+
+**Decision:** Aggregate at query time in `JdbcAdminTaskStatsRepository` via a single parameterised
+SQL query using `COUNT`, `COUNT FILTER (WHERE is_correct = true)`, and `AVG(points_awarded)`
+grouped by `task_template_id`. No new table, no migration. Stats are fetched in one round-trip
+for a full topic's template list. The `AdminTaskStatsRepository` port interface lives in the
+`topic` domain; only the JDBC adapter lives in `infrastructure`.
+
+**Why not a denormalised stats table:** A summary table requires a write trigger or scheduled job
+to stay fresh. The question list is admin-only, low-traffic, and does not need sub-millisecond
+latency. Aggregating from `task_assignments` is always accurate and needs no maintenance.
+
+**Why not JPQL on TaskAssignmentEntity:** JPQL aggregates with `COUNT FILTER` (SQL standard)
+are not supported in JPQL syntax. Using `JdbcTemplate` directly avoids a custom `@Query` with
+a native SQL hint and keeps the aggregate logic explicit.
+
+**Phase:** 06, Task 6.0
+
+---
+
 *(New entries are prepended above this line — most recent first)*

@@ -1,6 +1,6 @@
 # Phase 06 — Admin Web: Full Feature Parity
 
-**Status:** `PENDING`
+**Status:** `IN PROGRESS`
 **Goal:** React admin web covers all server admin endpoints — topic creation (URL+PDF),
 4-phase status polling, question report review and correction, user management, badge overview.
 
@@ -9,6 +9,25 @@
 ---
 
 ## Tasks
+
+### Task 6.0 — Topic content visibility: question list, struggle tasks, per-question stats, inline edit
+- [x] **What:** Expose generated topic content to admins post-creation. Admin can see all
+      generated questions (grouped by day), per-question attempt/success stats, adaptive/struggle
+      tasks logged for a topic, and can inline-edit any question (title, description, hint,
+      MCQ options, correct answer).
+- **Delivered:**
+  - **Server:** `GET /admin/topics/{topicId}/tasks` → `List<TaskTemplateAdminResponse>` (with nested stats).
+    `GET /admin/topics/{topicId}/struggle-tasks` → `List<AdaptiveTaskAdminResponse>`.
+    `PUT /admin/tasks/{templateId}` → `TaskTemplateAdminResponse` (increments version, regenerates instances).
+    Stats aggregated from `task_assignments` via `JdbcAdminTaskStatsRepository` — no new schema.
+  - **Web:** `TopicDetailPage` redesigned with 4 tabs: Overview, Questions, Struggle Questions,
+    Generation Log. `TaskQuestionsPanel`, `StruggleTasksPanel`, `GenerationLogPanel`, `EditTaskModal` components.
+- **Tests:** `AdminTaskServiceTest` (8 unit), `AdminTaskControllerTest` (7 `@WebMvcTest`).
+  Frontend: 30 existing tests stay green; new hooks/adapters covered by mock adapter.
+- **Branch:** `feat/phase-06-topic-question-management` (both repos)
+- **Exit criteria:** ✅ Server tests pass. ✅ Frontend typecheck + Vitest pass. PRs open.
+
+---
 
 ### Task 6.1 — Auth: JWT login page, token storage, logout
 - [ ] **What:** Implement the admin web login flow. The admin enters their email, receives

@@ -30,4 +30,12 @@ interface TaskTemplateJpaRepository : JpaRepository<TaskTemplateEntity, String> 
         dayIndex: Int,
         language: String
     ): TaskTemplateEntity?
+
+    @Query("""
+        SELECT t FROM TaskTemplateEntity t
+        WHERE t.module.topic.id = :topicId
+          AND t.isCurrent = TRUE
+        ORDER BY t.dayIndex ASC, t.poolIndex ASC
+    """)
+    fun findCurrentByTopicId(@Param("topicId") topicId: String): List<TaskTemplateEntity>
 }
