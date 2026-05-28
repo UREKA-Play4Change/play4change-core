@@ -159,7 +159,8 @@ class AdminTaskControllerTest {
                 .with(adminAuth())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
-                    """{"title":"New title","description":"New desc","hint":"A hint","options":["A","B","C"],"correctAnswer":0}"""
+                    """{"title":"New title","description":"New desc","hint":"A hint",""" +
+                        """"options":["A","B","C"],"correctAnswer":0}"""
                 )
         )
             .andExpect(status().isOk)
