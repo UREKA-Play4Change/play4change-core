@@ -44,6 +44,9 @@ class TaskTemplateRepositoryAdapter(
         jpa.saveAll(current)
     }
 
+    override fun findCurrentByTopicId(topicId: String): List<TaskTemplate> =
+        jpa.findCurrentByTopicId(topicId).map { it.toDomain() }
+
     private fun TaskTemplateEntity.toDomain() = TaskTemplate(
         id = id,
         moduleId = module.id,

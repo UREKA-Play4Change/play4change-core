@@ -64,6 +64,18 @@ class StruggleRepositoryAdapter(
         return jpa.save(entity).toDomain()
     }
 
+    override fun findAdaptiveTasksByTopicId(topicId: String): List<AdaptiveTaskAdminView> =
+        jpa.findAdaptiveTasksByTopicId(topicId).map { it.toAdminView() }
+
+    private fun AdaptiveTaskEntity.toAdminView(): AdaptiveTaskAdminView = AdaptiveTaskAdminView(
+        task = toDomain(),
+        sessionId = struggleSession.id,
+        sessionStatus = StruggleStatus.valueOf(struggleSession.status),
+        errorPattern = ErrorPattern.valueOf(struggleSession.errorPattern),
+        sessionDetectedAt = struggleSession.detectedAt,
+        enrollmentId = struggleSession.enrollment.id
+    )
+
     private fun StruggleSessionEntity.toDomain(): StruggleSession = StruggleSession(
         id = id,
         enrollmentId = enrollment.id,
