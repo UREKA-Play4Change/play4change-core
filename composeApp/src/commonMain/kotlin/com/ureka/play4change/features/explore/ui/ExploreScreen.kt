@@ -130,11 +130,34 @@ fun ExploreScreen(component: DefaultExploreComponent) {
                         horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                     ) {
                         ExploreFilter.entries.forEach { f ->
+                            val count = state.topics.count { topic ->
+                                when (f) {
+                                    ExploreFilter.ALL       -> true
+                                    ExploreFilter.ACTIVE    -> topic.isActive
+                                    ExploreFilter.OPEN      -> topic.enrollmentStatus == null && !topic.isLocked
+                                    ExploreFilter.COMPLETED -> topic.isCompleted
+                                    ExploreFilter.ABANDONED -> topic.isAbandoned
+                                    ExploreFilter.LOCKED    -> topic.isLocked
+                                }
+                            }
                             FilterChip(
                                 selected = state.filter == f,
                                 onClick = { onEvent(ExploreEvents.SetFilter(f)) },
                                 label = {
-                                    Text(filterLabel(f), style = MaterialTheme.typography.labelMedium)
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(filterLabel(f), style = MaterialTheme.typography.labelMedium)
+                                        Text(
+                                            text = count.toString(),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = if (state.filter == f)
+                                                MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                            else
+                                                MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
                                 },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
