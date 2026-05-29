@@ -59,7 +59,7 @@ attack surface, a STRIDE analysis is added as a subsection.
 | R02 | A05 Security Misconfiguration | Swagger UI publicly accessible without auth | Medium | OPEN | Phase 07 | Any user can browse the API schema. Low risk for a POC; must be gated before any public deployment. |
 | R03 | A05 Security Misconfiguration | `/actuator/prometheus` reachable via public Nginx proxy | Medium | OPEN | Phase 07 | Prometheus metrics expose internal timing and count data. Not a critical risk but should not be public. |
 | R04 | A03 Injection | `Name.kt` and `Password.kt` value object stubs — accept any string | High | FIXED (Phase 01, Task 1.4) | Phase 01 | Name.kt now validates: non-null, non-blank, 2–100 chars, no control characters. Password.kt deleted (unused). Fixed 2026-04-30. |
-| R05 | A07 Auth Failures | No rate limiting on `/auth/**` endpoints | High | OPEN | Phase 07 | `/auth/magic-link` can be used to spam any email address. `/auth/oauth` accepts any number of verification attempts. |
+| R05 | A07 Auth Failures | No rate limiting on `/auth/**` endpoints | High | FIXED (Phase 07, Task 7.1) | Phase 07 | Bucket4j per-IP token-bucket filter applied to all `/auth/**` endpoints. Limits: `/auth/magic-link` 5/10 min, `/auth/verify` 10/10 min, `/auth/oauth` 10/10 min, `/auth/refresh` 20/10 min, `/auth/logout` 10/10 min. Returns 429 + `Retry-After` header. X-Forwarded-For validated — private IPs rejected to prevent header injection. See `RateLimitFilter.kt`, `RateLimitService.kt`. `RateLimitTest` (4 tests) passes. |
 | R06 | A10 Server-Side Request Forgery | SSRF on `/admin/topics` URL ingestion — no IP range validation | High | PARTIALLY FIXED (Phase 02, Task 2.4) | Phase 07 | `UrlSsrfValidator` now rejects non-HTTPS schemes and RFC 1918 / loopback / link-local IPs via DNS resolution. Residual risk: DNS rebinding attack not prevented (see ADR-019). Full mitigation (socket-level IP check) tracked for Phase 07. |
 | R07 | A08 Software & Data Integrity | AI-generated content not validated before persistence | High | FIXED (Phase 02, Task 2.4) | Phase 02 | `AiOutputSanitiser` (jsoup `parse().text()`) strips all HTML and decodes entities on all generated string fields before persistence. Schema validation with single retry prevents partial results. See ADR-019. |
 | R08 | A04 Insecure Design | `RestTemplate` no timeout on JWKS endpoint fetch | Low | OPEN | Phase 07 | A slow or hung JWKS server could block auth threads. Default `RestTemplate` has no timeout. Fix: set connection and read timeouts. |
@@ -104,6 +104,14 @@ attack surface, a STRIDE analysis is added as a subsection.
 |---------|-------|----------|------|
 | ✔ Admin web access token in sessionStorage (not localStorage) | A02 Cryptographic Failures | `apiClient.ts` — `sessionStorage.setItem(SESSION_ACCESS_KEY, ...)` | Cleared on tab close. Not accessible cross-origin. XSS risk lower than localStorage. |
 | ⚠ Refresh token in JS-set cookie (not httpOnly) | A02 Cryptographic Failures | `apiClient.ts` — `setCookie(COOKIE_REFRESH_KEY, ...)` | SameSite=Strict; Secure on HTTPS. NOT httpOnly — XSS can read it. Accepted for Phase 06 (internal admin tool, not public-facing). httpOnly server-set cookie deferred to Phase 07. See DECISIONS.md [2026-05-29] [admin-web]. |
+
+---
+
+## Phase 06 Security Note — User Promotion
+
+| Control | OWASP | Location | Note |
+|---------|-------|----------|------|
+| ✔ User promotion endpoint restricted to ADMIN role | A01 Broken Access Control | `AdminUserController` — `/admin/users/{userId}/promote` under `/admin/**` requires ROLE_ADMIN | Demotion not possible via API — requires direct DB intervention, which is intentional. OWASP A01. |
 
 ---
 
