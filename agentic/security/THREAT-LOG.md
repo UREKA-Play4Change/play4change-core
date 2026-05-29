@@ -98,6 +98,15 @@ attack surface, a STRIDE analysis is added as a subsection.
 
 ---
 
+## Phase 06 Security Note — Admin Web Token Storage
+
+| Control | OWASP | Location | Note |
+|---------|-------|----------|------|
+| ✔ Admin web access token in sessionStorage (not localStorage) | A02 Cryptographic Failures | `apiClient.ts` — `sessionStorage.setItem(SESSION_ACCESS_KEY, ...)` | Cleared on tab close. Not accessible cross-origin. XSS risk lower than localStorage. |
+| ⚠ Refresh token in JS-set cookie (not httpOnly) | A02 Cryptographic Failures | `apiClient.ts` — `setCookie(COOKIE_REFRESH_KEY, ...)` | SameSite=Strict; Secure on HTTPS. NOT httpOnly — XSS can read it. Accepted for Phase 06 (internal admin tool, not public-facing). httpOnly server-set cookie deferred to Phase 07. See DECISIONS.md [2026-05-29] [admin-web]. |
+
+---
+
 ## Phase 04 Security Note
 
 | Control | OWASP | Location | Note |
