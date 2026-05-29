@@ -49,7 +49,7 @@ class HttpExploreRepositoryTest {
             respond(
                 content = ByteReadChannel(
                     """[
-                        {"id":"sustainability","title":"Sustainability","description":"Learn about climate.","category":"SUSTAINABILITY","taskCount":14,"isEnrolled":true},
+                        {"id":"sustainability","title":"Sustainability","description":"Learn about climate.","category":"SUSTAINABILITY","taskCount":14,"isEnrolled":true,"enrollmentStatus":"ACTIVE"},
                         {"id":"digital","title":"Digital Literacy","description":"Navigate digital world.","category":"DIGITAL","taskCount":10,"isEnrolled":false}
                     ]"""
                 ),
