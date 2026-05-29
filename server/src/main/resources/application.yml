@@ -100,7 +100,7 @@ minio:
   bucket: ${MINIO_BUCKET:play4change}
 
 task-delivery:
-  task-rate-minutes: 3
+  task-rate-minutes: 1
   dev-mode: true
   dev-rate-seconds: 3
 
