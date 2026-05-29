@@ -6,6 +6,7 @@ import com.ureka.play4change.application.port.TopicUseCase
 import com.ureka.play4change.domain.topic.AudienceLevel
 import com.ureka.play4change.domain.topic.TopicStatus
 import com.ureka.play4change.error.AppError
+import com.ureka.play4change.error.client.BadRequest
 import com.ureka.play4change.web.admin.dto.CreatePdfTopicRequest
 import com.ureka.play4change.web.admin.dto.CreateUrlTopicRequest
 import com.ureka.play4change.web.admin.dto.PageResponse
@@ -140,6 +141,10 @@ class TopicController(
     )
 
     @Suppress("UNCHECKED_CAST")
-    private fun <T> AppError.toErrorResponse(): ResponseEntity<T> =
-        ResponseEntity.status(httpStatus).build()
+    private fun <T> AppError.toErrorResponse(): ResponseEntity<T> = when (this) {
+        is BadRequest.InvalidField ->
+            ResponseEntity.status(httpStatus)
+                .body(mapOf("field" to field, "reason" to reason) as T)
+        else -> ResponseEntity.status(httpStatus).build()
+    }
 }
