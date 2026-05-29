@@ -1,7 +1,6 @@
 # Phase 09 — Learning Path DAG
 
-**Status:** `IN PROGRESS`
-**Branch:** `feat/phase-09-learning-path-dag`
+**Status:** `DONE`
 
 ## Goal
 
@@ -58,7 +57,7 @@ never need to replicate badge/enrollment logic.
 
 - [x] **9.27** Tests: `TopicPrerequisiteServiceTest`, `EnrollmentPrerequisiteGateTest`, `AdminTopicPrerequisiteControllerTest`
 - [x] **9.28** Manual test recipe (human checkpoint)
-- [ ] **9.29** Merge PR + update phase status to DONE
+- [x] **9.29** Merge PR + update phase status to DONE
 
 ## API Surface
 
