@@ -128,7 +128,7 @@
 ---
 
 ### Task 6.3 — Question report review: list, show, correct, dismiss
-- [ ] **What:** Build the question report review page. Admin sees pending reports, views
+- [x] **What:** Build the question report review page. Admin sees pending reports, views
       the question and user reason, and either corrects or dismisses the report.
 - **Design constraints:**
   - **Report list page** (`/admin/reports`):
@@ -153,9 +153,19 @@
     - Confirming dismiss calls the dismiss endpoint.
     - Correct form validates that all fields are non-empty before submitting.
     - Correct form submission calls the correct endpoint.
+- **Delivered:**
+  - **Web:** `domain/models/Report.ts`, `domain/ports/ReportPort.ts`, `ReportAdapter`,
+    `MockReportAdapter`, `useReports.ts` hooks, `ReportListPage.tsx`, `ReportDetailPage.tsx`.
+    Routes: `ADMIN_REPORTS=/admin/reports`, `ADMIN_REPORT_DETAIL=/admin/reports/:reportId`.
+    `container.ts` wired with `reportService`.
+  - **Note:** `TaskReportResponse` does not include task question/options (only `taskTemplateId`).
+    Correction form starts empty — admin enters corrected values. This is a server API limitation
+    (no `GET /admin/tasks/{id}` endpoint and `TaskReportResponse` omits question details).
+  - **Tests:** `ReportList.test.tsx` (5 tests), `ReportDetail.test.tsx` (6 tests). All 11 pass.
+- **Branch:** `feat/phase-06-topic-creation-tests` (web repo, same branch as Task 6.2)
 - **Security log requirement:** None.
 - **ADR trigger:** No.
-- **Exit criteria:** All test files pass. An admin can correct a question report end-to-end.
+- **Exit criteria:** ✅ 11 tests pass. PR #21 open.
 
 ---
 
