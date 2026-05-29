@@ -1,5 +1,6 @@
 package com.ureka.play4change.features.explore.data.http
 
+import com.ureka.play4change.features.explore.domain.model.EnrollmentStatus
 import com.ureka.play4change.features.explore.domain.model.Topic
 import com.ureka.play4change.features.explore.domain.model.TopicIconType
 import com.ureka.play4change.features.explore.domain.repository.ExploreRepository
@@ -26,6 +27,7 @@ private data class UserTopicDto(
     val category: String,
     val taskCount: Int,
     val isEnrolled: Boolean,
+    val enrollmentStatus: String? = null,
     val isLocked: Boolean = false,
     val prerequisiteTopicIds: List<String> = emptyList()
 )
@@ -68,11 +70,18 @@ class HttpExploreRepository(
         title = title,
         description = description,
         iconType = category.toIconType(),
-        isActive = isEnrolled,
+        enrollmentStatus = enrollmentStatus?.toEnrollmentStatus(),
         taskCount = taskCount,
         isLocked = isLocked,
         prerequisiteTopicIds = prerequisiteTopicIds
     )
+
+    private fun String.toEnrollmentStatus(): EnrollmentStatus? = when (uppercase()) {
+        "ACTIVE"    -> EnrollmentStatus.ACTIVE
+        "COMPLETED" -> EnrollmentStatus.COMPLETED
+        "PAUSED"    -> EnrollmentStatus.PAUSED
+        else        -> null
+    }
 
     private fun String.toIconType(): TopicIconType = when (uppercase()) {
         "SUSTAINABILITY" -> TopicIconType.SUSTAINABILITY
