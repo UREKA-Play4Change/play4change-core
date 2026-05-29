@@ -2,7 +2,6 @@ package com.ureka.play4change.web.user
 
 import com.ureka.play4change.application.port.EnrollmentUseCase
 import com.ureka.play4change.application.port.TopicUseCase
-import com.ureka.play4change.domain.enrollment.EnrollmentStatus
 import com.ureka.play4change.domain.topic.PrerequisiteRepository
 import com.ureka.play4change.web.user.dto.UserTopicResponse
 import org.springframework.http.ResponseEntity
@@ -29,11 +28,11 @@ class UserTopicController(
 
         val responses = topics.map { detail ->
             val topicId = detail.topic.id
-            val isEnrolled = enrollmentUseCase.getEnrollment(userId, topicId)
-                .fold(ifLeft = { false }, ifRight = { it.status == EnrollmentStatus.ACTIVE })
+            val enrollmentStatus = enrollmentUseCase.getEnrollment(userId, topicId)
+                .fold(ifLeft = { null }, ifRight = { it.status.name })
             val prereqIds = prerequisiteRepository.findPrerequisitesByTopicId(topicId)
             val isLocked = prereqIds.any { it !in completedTopicIds }
-            UserTopicResponse.from(detail.topic, isEnrolled, isLocked, prereqIds)
+            UserTopicResponse.from(detail.topic, enrollmentStatus, isLocked, prereqIds)
         }
         return ResponseEntity.ok(responses)
     }

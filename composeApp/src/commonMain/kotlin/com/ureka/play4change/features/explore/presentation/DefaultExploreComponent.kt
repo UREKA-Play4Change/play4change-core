@@ -4,6 +4,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.ureka.play4change.core.component.base.BaseComponent
 import com.ureka.play4change.core.error.AppError
 import com.ureka.play4change.core.component.stateful.safeLaunch
+import com.ureka.play4change.features.explore.domain.model.EnrollmentStatus
 import com.ureka.play4change.features.explore.domain.repository.ExploreRepository
 
 class DefaultExploreComponent(
@@ -26,6 +27,7 @@ class DefaultExploreComponent(
     override fun onEvent(event: ExploreEvents) {
         when (event) {
             ExploreEvents.LoadTopics         -> loadTopics()
+            is ExploreEvents.SetFilter       -> updateState { copy(filter = event.filter) }
             is ExploreEvents.RequestEnroll   -> updateState { copy(pendingEnroll = event.topic) }
             ExploreEvents.ConfirmEnroll      -> confirmEnroll()
             ExploreEvents.DismissEnroll      -> updateState { copy(pendingEnroll = null) }
@@ -41,7 +43,7 @@ class DefaultExploreComponent(
         safeLaunch(scope) {
             repository.enrollTopic("current-user", topic.id)
             val updated = state.value.topics.map { t ->
-                if (t.id == topic.id) t.copy(isActive = true) else t
+                if (t.id == topic.id) t.copy(enrollmentStatus = EnrollmentStatus.ACTIVE) else t
             }
             updateState { copy(topics = updated, pendingEnroll = null, enrolled = true) }
             emitEffect(ExploreEffect.TopicEnrolled)
@@ -53,7 +55,7 @@ class DefaultExploreComponent(
         safeLaunch(scope) {
             repository.deactivateEnrollment("current-user", topic.id)
             val updated = state.value.topics.map { t ->
-                if (t.id == topic.id) t.copy(isActive = false) else t
+                if (t.id == topic.id) t.copy(enrollmentStatus = EnrollmentStatus.PAUSED) else t
             }
             updateState { copy(topics = updated, pendingLeave = null) }
         }

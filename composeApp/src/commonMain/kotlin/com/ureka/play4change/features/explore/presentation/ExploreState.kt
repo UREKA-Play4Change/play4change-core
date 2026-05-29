@@ -6,6 +6,7 @@ import com.ureka.play4change.features.explore.domain.model.Topic
 
 data class ExploreState(
     val topics: List<Topic> = emptyList(),
+    val filter: ExploreFilter = ExploreFilter.ALL,
     val pendingEnroll: Topic? = null,
     val pendingLeave: Topic? = null,
     val enrolled: Boolean = false,

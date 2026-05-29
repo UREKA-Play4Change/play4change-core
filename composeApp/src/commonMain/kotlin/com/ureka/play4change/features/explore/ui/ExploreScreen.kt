@@ -1,6 +1,7 @@
 package com.ureka.play4change.features.explore.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,8 +18,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -27,6 +30,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -48,6 +53,7 @@ import com.ureka.play4change.features.explore.domain.model.Topic
 import com.ureka.play4change.features.explore.domain.model.TopicIconType
 import com.ureka.play4change.features.explore.presentation.DefaultExploreComponent
 import com.ureka.play4change.features.explore.presentation.ExploreEvents
+import com.ureka.play4change.features.explore.presentation.ExploreFilter
 import org.jetbrains.compose.resources.stringResource
 import play4change.composeapp.generated.resources.Res
 import play4change.composeapp.generated.resources.cancel
@@ -92,27 +98,76 @@ fun ExploreScreen(component: DefaultExploreComponent) {
                 }
             }
         } else {
+            val filteredTopics = state.topics.filter { topic ->
+                when (state.filter) {
+                    ExploreFilter.ALL       -> true
+                    ExploreFilter.ACTIVE    -> topic.isActive
+                    ExploreFilter.OPEN      -> topic.enrollmentStatus == null && !topic.isLocked
+                    ExploreFilter.COMPLETED -> topic.isCompleted
+                    ExploreFilter.ABANDONED -> topic.isAbandoned
+                    ExploreFilter.LOCKED    -> topic.isLocked
+                }
+            }
+
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
-                contentPadding = PaddingValues(Spacing.l),
+                contentPadding = PaddingValues(bottom = Spacing.l),
                 verticalArrangement = Arrangement.spacedBy(Spacing.m)
             ) {
                 item {
-                    Text(
-                        stringResource(Res.string.explore_subtitle),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Column(modifier = Modifier.padding(horizontal = Spacing.l)) {
+                        Text(
+                            stringResource(Res.string.explore_subtitle),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(Spacing.s))
+                    }
+                    Row(
+                        modifier = Modifier
+                            .horizontalScroll(rememberScrollState())
+                            .padding(horizontal = Spacing.l),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    ) {
+                        ExploreFilter.entries.forEach { f ->
+                            FilterChip(
+                                selected = state.filter == f,
+                                onClick = { onEvent(ExploreEvents.SetFilter(f)) },
+                                label = {
+                                    Text(filterLabel(f), style = MaterialTheme.typography.labelMedium)
+                                },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            )
+                        }
+                    }
                     Spacer(Modifier.height(Spacing.xs))
-                    HorizontalDivider()
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = Spacing.l))
                     Spacer(Modifier.height(Spacing.xs))
                 }
-                items(state.topics) { topic ->
+
+                items(filteredTopics) { topic ->
                     TopicCard(
                         topic = topic,
+                        modifier = Modifier.padding(horizontal = Spacing.l),
                         onEnroll = { onEvent(ExploreEvents.RequestEnroll(topic)) },
                         onLeave = { onEvent(ExploreEvents.RequestLeave(topic)) }
                     )
+                }
+
+                if (filteredTopics.isEmpty()) {
+                    item {
+                        Text(
+                            text = emptyMessage(state.filter),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = Spacing.l, vertical = Spacing.xl)
+                        )
+                    }
                 }
             }
         }
@@ -162,9 +217,14 @@ fun ExploreScreen(component: DefaultExploreComponent) {
 }
 
 @Composable
-private fun TopicCard(topic: Topic, onEnroll: () -> Unit, onLeave: () -> Unit) {
+private fun TopicCard(
+    topic: Topic,
+    modifier: Modifier = Modifier,
+    onEnroll: () -> Unit,
+    onLeave: () -> Unit
+) {
     ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.elevatedCardElevation(
@@ -172,18 +232,19 @@ private fun TopicCard(topic: Topic, onEnroll: () -> Unit, onLeave: () -> Unit) {
         )
     ) {
         Row(modifier = Modifier.height(IntrinsicSize.Min)) {
-            // Left accent: teal if enrolled, muted outline if not
+            val accentColor = when {
+                topic.isActive    -> MaterialTheme.colorScheme.secondary
+                topic.isCompleted -> MaterialTheme.colorScheme.tertiary
+                topic.isAbandoned -> MaterialTheme.colorScheme.error.copy(alpha = 0.4f)
+                else              -> MaterialTheme.colorScheme.outlineVariant
+            }
             Box(
                 modifier = Modifier
                     .width(4.dp)
                     .fillMaxHeight()
-                    .background(
-                        if (topic.isActive) MaterialTheme.colorScheme.secondary
-                        else MaterialTheme.colorScheme.outlineVariant
-                    )
+                    .background(accentColor)
             )
             Column(modifier = Modifier.padding(Spacing.l)) {
-                // Title + emoji + active badge
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
@@ -199,15 +260,26 @@ private fun TopicCard(topic: Topic, onEnroll: () -> Unit, onLeave: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f)
                     )
-                    if (topic.isActive) {
-                        Text(
+                    when {
+                        topic.isActive -> Text(
                             text = "Active",
                             style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.5.sp),
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.secondary
                         )
-                    } else if (topic.isLocked) {
-                        Icon(
+                        topic.isCompleted -> Icon(
+                            imageVector = Icons.Rounded.CheckCircle,
+                            contentDescription = "Completed",
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.tertiary
+                        )
+                        topic.isAbandoned -> Text(
+                            text = "Abandoned",
+                            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.5.sp),
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                        )
+                        topic.isLocked -> Icon(
                             imageVector = Icons.Rounded.Lock,
                             contentDescription = "Locked",
                             modifier = Modifier.size(16.dp),
@@ -224,8 +296,8 @@ private fun TopicCard(topic: Topic, onEnroll: () -> Unit, onLeave: () -> Unit) {
                     overflow = TextOverflow.Ellipsis
                 )
                 Spacer(Modifier.height(Spacing.m))
-                if (topic.isActive) {
-                    Button(
+                when {
+                    topic.isActive -> Button(
                         onClick = onLeave,
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium,
@@ -233,31 +305,41 @@ private fun TopicCard(topic: Topic, onEnroll: () -> Unit, onLeave: () -> Unit) {
                             containerColor = MaterialTheme.colorScheme.error
                         )
                     ) {
-                        Text(
-                            text = stringResource(Res.string.explore_leave),
-                            style = MaterialTheme.typography.labelLarge
-                        )
+                        Text(stringResource(Res.string.explore_leave), style = MaterialTheme.typography.labelLarge)
                     }
-                } else if (topic.isLocked) {
-                    Button(
+                    topic.isCompleted -> Button(
+                        onClick = {},
+                        enabled = false,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium,
+                        colors = ButtonDefaults.buttonColors(
+                            disabledContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            disabledContentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                    ) {
+                        Icon(Icons.Rounded.CheckCircle, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.width(Spacing.xs))
+                        Text("Completed", style = MaterialTheme.typography.labelLarge)
+                    }
+                    topic.isAbandoned -> Button(
                         onClick = {},
                         enabled = false,
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium
                     ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Lock,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(Modifier.width(Spacing.xs))
-                        Text(
-                            text = "Locked",
-                            style = MaterialTheme.typography.labelLarge
-                        )
+                        Text("Abandoned", style = MaterialTheme.typography.labelLarge)
                     }
-                } else {
-                    Button(
+                    topic.isLocked -> Button(
+                        onClick = {},
+                        enabled = false,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Icon(Icons.Rounded.Lock, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.width(Spacing.xs))
+                        Text("Locked", style = MaterialTheme.typography.labelLarge)
+                    }
+                    else -> Button(
                         onClick = onEnroll,
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium,
@@ -265,15 +347,30 @@ private fun TopicCard(topic: Topic, onEnroll: () -> Unit, onLeave: () -> Unit) {
                             containerColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
-                        Text(
-                            text = stringResource(Res.string.explore_join),
-                            style = MaterialTheme.typography.labelLarge
-                        )
+                        Text(stringResource(Res.string.explore_join), style = MaterialTheme.typography.labelLarge)
                     }
                 }
             }
         }
     }
+}
+
+private fun filterLabel(filter: ExploreFilter): String = when (filter) {
+    ExploreFilter.ALL       -> "All"
+    ExploreFilter.ACTIVE    -> "Active"
+    ExploreFilter.OPEN      -> "Open"
+    ExploreFilter.COMPLETED -> "Completed"
+    ExploreFilter.ABANDONED -> "Abandoned"
+    ExploreFilter.LOCKED    -> "Locked"
+}
+
+private fun emptyMessage(filter: ExploreFilter): String = when (filter) {
+    ExploreFilter.ALL       -> "No topics available."
+    ExploreFilter.ACTIVE    -> "You have no active enrollments."
+    ExploreFilter.OPEN      -> "No open topics to join right now."
+    ExploreFilter.COMPLETED -> "You haven't completed any topics yet."
+    ExploreFilter.ABANDONED -> "No abandoned topics."
+    ExploreFilter.LOCKED    -> "No locked topics."
 }
 
 private fun topicEmoji(iconType: TopicIconType): String = when (iconType) {
