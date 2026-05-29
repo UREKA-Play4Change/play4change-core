@@ -4,6 +4,7 @@ import com.ureka.play4change.auth.application.TokenService
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.core.env.Environment
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
@@ -11,17 +12,22 @@ import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 
 @Component
-class JwtAuthFilter(private val tokenService: TokenService) : OncePerRequestFilter() {
+class JwtAuthFilter(
+    private val tokenService: TokenService,
+    private val environment: Environment,
+) : OncePerRequestFilter() {
 
     companion object {
-        private val PUBLIC_PREFIXES = listOf(
+        private val ALWAYS_PUBLIC = listOf(
             "/auth/",
             "/actuator/health",
             "/actuator/prometheus",
+            "/error"
+        )
+        private val SWAGGER_PREFIXES = listOf(
             "/swagger-ui/",
             "/swagger-ui.html",
-            "/v3/api-docs/",
-            "/error"
+            "/v3/api-docs/"
         )
     }
 
@@ -30,9 +36,11 @@ class JwtAuthFilter(private val tokenService: TokenService) : OncePerRequestFilt
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        // Public routes: skip token parsing entirely — no 401, auth context untouched
         val path = request.requestURI
-        if (PUBLIC_PREFIXES.any { path == it || path.startsWith(it) }) {
+        val isProd = environment.activeProfiles.contains("prod")
+        val isPublic = ALWAYS_PUBLIC.any { path == it || path.startsWith(it) } ||
+            (!isProd && SWAGGER_PREFIXES.any { path == it || path.startsWith(it) })
+        if (isPublic) {
             filterChain.doFilter(request, response)
             return
         }
