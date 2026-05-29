@@ -12,6 +12,7 @@ import com.ureka.play4change.domain.enrollment.EnrollmentRepository
 import com.ureka.play4change.domain.enrollment.EnrollmentStatus
 import com.ureka.play4change.domain.enrollment.TaskAssignment
 import com.ureka.play4change.domain.enrollment.TaskShuffleSeed
+import com.ureka.play4change.domain.topic.PrerequisiteRepository
 import com.ureka.play4change.domain.topic.TaskType
 import com.ureka.play4change.domain.topic.TaskTemplateRepository
 import com.ureka.play4change.domain.topic.TopicModuleRepository
@@ -33,6 +34,7 @@ class EnrollmentService(
     private val topicModuleRepository: TopicModuleRepository,
     private val taskTemplateRepository: TaskTemplateRepository,
     private val enrollmentRepository: EnrollmentRepository,
+    private val prerequisiteRepository: PrerequisiteRepository,
     private val registry: MeterRegistry
 ) : EnrollmentUseCase {
 
@@ -48,6 +50,20 @@ class EnrollmentService(
         ensure(!topic.isExpired()) {
             BadRequest.InvalidField("topicId", "topic has expired")
         }
+
+        // Gate: all prerequisites must be completed before enrollment is allowed
+        val prerequisiteIds = prerequisiteRepository.findPrerequisitesByTopicId(command.topicId)
+        if (prerequisiteIds.isNotEmpty()) {
+            val completedTopicIds = enrollmentRepository
+                .findCompletedByUserId(command.userId)
+                .map { it.topicId }
+                .toSet()
+            val missing = prerequisiteIds.filterNot { it in completedTopicIds }
+            ensure(missing.isEmpty()) {
+                BadRequest.InvalidField("topicId", "prerequisites not completed: $missing")
+            }
+        }
+
         ensure(enrollmentRepository.findByUserIdAndTopicId(command.userId, command.topicId) == null) {
             Conflict.ConcurrentModification
         }
@@ -121,6 +137,9 @@ class EnrollmentService(
 
     override fun getActiveEnrollments(userId: String): List<Enrollment> =
         enrollmentRepository.findActiveByUserId(userId)
+
+    override fun getCompletedTopicIds(userId: String): Set<String> =
+        enrollmentRepository.findCompletedByUserId(userId).map { it.topicId }.toSet()
 
     override fun deactivateEnrollment(userId: String, topicId: String): Either<AppError, Unit> = either {
         val enrollment = ensureNotNull(enrollmentRepository.findByUserIdAndTopicId(userId, topicId)) {

@@ -13,5 +13,6 @@ interface EnrollmentUseCase {
     fun enroll(command: EnrollCommand): Either<AppError, Enrollment>
     fun getEnrollment(userId: String, topicId: String): Either<AppError, Enrollment>
     fun getActiveEnrollments(userId: String): List<Enrollment>
+    fun getCompletedTopicIds(userId: String): Set<String>
     fun deactivateEnrollment(userId: String, topicId: String): Either<AppError, Unit>
 }

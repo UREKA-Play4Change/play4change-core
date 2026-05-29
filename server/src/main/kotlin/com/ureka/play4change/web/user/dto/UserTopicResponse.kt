@@ -8,16 +8,21 @@ data class UserTopicResponse(
     val description: String,
     val category: String,
     val taskCount: Int,
-    val isEnrolled: Boolean
+    val isEnrolled: Boolean,
+    val isLocked: Boolean,
+    val prerequisiteTopicIds: List<String>
 ) {
     companion object {
-        fun from(topic: Topic, isEnrolled: Boolean) = UserTopicResponse(
-            id = topic.id,
-            title = topic.title,
-            description = topic.description,
-            category = topic.category,
-            taskCount = topic.taskCount,
-            isEnrolled = isEnrolled
-        )
+        fun from(topic: Topic, isEnrolled: Boolean, isLocked: Boolean, prerequisiteTopicIds: List<String>) =
+            UserTopicResponse(
+                id = topic.id,
+                title = topic.title,
+                description = topic.description,
+                category = topic.category,
+                taskCount = topic.taskCount,
+                isEnrolled = isEnrolled,
+                isLocked = isLocked,
+                prerequisiteTopicIds = prerequisiteTopicIds
+            )
     }
 }

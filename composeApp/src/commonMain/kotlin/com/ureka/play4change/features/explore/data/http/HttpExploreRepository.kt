@@ -25,7 +25,9 @@ private data class UserTopicDto(
     val description: String,
     val category: String,
     val taskCount: Int,
-    val isEnrolled: Boolean
+    val isEnrolled: Boolean,
+    val isLocked: Boolean = false,
+    val prerequisiteTopicIds: List<String> = emptyList()
 )
 
 // ---------------------------------------------------------------------------
@@ -67,7 +69,9 @@ class HttpExploreRepository(
         description = description,
         iconType = category.toIconType(),
         isActive = isEnrolled,
-        taskCount = taskCount
+        taskCount = taskCount,
+        isLocked = isLocked,
+        prerequisiteTopicIds = prerequisiteTopicIds
     )
 
     private fun String.toIconType(): TopicIconType = when (uppercase()) {

@@ -120,6 +120,25 @@ question reports. Correct one question. The corrected task regenerates its insta
 
 ---
 
+## Phase 09 — Learning Path DAG
+
+**Status:** `IN PROGRESS`
+**Phase file:** [phases/phase-09-learning-path-dag.md](phases/phase-09-learning-path-dag.md)
+**Branch:** `feat/phase-09-learning-path-dag`
+
+**Goal:** Prerequisite graph (DAG) for topics. Admin sets prerequisites via
+`POST /admin/topics/{id}/prerequisites`. Server gates enrollment (all prereqs must be COMPLETED).
+Mobile shows a lock icon on locked topics. Admin web shows a Prerequisites tab on topic detail
+and a new Learning Paths page with the full graph overview.
+
+**Entry criteria:** Phase 02 DONE (topics + badges exist).
+
+**Human checkpoint:** Create two topics A and B. Set B's prerequisite to A.
+Attempt to enroll in B on mobile — enrollment is blocked. Complete topic A.
+Attempt to enroll in B again — succeeds. Admin web Learning Paths page shows the A→B edge.
+
+---
+
 ## Phase 07 — Security Hardening & DAST
 
 **Status:** `PENDING`

@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -205,6 +206,13 @@ private fun TopicCard(topic: Topic, onEnroll: () -> Unit, onLeave: () -> Unit) {
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.secondary
                         )
+                    } else if (topic.isLocked) {
+                        Icon(
+                            imageVector = Icons.Rounded.Lock,
+                            contentDescription = "Locked",
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
                 Spacer(Modifier.height(Spacing.xs))
@@ -227,6 +235,24 @@ private fun TopicCard(topic: Topic, onEnroll: () -> Unit, onLeave: () -> Unit) {
                     ) {
                         Text(
                             text = stringResource(Res.string.explore_leave),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+                } else if (topic.isLocked) {
+                    Button(
+                        onClick = {},
+                        enabled = false,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Lock,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(Modifier.width(Spacing.xs))
+                        Text(
+                            text = "Locked",
                             style = MaterialTheme.typography.labelLarge
                         )
                     }

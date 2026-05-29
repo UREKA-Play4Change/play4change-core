@@ -34,6 +34,9 @@ class EnrollmentRepositoryAdapter(
     override fun findActiveByUserId(userId: String): List<Enrollment> =
         enrollmentJpa.findByUserIdAndStatus(userId, "ACTIVE").map { it.toDomain() }
 
+    override fun findCompletedByUserId(userId: String): List<Enrollment> =
+        enrollmentJpa.findByUserIdAndStatus(userId, "COMPLETED").map { it.toDomain() }
+
     override fun findAssignmentById(id: String): TaskAssignment? =
         assignmentJpa.findById(id).orElse(null)?.toDomain()
 
