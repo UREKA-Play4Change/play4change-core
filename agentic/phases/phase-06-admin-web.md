@@ -30,7 +30,7 @@
 ---
 
 ### Task 6.1 — Auth: JWT login page, token storage, logout
-- [ ] **What:** Implement the admin web login flow. The admin enters their email, receives
+- [x] **What:** Implement the admin web login flow. The admin enters their email, receives
       a magic link, clicks it, and the admin web stores the JWT and uses it for all subsequent
       requests.
 - **Design constraints:**
