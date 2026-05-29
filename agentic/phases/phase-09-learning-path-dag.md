@@ -56,8 +56,8 @@ never need to replicate badge/enrollment logic.
 
 ## Remaining
 
-- [ ] **9.27** Tests: `TopicPrerequisiteServiceTest`, `EnrollmentPrerequisiteGateTest`, `AdminTopicPrerequisiteControllerTest`
-- [ ] **9.28** Manual test recipe (human checkpoint)
+- [x] **9.27** Tests: `TopicPrerequisiteServiceTest`, `EnrollmentPrerequisiteGateTest`, `AdminTopicPrerequisiteControllerTest`
+- [x] **9.28** Manual test recipe (human checkpoint)
 - [ ] **9.29** Merge PR + update phase status to DONE
 
 ## API Surface
