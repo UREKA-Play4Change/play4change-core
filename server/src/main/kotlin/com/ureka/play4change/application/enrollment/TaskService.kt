@@ -74,18 +74,24 @@ class TaskService(
                 }
                 if (pendingPair != null) return@either TodayTaskResult.Available(pendingPair.first, pendingPair.second)
 
-                // Rate check: last submission must be >= effectiveRateMinutes ago
+                // Rate check: last submission must be >= effectiveRateSeconds ago
                 val lastSubmittedAt = assignments.mapNotNull { it.submittedAt }.maxOrNull()
                 if (lastSubmittedAt != null) {
-                    val rateMinutes = taskDeliveryProperties.effectiveRateMinutes().toLong()
-                    val minutesSince = ChronoUnit.MINUTES.between(lastSubmittedAt, OffsetDateTime.now())
-                    if (minutesSince < rateMinutes) {
-                        return@either TodayTaskResult.NotAvailableYet(lastSubmittedAt.plusMinutes(rateMinutes))
+                    val rateSeconds = taskDeliveryProperties.effectiveRateSeconds()
+                    val secondsSince = ChronoUnit.SECONDS.between(lastSubmittedAt, OffsetDateTime.now())
+                    if (secondsSince < rateSeconds) {
+                        return@either TodayTaskResult.NotAvailableYet(lastSubmittedAt.plusSeconds(rateSeconds))
                     }
                 }
 
                 // Next day index = count of assignments that have been submitted
                 dayIndex = assignments.count { it.submittedAt != null }
+                val taskCount = ensureNotNull(topicRepository.findById(topicId)) {
+                    NotFound.ResourceNotFound("Topic", topicId)
+                }.taskCount
+                if (dayIndex >= taskCount) {
+                    return@either TodayTaskResult.NotAvailableYet(OffsetDateTime.now().plusYears(100))
+                }
             } else {
                 // Prod mode: calendar-day-based, unlocks at midnight in user's timezone
                 dayIndex = DayIndexCalculator.compute(enrollment.enrolledAt, timezone)

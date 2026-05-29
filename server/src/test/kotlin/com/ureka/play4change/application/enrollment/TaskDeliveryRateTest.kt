@@ -184,7 +184,10 @@ class TaskDeliveryRateTest {
         every { enrollmentRepository.findByUserIdAndTopicId(userId, topicId) } returns enrollment
         every { enrollmentRepository.findAssignmentsByEnrollmentId(enrollmentId) } returns listOf(submitted)
         every { userRepository.findById(userId) } returns user
-        every { topicRepository.findById(topicId) } returns mockk { every { language } returns "en" }
+        every { topicRepository.findById(topicId) } returns mockk {
+            every { language } returns "en"
+            every { taskCount } returns 3
+        }
         every { topicModuleRepository.findByTopicId(topicId) } returns listOf(module)
         every {
             languageGatingService.resolveTemplate(
@@ -219,7 +222,10 @@ class TaskDeliveryRateTest {
         every { enrollmentRepository.findByUserIdAndTopicId(userId, topicId) } returns enrollment
         every { enrollmentRepository.findAssignmentsByEnrollmentId(enrollmentId) } returns emptyList()
         every { userRepository.findById(userId) } returns user
-        every { topicRepository.findById(topicId) } returns mockk { every { language } returns "en" }
+        every { topicRepository.findById(topicId) } returns mockk {
+            every { language } returns "en"
+            every { taskCount } returns 3
+        }
         every { topicModuleRepository.findByTopicId(topicId) } returns listOf(module)
         every {
             languageGatingService.resolveTemplate(

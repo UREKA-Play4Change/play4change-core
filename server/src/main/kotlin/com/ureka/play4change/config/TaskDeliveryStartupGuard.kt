@@ -11,8 +11,14 @@ class TaskDeliveryStartupGuard(
 ) {
     @PostConstruct
     fun validate() {
-        require(properties.taskRateMinutes >= 1) {
-            "task-delivery.task-rate-minutes must be >= 1, got ${properties.taskRateMinutes}"
+        if (properties.devMode) {
+            require(properties.devRateSeconds >= 1) {
+                "task-delivery.dev-rate-seconds must be >= 1, got ${properties.devRateSeconds}"
+            }
+        } else {
+            require(properties.taskRateMinutes >= 1) {
+                "task-delivery.task-rate-minutes must be >= 1, got ${properties.taskRateMinutes}"
+            }
         }
         check(!(properties.devMode && environment.activeProfiles.contains("prod"))) {
             "task-delivery.dev-mode must not be enabled in the prod Spring profile"

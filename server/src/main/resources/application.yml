@@ -102,6 +102,7 @@ minio:
 task-delivery:
   task-rate-minutes: 3
   dev-mode: true
+  dev-rate-seconds: 3
 
 scheduler:
   expiration:
