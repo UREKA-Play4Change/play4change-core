@@ -59,6 +59,9 @@ dependencies {
     // OpenAPI / Swagger UI
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
 
+    // Rate limiting
+    implementation("com.bucket4j:bucket4j-core:8.10.1")
+
     // Phase 3 — content & storage
     implementation("software.amazon.awssdk:s3:2.25.31")
     implementation("org.apache.pdfbox:pdfbox:3.0.1")
