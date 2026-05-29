@@ -3,6 +3,8 @@ package com.ureka.play4change.application.topic
 import com.ureka.play4change.application.port.ContentExtractorPort
 import com.ureka.play4change.application.port.FileStoragePort
 import com.ureka.play4change.application.port.TopicEventPublisher
+import com.ureka.play4change.domain.badge.BadgeRepository
+import com.ureka.play4change.domain.badge.MicroCompetence
 import com.ureka.play4change.domain.topic.ContentSourceType
 import com.ureka.play4change.domain.topic.GenerationPhase
 import com.ureka.play4change.domain.topic.TaskTemplate
@@ -39,6 +41,7 @@ class TaskGenerationOrchestrator(
     private val taskGenerationPort: TaskGenerationPort,
     private val batchInstanceGenerationService: BatchInstanceGenerationService,
     private val phaseTransitionService: PhaseTransitionService,
+    private val badgeRepository: BadgeRepository,
     private val eventPublisher: TopicEventPublisher,
     private val registry: MeterRegistry,
     @Value("\${ai.mistral.timeout-seconds:60}") private val timeoutSeconds: Long
@@ -164,6 +167,24 @@ class TaskGenerationOrchestrator(
 
                     taskTemplateRepository.saveAll(templates)
                     batchInstanceGenerationService.generateAndSave(templates)
+
+                    // Upsert MicroCompetence — create on first generation, update name/description on regeneration
+                    val existing = badgeRepository.findMicroCompetenceByTopicId(topicId)
+                    val microCompetence = if (existing != null) {
+                        existing.copy(
+                            name = topic.title,
+                            description = topic.description.ifBlank { topic.title }
+                        )
+                    } else {
+                        MicroCompetence(
+                            id = UUID.randomUUID().toString(),
+                            name = topic.title,
+                            description = topic.description.ifBlank { topic.title },
+                            topicId = topicId
+                        )
+                    }
+                    badgeRepository.saveMicroCompetence(microCompetence)
+                    log.info("MicroCompetence upserted for topic {}", topicId)
 
                     // INDEXING → ACTIVE
                     phaseTransitionService.transitionTo(topicId, GenerationPhase.ACTIVE)
