@@ -21,6 +21,20 @@ hard-to-reverse choices) — write a full ADR in `docs/adr/` instead.
 
 ---
 
+## [2026-05-29] [admin-web] — Access token in sessionStorage; refresh token in JS-set cookie (not httpOnly)
+
+**Context:** Phase 06 Task 6.1 spec preferred: access token in JS memory only (module variable), refresh token in httpOnly cookie set by the server. The httpOnly cookie approach requires a server-side change (`Set-Cookie` header on `/auth/verify`). That server change is deferred to Phase 07 security hardening to keep this task scoped.
+
+**Decision:** Access token stored in `sessionStorage` (survives page reload within the tab, cleared on tab close, not accessible cross-tab). Refresh token stored in a JS-set cookie (`SameSite=Strict; Secure on HTTPS`). The cookie is NOT httpOnly — a successful XSS attack could read the refresh token. Accepted for Phase 06 because: (a) the admin web is not public-facing, (b) the access token (the more sensitive credential) is in sessionStorage rather than a persistent store, (c) the `BroadcastChannel` tab-sync pattern requires the token to be JS-readable. The XSS risk is documented in THREAT-LOG.md (R02 covers Swagger; the cookie risk is lower severity for an internal admin tool).
+
+**Why not pure JS memory:** Page reload loses the token. Admins would need to re-login every time they reload, which is impractical.
+
+**Why not localStorage:** localStorage is persistent and accessible by any script on the same origin — broader XSS exposure than sessionStorage.
+
+**Phase:** 06, Task 6.1
+
+---
+
 ## [2026-05-17] [mobile/android] — Firebase initialized without google-services plugin; credentials via BuildConfig
 
 **Context:** The `google-services` Gradle plugin transforms `google-services.json` into Android resources and auto-configures `FirebaseApp`. The plugin is added to the project but a placeholder `composeApp/google-services.json` is committed (with zeroed-out project number and `REPLACE_WITH_REAL_API_KEY`). At runtime FCM will not work until the real credentials are provided.
