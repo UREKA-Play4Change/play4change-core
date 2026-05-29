@@ -37,4 +37,7 @@ data class Enrollment(
 
     fun deactivate(): Enrollment =
         copy(status = EnrollmentStatus.PAUSED, lastActivityAt = OffsetDateTime.now())
+
+    fun complete(): Enrollment =
+        copy(status = EnrollmentStatus.COMPLETED, lastActivityAt = OffsetDateTime.now())
 }
