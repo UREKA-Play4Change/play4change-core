@@ -209,7 +209,7 @@
 ---
 
 ### Task 6.5 — Badge overview: per-topic badge issuance stats
-- [ ] **What:** Build the badge overview page showing how many users have earned each
+- [x] **What:** Build the badge overview page showing how many users have earned each
       topic's badge and recent earners.
 - **Design constraints:**
   - **Badge stats page** (`/admin/badges`):
@@ -230,11 +230,18 @@
 - **Security log requirement:** None.
 - **ADR trigger:** No.
 - **Exit criteria:** `BadgeOverview.test.tsx` passes. Stats page loads on the local stack.
+- **Delivered:**
+  - Models: `TopicBadgeStats`, `RecentEarner` added to `Topic.ts`
+  - Port: `getTopicBadgeStats(topicId)` added to `ITopicService`
+  - Adapters: `TopicAdapter` and `MockTopicAdapter` implement `getTopicBadgeStats`
+  - Hook: `useAllTopicBadgeStats(topicIds)` in `useTopics.ts` — parallel `Promise.all`
+  - Web: `BadgeOverviewPage`, route `/admin/badges`; "0%" shows "No earners yet"
+  - Tests: `BadgeOverview.test.tsx` (5) — all pass
 
 ---
 
 ### Task 6.6 — Manual test recipe for Phase 06
-- [ ] **What:** Write the full end-to-end manual test recipe for Phase 06 in
+- [x] **What:** Write the full end-to-end manual test recipe for Phase 06 in
       `agentic/manual-testing/phase-06-recipe.md`.
 - **Design constraints:** The recipe must cover: login, topic creation via URL and PDF,
       status polling to ACTIVE, report review and correction, user promotion, badge stats.
@@ -242,6 +249,8 @@
 - **Security log requirement:** None.
 - **ADR trigger:** No.
 - **Exit criteria:** File exists and is accurate.
+- **Delivered:** `agentic/manual-testing/phase-06-recipe.md` — 6 sections covering login,
+  URL creation, PDF creation, report correction, user promotion, badge stats.
 
 ---
 
