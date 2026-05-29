@@ -6,6 +6,7 @@ import com.ureka.play4change.auth.adapter.inbound.web.MessageResponse
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.env.Environment
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
@@ -20,8 +21,12 @@ import org.springframework.web.cors.CorsConfigurationSource
 class SecurityConfig(
     private val jwtAuthFilter: JwtAuthFilter,
     private val objectMapper: ObjectMapper,
-    private val corsConfigurationSource: CorsConfigurationSource
+    private val corsConfigurationSource: CorsConfigurationSource,
+    private val environment: Environment
 ) {
+
+    private val isProd: Boolean
+        get() = environment.activeProfiles.contains("prod")
 
     @Bean
     fun authenticationEntryPoint(): AuthenticationEntryPoint =
@@ -46,19 +51,21 @@ class SecurityConfig(
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
-                auth
-                    .requestMatchers(
-                        "/auth/**",
-                        "/api/stats/public",
-                        "/error",
-                        "/actuator/health",
-                        "/actuator/prometheus",
-                        "/swagger-ui.html",
-                        "/swagger-ui/**",
-                        "/v3/api-docs/**"
-                    ).permitAll()
-                    .requestMatchers("/admin/**").hasRole("ADMIN")
-                    .anyRequest().authenticated()
+                auth.requestMatchers(
+                    "/auth/**",
+                    "/api/stats/public",
+                    "/error",
+                    "/actuator/health",
+                    "/actuator/prometheus",
+                ).permitAll()
+                val swaggerPaths = arrayOf("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**")
+                if (!isProd) {
+                    auth.requestMatchers(*swaggerPaths).permitAll()
+                } else {
+                    auth.requestMatchers(*swaggerPaths).hasRole("ADMIN")
+                }
+                auth.requestMatchers("/admin/**").hasRole("ADMIN")
+                auth.anyRequest().authenticated()
             }
             .exceptionHandling {
                 it.authenticationEntryPoint(authenticationEntryPoint())
