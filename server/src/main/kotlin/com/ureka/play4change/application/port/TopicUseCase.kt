@@ -10,6 +10,9 @@ import com.ureka.play4change.domain.topic.TopicStatus
 import com.ureka.play4change.error.AppError
 import java.time.OffsetDateTime
 
+data class PrerequisiteEdge(val topicId: String, val prerequisiteTopicId: String)
+data class LearningGraph(val edges: List<PrerequisiteEdge>)
+
 data class CreateUrlTopicCommand(
     val title: String,
     val description: String,
@@ -60,4 +63,7 @@ interface TopicUseCase {
     fun getByIdWithLog(topicId: String): Either<AppError, TopicDetail>
     fun listAll(statusFilter: String?, page: Int, size: Int): PageResult<TopicDetail>
     fun regenerate(topicId: String, adminId: String): Either<AppError, Topic>
+    fun getPrerequisites(topicId: String): Either<AppError, List<Topic>>
+    fun setPrerequisites(topicId: String, prerequisiteIds: List<String>): Either<AppError, List<Topic>>
+    fun getLearningGraph(): LearningGraph
 }
