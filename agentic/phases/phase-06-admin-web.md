@@ -170,7 +170,7 @@
 ---
 
 ### Task 6.4 — User management: list, promote to ADMIN, view enrollment status
-- [ ] **What:** Build the user management page. Admin can see all users, promote a user
+- [x] **What:** Build the user management page. Admin can see all users, promote a user
       to ADMIN, and view their enrollment status.
 - **Design constraints:**
   - This requires a new server endpoint if it does not already exist:
@@ -199,6 +199,12 @@
       which is intentional." OWASP A01.
 - **ADR trigger:** No.
 - **Exit criteria:** All test files pass. An admin can promote another user via the UI.
+- **Delivered:**
+  - Server: `AdminUserController` — `GET /admin/users`, `POST /admin/users/{userId}/promote`
+  - Server: `UserRepository.findAll`, `EnrollmentRepository.countByUserId` added
+  - Web: `AdminUserFull`/`AdminUserPage` models, `IUserService` port, `UserAdapter`, `MockUserAdapter`
+  - Web: `useUsers`/`usePromoteUser` hooks, `UserListPage`, route at `/admin/users`
+  - Tests: `UserList.test.tsx` (6), `PromoteUser.test.tsx` (4) — all pass
 
 ---
 
