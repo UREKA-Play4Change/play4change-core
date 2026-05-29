@@ -90,6 +90,7 @@ class StruggleDetectionTest {
         every { enrollmentRepository.findById(enrollmentId) } returns enrollment
         every { enrollmentRepository.save(any()) } answers { firstArg() }
         every { taskInstanceRepository.findByTaskTemplateId(templateId) } returns emptyList()
+        every { topicRepository.findById(any()) } returns null
     }
 
     @Test
