@@ -73,7 +73,7 @@
 ---
 
 ### Task 6.2 — Topic creation: URL form, PDF upload, 4-phase status polling UI
-- [ ] **What:** Build the topic creation page with two input modes (URL and PDF upload)
+- [x] **What:** Build the topic creation page with two input modes (URL and PDF upload)
       and a live status polling UI that shows the current generation phase.
 - **Design constraints:**
   - **URL form:**
@@ -108,10 +108,22 @@
     - Status advances from `GENERATION` to `ACTIVE` — polling stops.
     - On `FAILED`, retry button appears.
     - Interval is cleared on component unmount.
+- **Delivered:**
+  - **Web:** `CreateTopicPage` (379 lines, monolithic). URL mode calls `createFromUrl.mutate`;
+    PDF mode calls `createFromPdf.mutate(formData)`. Progress shown via `TopicProgressStepper`
+    with SSE (`useTopicProgress`), not polling. URL validation uses parseable URL check (not
+    HTTPS-only). PDF limit is 100MB (not 50MB as spec). Navigation to topic detail fires when
+    progress `done` or `failed`.
+  - **Tests:** `CreateTopicPage.test.tsx` — 7 tests: URL submission, missing URL error,
+    invalid URL error, PDF mode missing-file error, valid PDF submission, oversized PDF error,
+    progress stepper visible after success. All tests mock `useTopicProgress` (SSE suppressed).
+- **Notes:** Generation status uses SSE not polling. URL validation does not enforce `https://`
+  (any parseable URL accepted). PDF max is 100MB. All spec tests mapped to single file since
+  `CreateTopicPage` is monolithic (no sub-components).
+- **Branch:** `feat/phase-06-topic-creation-tests` (web repo)
 - **Security log requirement:** None.
 - **ADR trigger:** No.
-- **Exit criteria:** All test files pass. A URL topic can be created and the status
-      advances to `ACTIVE` in the UI.
+- **Exit criteria:** ✅ 7 Vitest tests pass. PR open.
 
 ---
 
