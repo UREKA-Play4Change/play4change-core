@@ -8,11 +8,14 @@ import com.ureka.play4change.application.port.ContentExtractorPort
 import com.ureka.play4change.application.port.CreatePdfTopicCommand
 import com.ureka.play4change.application.port.CreateUrlTopicCommand
 import com.ureka.play4change.application.port.FileStoragePort
+import com.ureka.play4change.application.port.LearningGraph
+import com.ureka.play4change.application.port.PrerequisiteEdge
 import com.ureka.play4change.application.port.TopicDetail
 import com.ureka.play4change.application.port.TopicUseCase
 import com.ureka.play4change.domain.topic.ContentSourceType
 import com.ureka.play4change.domain.topic.GenerationPhase
 import com.ureka.play4change.domain.topic.PageResult
+import com.ureka.play4change.domain.topic.PrerequisiteRepository
 import com.ureka.play4change.domain.topic.Topic
 import com.ureka.play4change.domain.topic.TopicPhaseLogRepository
 import com.ureka.play4change.domain.topic.TopicRepository
@@ -37,7 +40,8 @@ class TopicManagementService(
     private val orchestrator: TaskGenerationOrchestrator,
     private val phaseTransitionService: PhaseTransitionService,
     private val phaseLogRepository: TopicPhaseLogRepository,
-    private val statsRepository: TopicStatsRepository
+    private val statsRepository: TopicStatsRepository,
+    private val prerequisiteRepository: PrerequisiteRepository
 ) : TopicUseCase {
 
     private val log = LoggerFactory.getLogger(TopicManagementService::class.java)
@@ -206,5 +210,67 @@ class TopicManagementService(
         phaseTransitionService.transitionTo(topicId, GenerationPhase.INGESTION)
         orchestrator.generateAsync(topicId)
         topicRepository.findById(topicId) ?: topic
+    }
+
+    override fun getPrerequisites(topicId: String): Either<AppError, List<Topic>> = either {
+        ensureNotNull(topicRepository.findById(topicId)) {
+            NotFound.ResourceNotFound("Topic", topicId)
+        }
+        val prereqIds = prerequisiteRepository.findPrerequisitesByTopicId(topicId)
+        prereqIds.mapNotNull { topicRepository.findById(it) }
+    }
+
+    override fun setPrerequisites(topicId: String, prerequisiteIds: List<String>): Either<AppError, List<Topic>> = either {
+        ensureNotNull(topicRepository.findById(topicId)) {
+            NotFound.ResourceNotFound("Topic", topicId)
+        }
+        ensure(topicId !in prerequisiteIds) {
+            BadRequest.InvalidField("prerequisiteIds", "a topic cannot be its own prerequisite")
+        }
+        prerequisiteIds.forEach { prereqId ->
+            ensureNotNull(topicRepository.findById(prereqId)) {
+                NotFound.ResourceNotFound("Topic", prereqId)
+            }
+        }
+        ensure(!hasCycle(topicId, prerequisiteIds)) {
+            BadRequest.InvalidField("prerequisiteIds", "setting these prerequisites would create a cycle in the learning graph")
+        }
+        prerequisiteRepository.setPrerequisites(topicId, prerequisiteIds)
+        prerequisiteIds.mapNotNull { topicRepository.findById(it) }
+    }
+
+    override fun getLearningGraph(): LearningGraph {
+        val edges = prerequisiteRepository.findAllEdges()
+            .map { (topicId, prereqId) -> PrerequisiteEdge(topicId, prereqId) }
+        return LearningGraph(edges)
+    }
+
+    /** BFS cycle detection: returns true if adding [newPrereqs] for [topicId] would create a cycle. */
+    private fun hasCycle(topicId: String, newPrereqs: List<String>): Boolean {
+        // Build the current graph, replacing edges for topicId with newPrereqs
+        val adjacency = mutableMapOf<String, MutableList<String>>()
+        prerequisiteRepository.findAllEdges().forEach { (t, p) ->
+            if (t != topicId) adjacency.getOrPut(t) { mutableListOf() }.add(p)
+        }
+        adjacency[topicId] = newPrereqs.toMutableList()
+
+        // DFS from every node to detect a back-edge reaching topicId
+        val visited = mutableSetOf<String>()
+        val inStack = mutableSetOf<String>()
+
+        fun dfs(node: String): Boolean {
+            if (node in inStack) return true
+            if (node in visited) return false
+            visited.add(node)
+            inStack.add(node)
+            for (neighbor in adjacency[node] ?: emptyList()) {
+                if (dfs(neighbor)) return true
+            }
+            inStack.remove(node)
+            return false
+        }
+
+        val allNodes = adjacency.keys + adjacency.values.flatten()
+        return allNodes.any { node -> node !in visited && dfs(node) }
     }
 }
