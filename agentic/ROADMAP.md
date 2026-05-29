@@ -122,9 +122,8 @@ question reports. Correct one question. The corrected task regenerates its insta
 
 ## Phase 09 — Learning Path DAG
 
-**Status:** `IN PROGRESS`
+**Status:** `DONE`
 **Phase file:** [phases/phase-09-learning-path-dag.md](phases/phase-09-learning-path-dag.md)
-**Branch:** `feat/phase-09-learning-path-dag`
 
 **Goal:** Prerequisite graph (DAG) for topics. Admin sets prerequisites via
 `POST /admin/topics/{id}/prerequisites`. Server gates enrollment (all prereqs must be COMPLETED).
