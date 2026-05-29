@@ -18,6 +18,7 @@ import com.ureka.play4change.application.struggle.ErrorPatternClassifier
 import com.ureka.play4change.application.struggle.HandleStruggleService
 import com.ureka.play4change.domain.enrollment.AssignmentStatus
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
+import com.ureka.play4change.domain.enrollment.EnrollmentStatus
 import com.ureka.play4change.domain.enrollment.TaskAssignment
 import com.ureka.play4change.domain.enrollment.TaskShuffleSeed
 import com.ureka.play4change.domain.topic.TaskInstanceRepository
@@ -252,6 +253,19 @@ class TaskService(
         val savedEnrollment = enrollmentRepository.save(updatedEnrollment)
 
         triggerBadgeIssuance(isCorrect, command.userId, savedEnrollment.topicId, savedEnrollment.id)
+
+        // Transition enrollment to COMPLETED when all tasks have been submitted
+        if (updatedAssignment.submittedAt != null && savedEnrollment.status == EnrollmentStatus.ACTIVE) {
+            val topic = topicRepository.findById(savedEnrollment.topicId)
+            if (topic != null) {
+                val submittedCount = enrollmentRepository.findAssignmentsByEnrollmentId(savedEnrollment.id)
+                    .count { it.submittedAt != null }
+                if (submittedCount >= topic.taskCount) {
+                    enrollmentRepository.save(savedEnrollment.complete())
+                    log.info("Enrollment {} completed for user {} on topic {}", savedEnrollment.id, command.userId, savedEnrollment.topicId)
+                }
+            }
+        }
 
         val submissionOutcome = when {
             isCorrect && isLate -> "late"
