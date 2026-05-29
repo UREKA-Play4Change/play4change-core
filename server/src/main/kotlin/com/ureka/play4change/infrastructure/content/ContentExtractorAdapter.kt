@@ -19,7 +19,13 @@ class ContentExtractorAdapter : ContentExtractorPort {
             it.setConnectTimeout(CONNECT_TIMEOUT_MS)
             it.setReadTimeout(READ_TIMEOUT_MS)
         }
-    )
+    ).also { rt ->
+        rt.interceptors.add { request, body, execution ->
+            request.headers["User-Agent"] = USER_AGENT
+            request.headers["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            execution.execute(request, body)
+        }
+    }
 
     override fun extractFromUrl(url: String): String {
         UrlSsrfValidator.validate(url)
@@ -49,5 +55,7 @@ class ContentExtractorAdapter : ContentExtractorPort {
     companion object {
         private const val CONNECT_TIMEOUT_MS = 10_000
         private const val READ_TIMEOUT_MS = 30_000
+        private const val USER_AGENT =
+            "Mozilla/5.0 (compatible; Play4Change/1.0; +https://play4change.ureka.pt)"
     }
 }
