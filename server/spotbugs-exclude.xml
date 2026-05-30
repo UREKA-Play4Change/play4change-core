@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SpotBugs / FindSecBugs exclusion filter for the Play4Change server module.
+
+  Every suppressed finding MUST have a comment explaining:
+  1. Why it is a false positive (or deferred risk), and
+  2. The date the suppression was added.
+
+  If a suppression is for a deferred risk (not a false positive), it must be
+  tracked in THREAT-LOG.md and ISSUES.md with a planned remediation phase.
+-->
+<FindBugsFilter>
+
+  <!--
+    FALSE POSITIVE: Spring Security + JWT stateless auth replaces Spring's
+    CSRF protection. SessionCreationPolicy.STATELESS disables session cookies,
+    so CSRF tokens are not applicable. SecurityConfig.kt, ADR-011.
+    Added: 2026-05-30
+  -->
+  <Match>
+    <Bug pattern="SPRING_CSRF_PROTECTION_DISABLED"/>
+  </Match>
+
+  <!--
+    FALSE POSITIVE: Spring Boot @RestController endpoints are protected by the
+    JwtAuthFilter + SecurityConfig role-based access rules before any controller
+    method is invoked. SpotBugs cannot see the servlet filter chain.
+    Added: 2026-05-30
+  -->
+  <Match>
+    <Bug pattern="SPRING_ENDPOINT_PERMISSIVE_ACCESS"/>
+  </Match>
+
+  <!--
+    FALSE POSITIVE: TaskShuffleSeed.shuffleOptions() creates a new java.util.Random(seed)
+    intentionally. The seed is deterministic (SHA-256 of userId+taskId+enrollmentId) so
+    each call needs its own freshly-seeded instance to reproduce the same shuffle order
+    for the same inputs. Reusing a shared instance would break the anti-cheat determinism.
+    Added: 2026-05-30
+  -->
+  <Match>
+    <Class name="com.ureka.play4change.domain.enrollment.TaskShuffleSeed"/>
+    <Bug pattern="DMI_RANDOM_USED_ONLY_ONCE"/>
+  </Match>
+
+</FindBugsFilter>
