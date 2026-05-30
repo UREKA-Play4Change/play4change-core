@@ -29,6 +29,8 @@ class TokenService(
         Keys.hmacShaKeyFor(jwtProperties.secret.toByteArray())
     }
 
+    private val secureRandom = SecureRandom()
+
     /** Called by MagicLinkService and OAuthService after user is resolved. */
     fun issue(userId: String, email: String, role: String): TokenPair {
         val accessExpirySeconds = jwtProperties.accessTtlMinutes * 60
@@ -131,7 +133,7 @@ class TokenService(
 
     private fun generateSecureToken(): String {
         val bytes = ByteArray(32)
-        SecureRandom().nextBytes(bytes)
+        secureRandom.nextBytes(bytes)
         return String(Hex.encode(bytes))
     }
 
