@@ -1,6 +1,7 @@
 package com.ureka.play4change.web.admin
 
 import com.ureka.play4change.application.port.CorrectTaskCommand
+import jakarta.validation.Valid
 import com.ureka.play4change.application.port.TaskReportUseCase
 import com.ureka.play4change.error.AppError
 import com.ureka.play4change.web.admin.dto.CorrectTaskReportRequest
@@ -47,7 +48,7 @@ class AdminTaskReportController(private val taskReportUseCase: TaskReportUseCase
     @PostMapping("/{reportId}/correct")
     fun correctReport(
         @PathVariable reportId: String,
-        @RequestBody request: CorrectTaskReportRequest
+        @Valid @RequestBody request: CorrectTaskReportRequest
     ): ResponseEntity<TaskReportResponse> =
         taskReportUseCase.correct(
             CorrectTaskCommand(
