@@ -38,9 +38,13 @@ object UrlSsrfValidator {
         if (url.host.isBlank()) "URL has no host: $rawUrl" else null
 
     private fun checkPrivateAddress(url: URL): String? {
-        val addresses = runCatching { InetAddress.getAllByName(url.host) }
+        // Strip IPv6 bracket notation that URL parsing preserves (e.g. "[::1]" -> "::1")
+        val host = url.host.trimStart('[').trimEnd(']')
+        val addresses = runCatching { InetAddress.getAllByName(host) }
             .getOrElse { return "Cannot resolve host '${url.host}'" }
-        return addresses.firstOrNull { it.isLoopbackAddress || it.isSiteLocalAddress || it.isLinkLocalAddress }
-            ?.let { "URL resolves to a private or reserved IP address: ${it.hostAddress}" }
+        if (addresses.isEmpty()) return "URL resolved to no addresses: ${url.host}"
+        return addresses.firstOrNull {
+            it.isLoopbackAddress || it.isSiteLocalAddress || it.isLinkLocalAddress || it.isMulticastAddress
+        }?.let { "URL resolves to a private or reserved IP address: ${it.hostAddress}" }
     }
 }
