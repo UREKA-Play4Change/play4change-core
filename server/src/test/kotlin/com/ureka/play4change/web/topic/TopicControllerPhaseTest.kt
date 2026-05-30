@@ -4,6 +4,7 @@ import arrow.core.right
 import com.ninjasquad.springmockk.MockkBean
 import com.ureka.play4change.application.port.TopicDetail
 import com.ureka.play4change.application.port.TopicUseCase
+import com.ureka.play4change.auth.adapter.inbound.security.RateLimitService
 import com.ureka.play4change.auth.application.TokenService
 import com.ureka.play4change.domain.topic.AudienceLevel
 import com.ureka.play4change.domain.topic.ContentSourceType
@@ -41,6 +42,9 @@ class TopicControllerPhaseTest {
 
     @MockkBean
     private lateinit var tokenService: TokenService
+
+    @MockkBean
+    private lateinit var rateLimitService: RateLimitService
 
     @MockkBean
     private lateinit var meterRegistry: MeterRegistry
