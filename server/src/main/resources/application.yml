@@ -57,6 +57,11 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        ai.generation.duration: true
+      percentiles:
+        ai.generation.duration: 0.5, 0.95, 0.99
 # ── Resilience4j ──────────────────────────────────────────────────────────────
 resilience4j:
   circuit-breaker:
