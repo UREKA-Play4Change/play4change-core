@@ -6,6 +6,7 @@ import com.ureka.play4change.application.port.UpdateProfileNameCommand
 import com.ureka.play4change.application.port.UpdateProfileNameUseCase
 import com.ureka.play4change.application.user.GetUserProfileUseCase
 import com.ureka.play4change.application.user.UserProfile
+import com.ureka.play4change.auth.adapter.inbound.security.RateLimitService
 import com.ureka.play4change.auth.application.TokenService
 import com.ureka.play4change.error.client.BadRequest
 import com.ureka.play4change.error.client.NotFound
@@ -42,6 +43,9 @@ class UserProfileControllerTest {
 
     @MockkBean
     private lateinit var tokenService: TokenService
+
+    @MockkBean
+    private lateinit var rateLimitService: RateLimitService
 
     @MockkBean
     private lateinit var meterRegistry: MeterRegistry
