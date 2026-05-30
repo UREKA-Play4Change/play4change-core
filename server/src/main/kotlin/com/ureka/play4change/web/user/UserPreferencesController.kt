@@ -4,6 +4,8 @@ import com.ureka.play4change.application.port.UpdatePreferencesCommand
 import com.ureka.play4change.application.port.UserPreferences
 import com.ureka.play4change.application.port.UserPreferencesUseCase
 import com.ureka.play4change.error.AppError
+import jakarta.validation.Valid
+import jakarta.validation.constraints.Size
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
@@ -13,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 data class UpdatePreferencesRequest(
-    val language: String? = null,
-    val timezone: String? = null
+    @field:Size(max = 10) val language: String? = null,
+    @field:Size(max = 50) val timezone: String? = null
 )
 
 @RestController
@@ -30,7 +32,7 @@ class UserPreferencesController(private val userPreferencesUseCase: UserPreferen
 
     @PutMapping
     fun update(
-        @RequestBody request: UpdatePreferencesRequest,
+        @Valid @RequestBody request: UpdatePreferencesRequest,
         @AuthenticationPrincipal userId: String
     ): ResponseEntity<UserPreferences> =
         userPreferencesUseCase.update(
