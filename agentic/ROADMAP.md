@@ -157,7 +157,7 @@ returns 429. Swagger UI is not accessible without ADMIN JWT in prod profile.
 
 ## Phase 08 — Observability & Demo Polish
 
-**Status:** `PENDING`
+**Status:** `DONE`
 **Phase file:** [phases/phase-08-observability-demo.md](phases/phase-08-observability-demo.md)
 
 **Goal:** Grafana dashboards for AI latency / task submission rate / struggle trigger rate /
