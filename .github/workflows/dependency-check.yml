@@ -30,11 +30,26 @@ jobs:
         # See HACKS.md H04 for full explanation.
         run: ./gradlew :server:copyRuntimeDependencies --no-configuration-cache
 
+      - name: Copy mobile runtime dependencies
+        # composeApp: lenient artifact view on androidDebugRuntimeClasspath (KMP variant ambiguity workaround)
+        # common: jvmRuntimeClasspath (6 core KMP JARs)
+        # See HACKS.md H04 for context on the dep-check Gradle plugin workaround.
+        run: ./gradlew :composeApp:copyRuntimeDependencies :common:copyRuntimeDependencies --no-configuration-cache
+
       - name: Upload server dependencies artifact
         uses: actions/upload-artifact@v4
         with:
           name: server-dependencies
           path: server/build/dependencies/
+          retention-days: 1
+
+      - name: Upload mobile dependencies artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-dependencies
+          path: |
+            composeApp/build/dependencies/
+            common/build/dependencies/
           retention-days: 1
 
   dependency-check:
@@ -51,7 +66,13 @@ jobs:
           name: server-dependencies
           path: server/build/dependencies/
 
-      - name: OWASP Dependency Check
+      - name: Download mobile dependencies artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: mobile-dependencies
+          path: mobile-dependencies/
+
+      - name: OWASP Dependency Check (server)
         # ubuntu-latest runners have JAVA_HOME pre-set to a host path that
         # does not exist inside the owasp/dependency-check Docker container.
         # The action passes -e "JAVA_HOME" to Docker, so we override it here
@@ -69,10 +90,25 @@ jobs:
             --nvdApiKey ${{ secrets.NVD_API_KEY }}
         continue-on-error: false
 
-      - name: Upload dependency-check report
+      - name: OWASP Dependency Check (mobile modules)
+        uses: dependency-check/Dependency-Check_Action@main
+        env:
+          JAVA_HOME: /opt/java/openjdk
+        with:
+          project: 'play4change-mobile'
+          path: 'mobile-dependencies'
+          format: 'HTML'
+          args: >
+            --failOnCVSS 7
+            --suppression composeApp/dependency-check-suppression.xml
+            --suppression common/dependency-check-suppression.xml
+            --nvdApiKey ${{ secrets.NVD_API_KEY }}
+        continue-on-error: false
+
+      - name: Upload dependency-check reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: dependency-check-report
+          name: dependency-check-reports
           path: reports/
           retention-days: 30
