@@ -1,8 +1,11 @@
 package com.ureka.play4change.domain.identity
 
+import com.ureka.play4change.domain.topic.PageResult
+
 interface UserRepository {
     fun findById(id: String): User?
     fun findByEmail(email: String): User?
     fun findByProviderAndProviderId(provider: AuthProvider, providerId: String): User?
     fun save(user: User): User
+    fun findAll(page: Int, size: Int): PageResult<User>
 }
