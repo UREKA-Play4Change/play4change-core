@@ -413,4 +413,20 @@ Full audit of all `@RequestBody` controller parameters. Findings table:
 
 **Test coverage:** `AuthControllerValidationTest` (3 tests) verifies blank email → 400, non-email → 400, blank refreshToken → 400.
 
+---
+
+## Phase 07 SpotBugs Triage (Task 7.9) — 2026-05-30
+
+SpotBugs 4.8.6 + FindSecBugs 1.13.0 added to `server/build.gradle.kts`.
+First scan found 3 findings. All triaged:
+
+| # | Finding | Class | Category | Action |
+|---|---------|-------|---------|--------|
+| 1 | `DMI_RANDOM_USED_ONLY_ONCE` | `TokenService.generateSecureToken()` | Correctness | FIXED: Moved `SecureRandom()` to class member `private val secureRandom`. Reusing shared instance is correct — `SecureRandom` is thread-safe. |
+| 2 | `DMI_RANDOM_USED_ONLY_ONCE` | `MagicLinkService.generateToken()` | Correctness | FIXED: Moved `SecureRandom()` to class member `private val secureRandom`. Same rationale as above. |
+| 3 | `DMI_RANDOM_USED_ONLY_ONCE` | `TaskShuffleSeed.shuffleOptions()` | Correctness | SUPPRESSED (false positive): Creates a seeded `Random(seed)` intentionally — same three inputs must always produce the same shuffle order (anti-cheat). Suppression documented in `spotbugs-exclude.xml`. |
+
+**Summary:** Real findings: 2 (both fixed). False positives: 1 (suppressed with justification). Deferred: 0.
+`./gradlew :server:spotbugsMain` exits 0. All tests pass.
+
 *(New entries are prepended above existing open items. Most recent first.)*
