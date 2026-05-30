@@ -6,6 +6,7 @@ import com.ninjasquad.springmockk.MockkBean
 import com.ureka.play4change.application.port.AdminTaskUseCase
 import com.ureka.play4change.application.port.TaskTemplateWithStats
 import com.ureka.play4change.application.port.UpdateTaskCommand
+import com.ureka.play4change.auth.adapter.inbound.security.RateLimitService
 import com.ureka.play4change.auth.application.TokenService
 import com.ureka.play4change.domain.struggle.AdaptiveTask
 import com.ureka.play4change.domain.struggle.AdaptiveTaskAdminView
@@ -46,6 +47,9 @@ class AdminTaskControllerTest {
 
     @MockkBean
     private lateinit var tokenService: TokenService
+
+    @MockkBean
+    private lateinit var rateLimitService: RateLimitService
 
     @MockkBean
     private lateinit var meterRegistry: MeterRegistry
