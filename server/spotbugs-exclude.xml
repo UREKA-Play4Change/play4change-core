@@ -43,4 +43,17 @@
     <Bug pattern="DMI_RANDOM_USED_ONLY_ONCE"/>
   </Match>
 
+
+  <!--
+    FALSE POSITIVE: @MockkBean / @SpringBootTest properties in Kotlin test classes are
+    injected by the Spring test context. SpotBugs sees the generated getter returning
+    null before injection and reports NP_NONNULL_RETURN_VIOLATION. These are test-only
+    classes with no production impact.
+    Added: 2026-05-30
+  -->
+  <Match>
+    <Class name="~com\.ureka\.play4change\..*Test.*"/>
+    <Bug pattern="NP_NONNULL_RETURN_VIOLATION"/>
+  </Match>
+
 </FindBugsFilter>
