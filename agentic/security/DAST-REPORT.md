@@ -165,3 +165,12 @@ When ZAP reports these, mark them as FALSE POSITIVE in the findings table with t
 
 **Phase 07 DAST pass status:** COMPLETE — 2026-05-30
 **Authenticated scans:** See `DAST-REPORT-AUTHENTICATED.md`
+
+### Accepted Residual Risk — CSP unsafe-inline
+
+**Finding:** Content-Security-Policy with `style-src 'unsafe-inline'` in SPA `/` location
+**Why accepted:** The Vite/React build inlines CSS styles by default. Removing `'unsafe-inline'`
+requires migrating to CSS modules with nonce-based CSP. This is a planned improvement but
+out of scope for Phase 07.
+**Approver:** Radesh Govind, 2026-05-30
+**Follow-up:** CSP nonce migration deferred to a post-Phase-07 hardening ticket in ISSUES.md
