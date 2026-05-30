@@ -1,6 +1,7 @@
 package com.ureka.play4change.web.admin
 
 import com.ureka.play4change.application.port.TopicUseCase
+import jakarta.validation.Valid
 import com.ureka.play4change.error.AppError
 import com.ureka.play4change.web.admin.dto.LearningGraphEdgeResponse
 import com.ureka.play4change.web.admin.dto.LearningGraphResponse
@@ -25,7 +26,7 @@ class AdminTopicPrerequisiteController(
     @PostMapping("/topics/{id}/prerequisites")
     fun setPrerequisites(
         @PathVariable id: String,
-        @RequestBody request: SetPrerequisitesRequest
+        @Valid @RequestBody request: SetPrerequisitesRequest
     ): ResponseEntity<List<PrerequisiteTopicResponse>> =
         topicUseCase.setPrerequisites(id, request.prerequisiteIds).fold(
             ifLeft = { it.toErrorResponse() },
