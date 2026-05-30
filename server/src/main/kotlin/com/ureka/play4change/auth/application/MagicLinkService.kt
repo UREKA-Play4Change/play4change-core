@@ -24,6 +24,8 @@ class MagicLinkService(
     private val tokenService: TokenService,
 ) : AuthUseCase {
 
+    private val secureRandom = SecureRandom()
+
     override fun requestMagicLink(email: String) {
         val normalised = email.lowercase().trim()
         val rawToken = generateToken()
@@ -67,7 +69,7 @@ class MagicLinkService(
 
     private fun generateToken(): String {
         val bytes = ByteArray(32)
-        SecureRandom().nextBytes(bytes)
+        secureRandom.nextBytes(bytes)
         return String(Hex.encode(bytes))
     }
 
