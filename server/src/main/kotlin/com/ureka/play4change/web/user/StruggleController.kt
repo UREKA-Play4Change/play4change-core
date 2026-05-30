@@ -1,6 +1,7 @@
 package com.ureka.play4change.web.user
 
 import com.ureka.play4change.application.port.StruggleUseCase
+import jakarta.validation.Valid
 import com.ureka.play4change.application.port.SubmitAdaptiveTaskCommand
 import com.ureka.play4change.error.AppError
 import com.ureka.play4change.web.user.dto.AdaptiveSubmitResultResponse
@@ -28,7 +29,7 @@ class StruggleController(private val struggleUseCase: StruggleUseCase) {
     fun submitAdaptiveTask(
         @PathVariable sessionId: String,
         @PathVariable taskId: String,
-        @RequestBody request: SubmitAdaptiveTaskRequest,
+        @Valid @RequestBody request: SubmitAdaptiveTaskRequest,
         @AuthenticationPrincipal userId: String
     ): ResponseEntity<AdaptiveSubmitResultResponse> =
         struggleUseCase.submitAdaptiveTask(
