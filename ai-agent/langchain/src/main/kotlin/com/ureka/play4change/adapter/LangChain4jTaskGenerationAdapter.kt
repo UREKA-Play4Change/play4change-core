@@ -65,7 +65,7 @@ class LangChain4jTaskGenerationAdapter(
     override suspend fun generateTasks(
         request: GenerationRequest
     ): Either<AppError, GenerationResult> {
-        val timer = Timer.start(meterRegistry)
+        val generationTimer = Timer.start(meterRegistry)
         log.info("Generating ${request.taskCount} tasks for domain=${request.subjectDomain} module=${request.moduleId}")
 
         return runCatching {
@@ -98,8 +98,12 @@ class LangChain4jTaskGenerationAdapter(
                 return ServiceUnavailable.DependencyUnavailable("mistral-ai-schema").left()
             }
 
-            val durationMs = timer.stop(
-                meterRegistry.timer("ai.generation.duration", "type", "fixed_path")
+            val durationMs = generationTimer.stop(
+                meterRegistry.timer(
+                    "ai.generation.duration",
+                    "topic_id", request.topicId,
+                    "generation_phase", "GENERATION"
+                )
             ) / 1_000_000
 
             GenerationResult(
@@ -129,6 +133,7 @@ class LangChain4jTaskGenerationAdapter(
     override suspend fun generateAdaptiveBranch(
         context: StruggleContext
     ): Either<AppError, AdaptiveBranch> {
+        val analysisTimer = Timer.start(meterRegistry)
         log.info("Generating adaptive branch for user=${context.userId} task=${context.taskId} errorPattern=${context.errorPattern}")
 
         return runCatching {
@@ -143,7 +148,7 @@ class LangChain4jTaskGenerationAdapter(
             val match = deduplicationService.findSimilarStruggle(struggleEmbedding)
 
             // 3. Apply similarity-based reuse strategy
-            when (match.strategy) {
+            val result = when (match.strategy) {
                 ReuseStrategy.FULL_REUSE -> {
                     log.info("Full reuse: similarity=${match.similarity} branchId=${match.branchId}")
                     meterRegistry.counter("ai.adaptive.reuse", "strategy", "full").increment()
@@ -162,6 +167,14 @@ class LangChain4jTaskGenerationAdapter(
                     generateFreshBranch(context, struggleEmbedding)
                 }
             }
+            analysisTimer.stop(
+                meterRegistry.timer(
+                    "ai.generation.duration",
+                    "topic_id", context.topicId,
+                    "generation_phase", "ANALYSIS"
+                )
+            )
+            result
         }.fold(
             onSuccess = { it.right() },
             onFailure = { e ->
