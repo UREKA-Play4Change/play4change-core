@@ -39,6 +39,8 @@ data class TaskState(
     val hintVisible: Boolean = false,
     val submitted: Boolean = false,
     val isCorrect: Boolean = false,
+    /** True briefly after a first wrong attempt so the UI can flash red before resetting. */
+    val wrongAnswerFeedback: Boolean = false,
 
     // Shared
     val submission: SubmissionState = SubmissionState.Idle,
@@ -46,6 +48,7 @@ data class TaskState(
     val totalPoints: Int = 0,
     val struggleTriggered: Boolean = false,
     val showHint: Boolean = false,
+    val enrollmentId: String = "",
 
     // Back navigation is BLOCKED during an active quiz/task.
     // Unlocked after submission via Continue.
