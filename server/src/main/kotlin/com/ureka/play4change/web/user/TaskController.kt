@@ -1,6 +1,7 @@
 package com.ureka.play4change.web.user
 
 import com.ureka.play4change.application.port.SubmitAnswerCommand
+import jakarta.validation.Valid
 import com.ureka.play4change.application.port.SubmitPhotoCommand
 import com.ureka.play4change.application.port.TaskUseCase
 import com.ureka.play4change.application.port.TodayTaskResult
@@ -49,7 +50,7 @@ class TaskController(
     @PostMapping("/{assignmentId}/submit")
     fun submitAnswer(
         @PathVariable assignmentId: String,
-        @RequestBody request: SubmitAnswerRequest,
+        @Valid @RequestBody request: SubmitAnswerRequest,
         @AuthenticationPrincipal userId: String,
         @RequestHeader(value = "X-Timezone", required = false) timezone: String?
     ): ResponseEntity<SubmitResultResponse> =
@@ -68,7 +69,7 @@ class TaskController(
     @PostMapping("/{assignmentId}/submit-photo")
     fun submitPhoto(
         @PathVariable assignmentId: String,
-        @RequestBody request: SubmitPhotoRequest,
+        @Valid @RequestBody request: SubmitPhotoRequest,
         @AuthenticationPrincipal userId: String
     ): ResponseEntity<TodoSubmitResponse> =
         taskUseCase.submitPhoto(
