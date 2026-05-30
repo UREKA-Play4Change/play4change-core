@@ -22,3 +22,14 @@ IMPLEMENTATION.md
 2026-*.json
 zap-report.html
 zap-report.json
+zap-auth-admin-report.html
+zap-auth-admin-report.json
+zap-auth-user-report.html
+zap-auth-user-report.json
+agentic/security/zap.yaml
+agentic/security/zap-report.html
+agentic/security/zap-report.json
+agentic/security/zap-auth-admin-report.html
+agentic/security/zap-auth-admin-report.json
+agentic/security/zap-auth-user-report.html
+agentic/security/zap-auth-user-report.json
