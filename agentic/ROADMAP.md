@@ -140,7 +140,7 @@ Attempt to enroll in B again — succeeds. Admin web Learning Paths page shows t
 
 ## Phase 07 — Security Hardening & DAST
 
-**Status:** `PENDING`
+**Status:** `DONE`
 **Phase file:** [phases/phase-07-security-hardening.md](phases/phase-07-security-hardening.md)
 
 **Goal:** Systematic OWASP Top 10 pass, OWASP ZAP DAST run against Docker Compose stack,
@@ -157,7 +157,7 @@ returns 429. Swagger UI is not accessible without ADMIN JWT in prod profile.
 
 ## Phase 08 — Observability & Demo Polish
 
-**Status:** `PENDING`
+**Status:** `DONE`
 **Phase file:** [phases/phase-08-observability-demo.md](phases/phase-08-observability-demo.md)
 
 **Goal:** Grafana dashboards for AI latency / task submission rate / struggle trigger rate /

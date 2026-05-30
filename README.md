@@ -140,7 +140,9 @@ All decisions are documented in [`docs/adr/`](docs/adr/) (ADR-001 through ADR-01
 
 ## 7. Demo
 
-The [`demo/`](demo/) directory contains runnable JetBrains HTTP Client files covering the three core flows:
+**[demo/DEMO_SCRIPT.md](demo/DEMO_SCRIPT.md)** — self-contained walkthrough covering all 5 bounded contexts in ~15 minutes. Follows auth → topic creation → enrollment → struggle → peer review → badge → observability.
+
+The [`demo/`](demo/) directory also contains runnable JetBrains HTTP Client files:
 
 - **[demo/auth.http](demo/auth.http)** — passwordless magic link and OAuth login flow
 - **[demo/admin_topic.http](demo/admin_topic.http)** — admin PDF upload and async AI generation
@@ -162,17 +164,36 @@ the Docker Compose container). The change takes effect on the user's next login.
 
 ---
 
-## 9. Tests
+## 9. Observability
 
-24 unit tests across 4 test classes. No Spring context required — all tests run as pure JVM.
+Two Grafana dashboards are provisioned automatically on `docker compose up`. Access at **http://localhost:3000** (admin / admin).
 
-| Class | Tests | Coverage |
-|---|---|---|
-| `ErrorPatternClassifierTest` | 8 | Struggle pattern classification rules and priority ordering |
-| `DayIndexCalculatorTest` | 7 | Day progression, timezone boundary cases, clock-skew guard |
-| `MagicLinkServiceTest` | 7 | Auth service with MockK — hash storage, atomic claim, concurrency path |
-| `TokenServiceTest` | 2 | Token revocation — full family invalidation and no-op on unknown token |
+| Dashboard | What it shows |
+|---|---|
+| AI Generation Latency | P50 / P95 / P99 of Mistral API call duration, per generation phase |
+| Learner Flow Metrics | Task submission rate (correct vs incorrect), struggle trigger rate, peer review verdict throughput |
+
+Prometheus scrapes the server on port 9090. Raw metrics: **http://localhost:9090**.
+
+---
+
+## 10. Tests
+
+210 unit tests across 39 test classes. No Spring context required — all tests run as pure JVM.
+
+Selected highlights:
+
+| Class | Area |
+|---|---|
+| `AiGenerationMetricsTest` | AI timer with `generation_phase` and `topic_id` tags |
+| `LearnerFlowMetricsTest` | tasks.submitted / struggle.sessions.created / reviews.verdicts counters |
+| `AuthControllerValidationTest` | Bean validation on auth endpoints |
+| `ErrorPatternClassifierTest` | Struggle pattern classification rules |
+| `DayIndexCalculatorTest` | Day progression, timezone boundary cases |
+| `MagicLinkServiceTest` | Hash storage, atomic claim, concurrency path |
+| `EnrollmentPrerequisiteGateTest` | DAG prerequisite enforcement |
 
 ```bash
 ./gradlew :server:test
+./gradlew :ai-agent:langchain:test
 ```

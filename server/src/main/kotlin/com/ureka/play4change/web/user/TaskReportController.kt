@@ -1,6 +1,7 @@
 package com.ureka.play4change.web.user
 
 import com.ureka.play4change.application.port.ReportTaskCommand
+import jakarta.validation.Valid
 import com.ureka.play4change.application.port.TaskReportUseCase
 import com.ureka.play4change.error.AppError
 import com.ureka.play4change.web.user.dto.ReportTaskRequest
@@ -20,7 +21,7 @@ class TaskReportController(private val taskReportUseCase: TaskReportUseCase) {
     @PostMapping("/{taskId}/report")
     fun reportTask(
         @PathVariable taskId: String,
-        @RequestBody request: ReportTaskRequest,
+        @Valid @RequestBody request: ReportTaskRequest,
         @AuthenticationPrincipal userId: String
     ): ResponseEntity<Map<String, String>> {
         require(request.reason.isNotBlank()) { "reason must not be blank" }

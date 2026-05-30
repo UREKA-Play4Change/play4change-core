@@ -384,4 +384,49 @@ down to the service. Either requires a small service-layer change and a test upd
 
 ---
 
+---
+
+## Phase 07 Input Validation Audit (Task 7.5) — 2026-05-30
+
+Full audit of all `@RequestBody` controller parameters. Findings table:
+
+| DTO Class | Controller | Was Valid? | Action | Notes |
+|-----------|-----------|-----------|--------|-------|
+| `MagicLinkRequest` | `AuthController.requestMagicLink` | No `@Valid`, no constraints | FIXED: `@field:NotBlank @field:Email` on email; `@Valid` added | R16 |
+| `MagicLinkVerifyRequest` | `AuthController.verifyMagicLinkPost` | No `@Valid`, no constraints | FIXED: `@field:NotBlank` on token; `@Valid` added | |
+| `OAuthRequest` | `AuthController.oauthLogin` | No `@Valid`, no constraints | FIXED: `@Valid` added; idToken/credential validation via `resolvedToken()` retained | |
+| `RefreshRequest` | `AuthController.refresh`, `logout`, `logoutPost` | No `@Valid`, no constraints | FIXED: `@field:NotBlank` on refreshToken; `@Valid` added | |
+| `CreateUrlTopicRequest` | `TopicController.createFromUrl` | No `@Valid`, no constraints | FIXED: `@field:NotBlank @Size` on title/description; `@field:NotEmpty @Size` on urls; `@Min @Max` on durationDays; `@Valid` added | |
+| `SubmitAnswerRequest` | `TaskController.submitAnswer` | No `@Valid`, Int field | FIXED: `@Valid` added; Int is non-nullable — no constraint needed | |
+| `SubmitPhotoRequest` | `TaskController.submitPhoto` | No `@Valid`, no constraints | FIXED: `@field:NotBlank @Size(max=2000)` on photoUrl; `@Valid` added | |
+| `SubmitVerdictRequest` | `PeerReviewController.submitVerdict` | No `@Valid`, no constraints | FIXED: `@field:NotBlank @Size(max=50)` on verdict; `@Size(max=500)` on comment; `@Valid` added | |
+| `SubmitAdaptiveTaskRequest` | `StruggleController.submitAdaptiveTask` | No `@Valid`, Int field | FIXED: `@Valid` added; Int is non-nullable — no constraint needed | |
+| `CorrectTaskReportRequest` | `AdminTaskReportController.correctReport` | No `@Valid`, no constraints | FIXED: `@field:NotBlank @Size` on correctedTitle; `@field:NotEmpty @Size(min=2,max=10)` on correctedOptions; `@Valid` added | |
+| `SetPrerequisitesRequest` | `AdminTopicPrerequisiteController.setPrerequisites` | No `@Valid`, no constraints | FIXED: `@Valid` added; empty list is valid (removes all prerequisites) | |
+| `UpdatePreferencesRequest` | `UserPreferencesController.update` | No `@Valid`, no constraints | FIXED: `@Size(max=10)` on language; `@Size(max=50)` on timezone; both optional; `@Valid` added | |
+| `UpdateProfileNameRequest` | `UserProfileController.updateName` | No `@Valid`, no constraints | FIXED: `@field:NotBlank @Size(min=2,max=100)` on name; `@Valid` added | |
+| `RegisterDeviceTokenRequest` | `DeviceTokenController.register` | No `@Valid`, manual validation | FIXED: `@field:NotBlank @Size(max=1024)` on token; `@field:NotBlank @Pattern(ANDROID|IOS)` on platform; manual validation removed; `@Valid` added | |
+| `ReportTaskRequest` | `TaskReportController.reportTask` | No `@Valid`, no constraints | FIXED: `@field:NotBlank @Size(max=500)` on reason; manual `require()` retained as defense in depth; `@Valid` added | |
+| `UpdateTaskRequest` | `AdminTaskController.updateTask` | Already valid | ALREADY VALID: `@field:NotBlank`, `@field:Size` present; `@Valid` already on `@RequestBody` | Only pre-existing valid DTO |
+
+**Also added:** `MethodArgumentNotValidException` handler in `AuthExceptionHandler.kt` returning `{ "message": "Validation failed", "errors": ["field: message", ...] }`.
+
+**Test coverage:** `AuthControllerValidationTest` (3 tests) verifies blank email → 400, non-email → 400, blank refreshToken → 400.
+
+---
+
+## Phase 07 SpotBugs Triage (Task 7.9) — 2026-05-30
+
+SpotBugs 4.8.6 + FindSecBugs 1.13.0 added to `server/build.gradle.kts`.
+First scan found 3 findings. All triaged:
+
+| # | Finding | Class | Category | Action |
+|---|---------|-------|---------|--------|
+| 1 | `DMI_RANDOM_USED_ONLY_ONCE` | `TokenService.generateSecureToken()` | Correctness | FIXED: Moved `SecureRandom()` to class member `private val secureRandom`. Reusing shared instance is correct — `SecureRandom` is thread-safe. |
+| 2 | `DMI_RANDOM_USED_ONLY_ONCE` | `MagicLinkService.generateToken()` | Correctness | FIXED: Moved `SecureRandom()` to class member `private val secureRandom`. Same rationale as above. |
+| 3 | `DMI_RANDOM_USED_ONLY_ONCE` | `TaskShuffleSeed.shuffleOptions()` | Correctness | SUPPRESSED (false positive): Creates a seeded `Random(seed)` intentionally — same three inputs must always produce the same shuffle order (anti-cheat). Suppression documented in `spotbugs-exclude.xml`. |
+
+**Summary:** Real findings: 2 (both fixed). False positives: 1 (suppressed with justification). Deferred: 0.
+`./gradlew :server:spotbugsMain` exits 0. All tests pass.
+
 *(New entries are prepended above existing open items. Most recent first.)*

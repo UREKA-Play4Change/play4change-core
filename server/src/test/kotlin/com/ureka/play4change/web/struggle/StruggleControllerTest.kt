@@ -5,6 +5,7 @@ import com.ninjasquad.springmockk.MockkBean
 import com.ureka.play4change.application.port.AdaptiveSubmitResult
 import com.ureka.play4change.application.port.StruggleUseCase
 import com.ureka.play4change.application.port.SubmitAdaptiveTaskCommand
+import com.ureka.play4change.auth.adapter.inbound.security.RateLimitService
 import com.ureka.play4change.auth.application.TokenService
 import com.ureka.play4change.domain.struggle.AdaptiveTask
 import com.ureka.play4change.domain.struggle.ErrorPattern
@@ -43,6 +44,9 @@ class StruggleControllerTest {
 
     @MockkBean
     private lateinit var tokenService: TokenService
+
+    @MockkBean
+    private lateinit var rateLimitService: RateLimitService
 
     @MockkBean
     private lateinit var meterRegistry: MeterRegistry

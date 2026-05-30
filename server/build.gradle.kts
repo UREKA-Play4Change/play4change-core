@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     id("dev.detekt") version "2.0.0-alpha.2"
     id("org.owasp.dependencycheck") version "10.0.4"
+    id("com.github.spotbugs") version "6.0.26"
 }
 
 group = "com.ureka.play4change"
@@ -59,6 +60,9 @@ dependencies {
     // OpenAPI / Swagger UI
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
 
+    // Rate limiting
+    implementation("com.bucket4j:bucket4j-core:8.10.1")
+
     // Phase 3 — content & storage
     implementation("software.amazon.awssdk:s3:2.25.31")
     implementation("org.apache.pdfbox:pdfbox:3.0.1")
@@ -76,6 +80,27 @@ tasks.withType<Test> {
 detekt {
     config.setFrom("$projectDir/detekt.yml")
     buildUponDefaultConfig = true
+}
+
+spotbugs {
+    toolVersion.set("4.8.6")
+    effort.set(com.github.spotbugs.snom.Effort.MAX)
+    reportLevel.set(com.github.spotbugs.snom.Confidence.HIGH)
+    excludeFilter.set(file("spotbugs-exclude.xml"))
+    ignoreFailures.set(false)
+}
+
+dependencies {
+    spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:1.13.0")
+}
+
+tasks.named("spotbugsMain") {
+    dependsOn("compileKotlin")
+}
+// Emit HTML reports for human review alongside the XML report required by CI
+tasks.withType<com.github.spotbugs.snom.SpotBugsTask> {
+    reports.create("xml") { required.set(true) }
+    reports.create("html") { required.set(true) }
 }
 
 // NOTE: dep-check 10.0.4 has a Jackson version mismatch bug — compiled against 2.17+ but its

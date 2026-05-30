@@ -5,6 +5,7 @@ import com.ninjasquad.springmockk.MockkBean
 import com.ureka.play4change.application.port.UpdatePreferencesCommand
 import com.ureka.play4change.application.port.UserPreferences
 import com.ureka.play4change.application.port.UserPreferencesUseCase
+import com.ureka.play4change.auth.adapter.inbound.security.RateLimitService
 import com.ureka.play4change.auth.application.TokenService
 import com.ureka.play4change.error.client.BadRequest
 import com.ureka.play4change.infra.config.SecurityConfig
@@ -37,6 +38,9 @@ class UserPreferencesControllerTest {
 
     @MockkBean
     private lateinit var tokenService: TokenService
+
+    @MockkBean
+    private lateinit var rateLimitService: RateLimitService
 
     @MockkBean
     private lateinit var meterRegistry: MeterRegistry

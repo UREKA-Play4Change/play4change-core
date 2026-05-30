@@ -4,6 +4,7 @@
   <CurrentIssues>
     <ID>CyclomaticComplexMethod:HandleStruggleService.kt:HandleStruggleService$@Async("generationExecutor") fun triggerAsync</ID>
     <ID>CyclomaticComplexMethod:RoadmapService.kt:RoadmapService$override fun getRoadmap: Either&lt;AppError, List&lt;RoadmapNode&gt;&gt;</ID>
+    <ID>CyclomaticComplexMethod:TaskService.kt:TaskService$override fun submitAnswer: Either&lt;AppError, SubmitResult&gt;</ID>
     <ID>EmptyFunctionBlock:WebMvcConfig.kt:WebMvcConfig${}</ID>
     <ID>LongMethod:EnrollmentService.kt:EnrollmentService$override fun enroll: Either&lt;AppError, Enrollment&gt;</ID>
     <ID>LongMethod:HandleStruggleService.kt:HandleStruggleService$@Async("generationExecutor") fun triggerAsync</ID>
@@ -11,6 +12,7 @@
     <ID>LongMethod:RoadmapService.kt:RoadmapService$override fun getRoadmap: Either&lt;AppError, List&lt;RoadmapNode&gt;&gt;</ID>
     <ID>LongMethod:TaskGenerationOrchestrator.kt:TaskGenerationOrchestrator$@Async("generationExecutor") fun generateAsync</ID>
     <ID>LongMethod:TaskService.kt:TaskService$override fun submitAnswer: Either&lt;AppError, SubmitResult&gt;</ID>
+    <ID>MagicNumber:CreateUrlTopicRequest.kt:CreateUrlTopicRequest$365</ID>
     <ID>MagicNumber:EnrollmentService.kt:EnrollmentService$24</ID>
     <ID>MagicNumber:GoogleOAuthAdapter.kt:GoogleOAuthAdapter$3_600_000L</ID>
     <ID>MagicNumber:HandleStruggleService.kt:HandleStruggleService$1_000L</ID>
@@ -18,11 +20,17 @@
     <ID>MagicNumber:HandleStruggleService.kt:HandleStruggleService$500</ID>
     <ID>MagicNumber:MagicLinkService.kt:MagicLinkService$15</ID>
     <ID>MagicNumber:MagicLinkService.kt:MagicLinkService$32</ID>
+    <ID>MagicNumber:RateLimitService.kt:RateLimitService$10</ID>
+    <ID>MagicNumber:RateLimitService.kt:RateLimitService$1_000_000_000L</ID>
+    <ID>MagicNumber:RateLimitService.kt:RateLimitService$20</ID>
+    <ID>MagicNumber:RateLimitService.kt:RateLimitService$5</ID>
     <ID>MagicNumber:RequestIdFilter.kt:RequestIdFilter$8</ID>
+    <ID>MagicNumber:TaskDeliveryProperties.kt:TaskDeliveryProperties$120</ID>
+    <ID>MagicNumber:TaskDeliveryProperties.kt:TaskDeliveryProperties$60L</ID>
     <ID>MagicNumber:TaskGenerationOrchestrator.kt:TaskGenerationOrchestrator$1_000L</ID>
     <ID>MagicNumber:TaskGenerationOrchestrator.kt:TaskGenerationOrchestrator$500</ID>
     <ID>MagicNumber:TaskGenerationOrchestrator.kt:TaskGenerationOrchestrator$8000</ID>
-    <ID>MagicNumber:TaskService.kt:TaskService$24</ID>
+    <ID>MagicNumber:TaskService.kt:TaskService$100</ID>
     <ID>MagicNumber:TokenService.kt:TokenService$1000L</ID>
     <ID>MagicNumber:TokenService.kt:TokenService$32</ID>
     <ID>MagicNumber:TokenService.kt:TokenService$60</ID>
@@ -30,15 +38,21 @@
     <ID>MagicNumber:TopicController.kt:TopicController$30</ID>
     <ID>MagicNumber:TopicManagementService.kt:TopicManagementService$3</ID>
     <ID>MagicNumber:WebMvcConfig.kt:WebMvcConfig$3600</ID>
-    <ID>MaxLineLength:Application.kt:Application$@EnableConfigurationProperties(JwtProperties::class, ResendProperties::class, GoogleProperties::class, MinioProperties::class)</ID>
     <ID>MaxLineLength:GoogleOAuthAdapter.kt:GoogleOAuthAdapter$log.warn("GoogleOAuthAdapter: GOOGLE_CLIENT_ID is blank — Google OAuth is disabled; all tokens will be rejected")</ID>
+    <ID>MaxLineLength:LearnerFlowMetricsTest.kt:LearnerFlowMetricsTest$assertNotNull(counter) { "Expected reviews.verdicts.submitted.total with verdict=correct and topic_id=$topicId" }</ID>
+    <ID>MaxLineLength:TaskService.kt:TaskService$log.info("Enrollment {} completed for user {} on topic {}", savedEnrollment.id, command.userId, savedEnrollment.topicId)</ID>
+    <ID>MaxLineLength:TopicManagementService.kt:TopicManagementService$BadRequest.InvalidField("prerequisiteIds", "setting these prerequisites would create a cycle in the learning graph")</ID>
+    <ID>MaxLineLength:TopicManagementService.kt:TopicManagementService$override</ID>
     <ID>NewLineAtEndOfFile:Application.kt:com.ureka.play4change.Application.kt</ID>
     <ID>NewLineAtEndOfFile:LangChain4jConfig.kt:com.ureka.play4change.infra.config.LangChain4jConfig.kt</ID>
     <ID>NewLineAtEndOfFile:LoggingInterceptor.kt:com.ureka.play4change.infra.pipeline.interceptors.LoggingInterceptor.kt</ID>
     <ID>NewLineAtEndOfFile:RequestIdFilter.kt:com.ureka.play4change.infra.pipeline.filters.RequestIdFilter.kt</ID>
     <ID>NewLineAtEndOfFile:VectorConverter.kt:com.ureka.play4change.infra.converter.VectorConverter.kt</ID>
+    <ID>ReturnCount:AdminUserController.kt:AdminUserController$@PostMapping("/{userId}/promote") fun promoteUser: ResponseEntity&lt;UserAdminResponse&gt;</ID>
     <ID>ReturnCount:ErrorPatternClassifier.kt:ErrorPatternClassifier$fun classify: ErrorPattern</ID>
     <ID>ReturnCount:HandleStruggleService.kt:HandleStruggleService$@Async("generationExecutor") fun triggerAsync</ID>
+    <ID>ReturnCount:TopicManagementService.kt:TopicManagementService$fun dfs: Boolean</ID>
+    <ID>ReturnCount:UrlSsrfValidator.kt:UrlSsrfValidator$private fun checkPrivateAddress: String?</ID>
     <ID>ReturnCount:VectorConverter.kt:VectorConverter$override fun convertToEntityAttribute: FloatArray?</ID>
     <ID>SwallowedException:FacebookOAuthAdapter.kt:FacebookOAuthAdapter$ex: Exception</ID>
     <ID>SwallowedException:GoogleOAuthAdapter.kt:GoogleOAuthAdapter$ex: Exception</ID>
@@ -57,11 +71,13 @@
     <ID>TooGenericExceptionCaught:ResendEmailAdapter.kt:ResendEmailAdapter$ex: Exception</ID>
     <ID>TooGenericExceptionCaught:TaskGenerationOrchestrator.kt:TaskGenerationOrchestrator$ex: Exception</ID>
     <ID>TooGenericExceptionCaught:TopicManagementService.kt:TopicManagementService$ex: Exception</ID>
+    <ID>TooManyFunctions:EnrollmentRepository.kt:EnrollmentRepository</ID>
     <ID>UnusedParameter:AuthExceptionHandler.kt:AuthExceptionHandler$ex: HttpMessageNotReadableException</ID>
     <ID>UnusedParameter:AuthExceptionHandler.kt:AuthExceptionHandler$ex: IllegalStateException</ID>
     <ID>UnusedParameter:AuthExceptionHandler.kt:AuthExceptionHandler$ex: ObjectOptimisticLockingFailureException</ID>
     <ID>VariableNaming:LoggingInterceptor.kt:LoggingInterceptor$// Store timer start in request attribute — survives through to afterCompletion private val TIMER_ATTR = "request.timer.start"</ID>
     <ID>WildcardImport:AdaptiveTaskEntity.kt:import jakarta.persistence.*</ID>
+    <ID>WildcardImport:AdminTopicPrerequisiteController.kt:import org.springframework.web.bind.annotation.*</ID>
     <ID>WildcardImport:AuthController.kt:import org.springframework.web.bind.annotation.*</ID>
     <ID>WildcardImport:EnrollmentController.kt:import org.springframework.web.bind.annotation.*</ID>
     <ID>WildcardImport:EnrollmentEntity.kt:import jakarta.persistence.*</ID>

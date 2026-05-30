@@ -2,6 +2,7 @@ package com.ureka.play4change.web.notification
 
 import com.ninjasquad.springmockk.MockkBean
 import com.ureka.play4change.application.port.DeviceTokenUseCase
+import com.ureka.play4change.auth.adapter.inbound.security.RateLimitService
 import com.ureka.play4change.auth.application.TokenService
 import com.ureka.play4change.infra.config.SecurityConfig
 import com.ureka.play4change.web.user.DeviceTokenController
@@ -31,6 +32,9 @@ class DeviceTokenControllerTest {
 
     @MockkBean
     private lateinit var tokenService: TokenService
+
+    @MockkBean
+    private lateinit var rateLimitService: RateLimitService
 
     @MockkBean
     private lateinit var meterRegistry: MeterRegistry

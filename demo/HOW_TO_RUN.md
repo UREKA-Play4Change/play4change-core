@@ -7,7 +7,9 @@
 | Tool | Version | Notes |
 |------|---------|-------|
 | Docker Desktop | 4.x or later | Engine 24+ recommended; must have Compose v2 (`docker compose`, not `docker-compose`) |
-| Java | 21 | Only needed if running the server **outside** Docker (Gradle builds inside Docker by default) |
+| Java (JDK) | 21 | Required to run `./gradlew` for tests and local builds |
+| Node.js | 20+ | Required only if running the admin web frontend locally (`client/`) |
+| Android Studio | Hedgehog+ | Required only for mobile KMP development |
 | curl | any | Used for health checks in this guide |
 | Git | any | To clone the repo |
 
@@ -233,3 +235,73 @@ docker compose down -v
 
 Use this when you want a completely clean state — Flyway will re-run all
 migrations (V1–V10) on the next `docker compose up`.
+
+---
+
+## 8. Grafana Dashboards
+
+Grafana is provisioned automatically at startup. No manual configuration required.
+
+Open **http://localhost:3000** — credentials `admin` / `admin` (or `GF_SECURITY_ADMIN_PASSWORD` if overridden in `.env`).
+
+| Dashboard | Description |
+|-----------|-------------|
+| AI Generation Latency | P50 / P95 / P99 of Mistral API call duration. Populated after a topic is created. |
+| Learner Flow Metrics | Task submission rate (correct vs incorrect), struggle trigger rate, peer review verdict throughput. Populated after task submissions. |
+
+Prometheus data source is pre-configured. Raw metrics at **http://localhost:9090**.
+
+---
+
+## 9. OWASP Dependency Check
+
+Run the dependency vulnerability scan against the server:
+
+```bash
+./gradlew :server:dependencyCheckAnalyze
+```
+
+Report is generated at `server/build/reports/dependency-check-report.html`.
+
+For the mobile modules:
+
+```bash
+./gradlew :composeApp:copyRuntimeDependencies
+./gradlew :common:copyRuntimeDependencies
+# Then check build/dependencies/ folders with the dependency-check CLI if needed
+```
+
+---
+
+## 10. Push Notifications (FCM / APNs) — Optional
+
+Push notifications for daily task reminders are delivered via Firebase Cloud Messaging (Android) and APNs (iOS).
+
+**To enable:**
+1. Create a Firebase project and download `google-services.json`. Place it in `composeApp/`.
+2. Set the FCM server key in the server environment:
+   ```
+   FCM_SERVER_KEY=your-firebase-server-key
+   ```
+3. For iOS, provide an APNs p8 key and configure the server with:
+   ```
+   APNS_KEY_ID=...
+   APNS_TEAM_ID=...
+   APNS_KEY_PATH=/path/to/AuthKey_XXXXXX.p8
+   ```
+
+Without these, the server starts normally but no push notifications are sent.
+
+---
+
+## 11. Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---------|--------------|-----|
+| `play4change-server` exits immediately | Postgres not yet healthy | Wait 10–20 s and re-run `docker compose up` |
+| `flyway.exception.FlywayValidateException` | Dirty migration history | Run `docker compose down -v` then `docker compose up` |
+| Topic stuck at `INGESTION` | `MISTRAL_API_KEY` not set | Add real key in `.env`, restart server: `docker compose restart server` |
+| Magic link token not in logs | RESEND_API_KEY is set | Check email inbox; if no email, verify RESEND_API_KEY is correct |
+| `ERROR: role "play4change" does not exist` | Postgres volume from a different project | Run `docker compose down -v` to wipe volumes |
+| `MinIO: bucket not found` | First run — bucket not yet created | The server creates the bucket on first upload; no manual action needed |
+| Grafana shows "No data" | No events have occurred yet | Run the demo script in `demo/DEMO_SCRIPT.md` to generate metrics |

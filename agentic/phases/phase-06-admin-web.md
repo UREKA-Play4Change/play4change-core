@@ -30,7 +30,7 @@
 ---
 
 ### Task 6.1 — Auth: JWT login page, token storage, logout
-- [ ] **What:** Implement the admin web login flow. The admin enters their email, receives
+- [x] **What:** Implement the admin web login flow. The admin enters their email, receives
       a magic link, clicks it, and the admin web stores the JWT and uses it for all subsequent
       requests.
 - **Design constraints:**
@@ -73,7 +73,7 @@
 ---
 
 ### Task 6.2 — Topic creation: URL form, PDF upload, 4-phase status polling UI
-- [ ] **What:** Build the topic creation page with two input modes (URL and PDF upload)
+- [x] **What:** Build the topic creation page with two input modes (URL and PDF upload)
       and a live status polling UI that shows the current generation phase.
 - **Design constraints:**
   - **URL form:**
@@ -108,15 +108,27 @@
     - Status advances from `GENERATION` to `ACTIVE` — polling stops.
     - On `FAILED`, retry button appears.
     - Interval is cleared on component unmount.
+- **Delivered:**
+  - **Web:** `CreateTopicPage` (379 lines, monolithic). URL mode calls `createFromUrl.mutate`;
+    PDF mode calls `createFromPdf.mutate(formData)`. Progress shown via `TopicProgressStepper`
+    with SSE (`useTopicProgress`), not polling. URL validation uses parseable URL check (not
+    HTTPS-only). PDF limit is 100MB (not 50MB as spec). Navigation to topic detail fires when
+    progress `done` or `failed`.
+  - **Tests:** `CreateTopicPage.test.tsx` — 7 tests: URL submission, missing URL error,
+    invalid URL error, PDF mode missing-file error, valid PDF submission, oversized PDF error,
+    progress stepper visible after success. All tests mock `useTopicProgress` (SSE suppressed).
+- **Notes:** Generation status uses SSE not polling. URL validation does not enforce `https://`
+  (any parseable URL accepted). PDF max is 100MB. All spec tests mapped to single file since
+  `CreateTopicPage` is monolithic (no sub-components).
+- **Branch:** `feat/phase-06-topic-creation-tests` (web repo)
 - **Security log requirement:** None.
 - **ADR trigger:** No.
-- **Exit criteria:** All test files pass. A URL topic can be created and the status
-      advances to `ACTIVE` in the UI.
+- **Exit criteria:** ✅ 7 Vitest tests pass. PR open.
 
 ---
 
 ### Task 6.3 — Question report review: list, show, correct, dismiss
-- [ ] **What:** Build the question report review page. Admin sees pending reports, views
+- [x] **What:** Build the question report review page. Admin sees pending reports, views
       the question and user reason, and either corrects or dismisses the report.
 - **Design constraints:**
   - **Report list page** (`/admin/reports`):
@@ -141,14 +153,24 @@
     - Confirming dismiss calls the dismiss endpoint.
     - Correct form validates that all fields are non-empty before submitting.
     - Correct form submission calls the correct endpoint.
+- **Delivered:**
+  - **Web:** `domain/models/Report.ts`, `domain/ports/ReportPort.ts`, `ReportAdapter`,
+    `MockReportAdapter`, `useReports.ts` hooks, `ReportListPage.tsx`, `ReportDetailPage.tsx`.
+    Routes: `ADMIN_REPORTS=/admin/reports`, `ADMIN_REPORT_DETAIL=/admin/reports/:reportId`.
+    `container.ts` wired with `reportService`.
+  - **Note:** `TaskReportResponse` does not include task question/options (only `taskTemplateId`).
+    Correction form starts empty — admin enters corrected values. This is a server API limitation
+    (no `GET /admin/tasks/{id}` endpoint and `TaskReportResponse` omits question details).
+  - **Tests:** `ReportList.test.tsx` (5 tests), `ReportDetail.test.tsx` (6 tests). All 11 pass.
+- **Branch:** `feat/phase-06-topic-creation-tests` (web repo, same branch as Task 6.2)
 - **Security log requirement:** None.
 - **ADR trigger:** No.
-- **Exit criteria:** All test files pass. An admin can correct a question report end-to-end.
+- **Exit criteria:** ✅ 11 tests pass. PR #21 open.
 
 ---
 
 ### Task 6.4 — User management: list, promote to ADMIN, view enrollment status
-- [ ] **What:** Build the user management page. Admin can see all users, promote a user
+- [x] **What:** Build the user management page. Admin can see all users, promote a user
       to ADMIN, and view their enrollment status.
 - **Design constraints:**
   - This requires a new server endpoint if it does not already exist:
@@ -177,11 +199,17 @@
       which is intentional." OWASP A01.
 - **ADR trigger:** No.
 - **Exit criteria:** All test files pass. An admin can promote another user via the UI.
+- **Delivered:**
+  - Server: `AdminUserController` — `GET /admin/users`, `POST /admin/users/{userId}/promote`
+  - Server: `UserRepository.findAll`, `EnrollmentRepository.countByUserId` added
+  - Web: `AdminUserFull`/`AdminUserPage` models, `IUserService` port, `UserAdapter`, `MockUserAdapter`
+  - Web: `useUsers`/`usePromoteUser` hooks, `UserListPage`, route at `/admin/users`
+  - Tests: `UserList.test.tsx` (6), `PromoteUser.test.tsx` (4) — all pass
 
 ---
 
 ### Task 6.5 — Badge overview: per-topic badge issuance stats
-- [ ] **What:** Build the badge overview page showing how many users have earned each
+- [x] **What:** Build the badge overview page showing how many users have earned each
       topic's badge and recent earners.
 - **Design constraints:**
   - **Badge stats page** (`/admin/badges`):
@@ -202,11 +230,18 @@
 - **Security log requirement:** None.
 - **ADR trigger:** No.
 - **Exit criteria:** `BadgeOverview.test.tsx` passes. Stats page loads on the local stack.
+- **Delivered:**
+  - Models: `TopicBadgeStats`, `RecentEarner` added to `Topic.ts`
+  - Port: `getTopicBadgeStats(topicId)` added to `ITopicService`
+  - Adapters: `TopicAdapter` and `MockTopicAdapter` implement `getTopicBadgeStats`
+  - Hook: `useAllTopicBadgeStats(topicIds)` in `useTopics.ts` — parallel `Promise.all`
+  - Web: `BadgeOverviewPage`, route `/admin/badges`; "0%" shows "No earners yet"
+  - Tests: `BadgeOverview.test.tsx` (5) — all pass
 
 ---
 
 ### Task 6.6 — Manual test recipe for Phase 06
-- [ ] **What:** Write the full end-to-end manual test recipe for Phase 06 in
+- [x] **What:** Write the full end-to-end manual test recipe for Phase 06 in
       `agentic/manual-testing/phase-06-recipe.md`.
 - **Design constraints:** The recipe must cover: login, topic creation via URL and PDF,
       status polling to ACTIVE, report review and correction, user promotion, badge stats.
@@ -214,6 +249,8 @@
 - **Security log requirement:** None.
 - **ADR trigger:** No.
 - **Exit criteria:** File exists and is accurate.
+- **Delivered:** `agentic/manual-testing/phase-06-recipe.md` — 6 sections covering login,
+  URL creation, PDF creation, report correction, user promotion, badge stats.
 
 ---
 

@@ -104,14 +104,23 @@ ZAP authenticated scan configuration requires:
 
 ### Run 1 — Baseline Scan (unauthenticated)
 
-**Date:** *(to be filled)*
-**Stack version:** *(git commit hash)*
-**ZAP version:** stable (ghcr.io/zaproxy/zaproxy:stable)
+**Date:** 2026-05-30
+**Stack version:** dbe3d21
+**ZAP version:** 2.17.0 (ghcr.io/zaproxy/zaproxy:stable)
 **Target:** http://localhost:8080
+**Summary:** FAIL-NEW: 0 | WARN-NEW: 1 | PASS: 66
 
-| # | Risk Level | ZAP Alert | Affected URL | Status | Notes |
-|---|-----------|-----------|-------------|--------|-------|
-| — | — | *(no scan has been run yet — this table is populated in Phase 07)* | — | — | — |
+| # | Risk Level | ZAP Alert (ID) | Affected URL | Status | Notes |
+|---|-----------|---------------|-------------|--------|-------|
+| 1 | Informational | Non-Storable Content [10049] | http://localhost:8080, http://localhost:8080/robots.txt | ACCEPTED | Server returns `no-store` on 401 responses — correct and intentional. Cache-Control: no-store is a security best practice for authenticated endpoints. Not a vulnerability. |
+
+**Finding detail — Non-Storable Content:**
+- **Risk code:** 0 (Informational)
+- **Confidence:** Medium
+- **Evidence:** `no-store` in Cache-Control response header
+- **Why accepted:** The ZAP scanner only reached 2 URLs (both returned HTTP 401 Unauthorized because the entire API requires a JWT). The `no-store` directive is intentionally set by Spring Security on 401 responses to prevent caching of authentication challenges. This is correct behaviour per RFC 7234 and Spring Security defaults. No action required.
+- **Approver:** Radesh Govind, 2026-05-30
+- **Follow-up:** None — permanent accept
 
 ### Run 2 — Post-Remediation Scan
 
@@ -143,14 +152,25 @@ When ZAP reports these, mark them as FALSE POSITIVE in the findings table with t
 
 ## Remediation Summary
 
-*(Populated after Task 7.7)*
+*(Updated after Task 7.6 — no Critical/High/Medium findings found)*
 
 | Metric | Before Phase 07 | After Phase 07 |
 |--------|----------------|---------------|
-| Critical findings | — | — |
-| High findings | — | — |
-| Medium findings | — | — |
-| Low findings | — | — |
-| Risk-accepted (with justification) | — | — |
+| Critical findings | — | 0 |
+| High findings | — | 0 |
+| Medium findings | — | 0 |
+| Low findings | — | 0 |
+| Informational findings | — | 1 (Non-Storable Content — accepted, no action) |
+| Risk-accepted (with justification) | — | 1 (see Run 1 finding detail) |
 
-**Phase 07 DAST pass status:** PENDING
+**Phase 07 DAST pass status:** COMPLETE — 2026-05-30
+**Authenticated scans:** See `DAST-REPORT-AUTHENTICATED.md`
+
+### Accepted Residual Risk — CSP unsafe-inline
+
+**Finding:** Content-Security-Policy with `style-src 'unsafe-inline'` in SPA `/` location
+**Why accepted:** The Vite/React build inlines CSS styles by default. Removing `'unsafe-inline'`
+requires migrating to CSS modules with nonce-based CSP. This is a planned improvement but
+out of scope for Phase 07.
+**Approver:** Radesh Govind, 2026-05-30
+**Follow-up:** CSP nonce migration deferred to a post-Phase-07 hardening ticket in ISSUES.md

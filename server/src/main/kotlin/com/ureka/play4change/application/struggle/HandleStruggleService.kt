@@ -82,6 +82,10 @@ class HandleStruggleService(
                 ErrorPattern.TIME_PRESSURE -> "time_pressure"
             }
             registry.counter("struggle_sessions_total", "error_pattern", errorPatternTag).increment()
+            registry.counter(
+                "struggle.sessions.created.total",
+                "topic_id", enrollment.topicId
+            ).increment()
 
             val context = StruggleContext(
                 userId = userId,

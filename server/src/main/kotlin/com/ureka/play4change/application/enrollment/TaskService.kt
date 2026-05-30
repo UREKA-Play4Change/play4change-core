@@ -278,6 +278,12 @@ class TaskService(
             "task_type", "multiple_choice"
         ).increment()
 
+        registry.counter(
+            "tasks.submitted.total",
+            "result", if (isCorrect) "correct" else "incorrect",
+            "topic_id", savedEnrollment.topicId
+        ).increment()
+
         SubmitResult(
             assignment = savedAssignment,
             isCorrect = isCorrect,

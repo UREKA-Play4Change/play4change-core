@@ -6,6 +6,7 @@ import com.ninjasquad.springmockk.MockkBean
 import com.ureka.play4change.application.port.LearningGraph
 import com.ureka.play4change.application.port.PrerequisiteEdge
 import com.ureka.play4change.application.port.TopicUseCase
+import com.ureka.play4change.auth.adapter.inbound.security.RateLimitService
 import com.ureka.play4change.auth.application.TokenService
 import com.ureka.play4change.domain.topic.AudienceLevel
 import com.ureka.play4change.domain.topic.ContentSourceType
@@ -45,6 +46,9 @@ class AdminTopicPrerequisiteControllerTest {
 
     @MockkBean
     private lateinit var tokenService: TokenService
+
+    @MockkBean
+    private lateinit var rateLimitService: RateLimitService
 
     @MockkBean
     private lateinit var meterRegistry: MeterRegistry

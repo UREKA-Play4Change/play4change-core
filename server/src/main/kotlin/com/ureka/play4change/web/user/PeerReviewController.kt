@@ -1,6 +1,7 @@
 package com.ureka.play4change.web.user
 
 import com.ureka.play4change.application.port.PeerReviewUseCase
+import jakarta.validation.Valid
 import com.ureka.play4change.application.port.SubmitVerdictCommand
 import com.ureka.play4change.domain.peerreview.ReviewVerdict
 import com.ureka.play4change.error.AppError
@@ -18,7 +19,7 @@ class PeerReviewController(private val peerReviewUseCase: PeerReviewUseCase) {
     @PostMapping("/{reviewId}/verdict")
     fun submitVerdict(
         @PathVariable reviewId: String,
-        @RequestBody request: SubmitVerdictRequest,
+        @Valid @RequestBody request: SubmitVerdictRequest,
         @AuthenticationPrincipal userId: String
     ): ResponseEntity<VerdictResultResponse> {
         val verdict = runCatching { ReviewVerdict.valueOf(request.verdict.uppercase()) }

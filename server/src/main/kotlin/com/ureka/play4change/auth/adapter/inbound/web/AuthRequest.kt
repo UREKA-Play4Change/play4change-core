@@ -1,10 +1,16 @@
 package com.ureka.play4change.auth.adapter.inbound.web
 
 import com.ureka.play4change.auth.domain.model.AuthProvider
+import jakarta.validation.constraints.Email
+import jakarta.validation.constraints.NotBlank
 
-data class MagicLinkRequest(val email: String)
+data class MagicLinkRequest(
+    @field:NotBlank @field:Email val email: String
+)
 
-data class MagicLinkVerifyRequest(val token: String)
+data class MagicLinkVerifyRequest(
+    @field:NotBlank val token: String
+)
 
 /**
  * Accepts both `idToken` (legacy) and `credential` (web frontend / Google One-Tap).
@@ -19,4 +25,6 @@ data class OAuthRequest(
         credential ?: idToken ?: throw IllegalArgumentException("OAuthRequest requires idToken or credential")
 }
 
-data class RefreshRequest(val refreshToken: String)
+data class RefreshRequest(
+    @field:NotBlank val refreshToken: String
+)

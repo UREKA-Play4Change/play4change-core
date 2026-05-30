@@ -5,6 +5,7 @@ import com.ninjasquad.springmockk.MockkBean
 import com.ureka.play4change.application.port.CorrectTaskCommand
 import com.ureka.play4change.application.port.ReportTaskCommand
 import com.ureka.play4change.application.port.TaskReportUseCase
+import com.ureka.play4change.auth.adapter.inbound.security.RateLimitService
 import com.ureka.play4change.auth.application.TokenService
 import com.ureka.play4change.domain.report.TaskReport
 import com.ureka.play4change.domain.report.TaskReportStatus
@@ -43,6 +44,9 @@ class TaskReportControllerTest {
 
     @MockkBean
     private lateinit var tokenService: TokenService
+
+    @MockkBean
+    private lateinit var rateLimitService: RateLimitService
 
     @MockkBean
     private lateinit var meterRegistry: MeterRegistry

@@ -107,6 +107,14 @@ class PeerReviewService(
             "finalized", willFinalize.toString()
         ).increment()
 
+        val verdictTopicId = enrollmentRepository.findAssignmentById(review.submissionAssignmentId)
+            ?.let { enrollmentRepository.findById(it.enrollmentId) }?.topicId ?: "unknown"
+        registry.counter(
+            "reviews.verdicts.submitted.total",
+            "verdict", command.verdict.name.lowercase(),
+            "topic_id", verdictTopicId
+        ).increment()
+
         if (!willFinalize) {
             return@either VerdictResult(
                 peerReview = updatedReview,

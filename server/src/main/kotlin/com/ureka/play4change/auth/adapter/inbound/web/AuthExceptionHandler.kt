@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.orm.ObjectOptimisticLockingFailureException
+import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
@@ -30,6 +31,13 @@ class AuthExceptionHandler {
     fun handleMalformedBody(ex: HttpMessageNotReadableException): ResponseEntity<MessageResponse> =
         ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(MessageResponse("Malformed request body"))
+
+    @ExceptionHandler(MethodArgumentNotValidException::class)
+    fun handleValidation(ex: MethodArgumentNotValidException): ResponseEntity<Map<String, Any>> {
+        val errors = ex.bindingResult.fieldErrors.map { "${it.field}: ${it.defaultMessage}" }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(mapOf("message" to "Validation failed", "errors" to errors))
+    }
 
     @ExceptionHandler(ObjectOptimisticLockingFailureException::class)
     fun handleOptimisticLock(ex: ObjectOptimisticLockingFailureException): ResponseEntity<Map<String, String>> =

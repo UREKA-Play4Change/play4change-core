@@ -12,6 +12,7 @@ import com.ureka.play4change.web.admin.dto.CreateUrlTopicRequest
 import com.ureka.play4change.web.admin.dto.PageResponse
 import com.ureka.play4change.web.admin.dto.TopicResponse
 import jakarta.servlet.http.HttpServletResponse
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -30,7 +31,7 @@ class TopicController(
 
     @PostMapping
     fun createFromUrl(
-        @RequestBody request: CreateUrlTopicRequest,
+        @Valid @RequestBody request: CreateUrlTopicRequest,
         @AuthenticationPrincipal adminId: String
     ): ResponseEntity<TopicResponse> {
         val url = request.urls.first()

@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.googleServices)
+    id("org.owasp.dependencycheck") version "10.0.4"
 }
 
 kotlin {
@@ -160,4 +161,32 @@ android {
 
 dependencies {
     debugImplementation(libs.compose.multiplatform.uiTooling)
+}
+
+// NOTE: dep-check 10.0.4 Gradle plugin has a Jackson version mismatch bug (see HACKS.md H04).
+// ':composeApp:dependencyCheckAnalyze' fails locally. CI uses dep-check CLI via the
+// copyRuntimeDependencies task + dependency-check/Dependency-Check_Action@main.
+dependencyCheck {
+    failBuildOnCVSS = 7.0f
+    suppressionFile = "$projectDir/dependency-check-suppression.xml"
+}
+
+// Copies Android debug runtime JARs to build/dependencies for the CI dep-check CLI scan.
+// Uses lenient artifact view to avoid KMP variant ambiguity with the :common AAR dependency.
+tasks.register("copyRuntimeDependencies") {
+    val outDir = layout.buildDirectory.dir("dependencies")
+    outputs.dir(outDir)
+    doLast {
+        val jars = configurations.getByName("androidDebugRuntimeClasspath")
+            .incoming
+            .artifactView { lenient(true) }
+            .artifacts
+            .artifactFiles
+            .filter { it.name.endsWith(".jar") }
+        copy {
+            from(jars)
+            into(outDir)
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        }
+    }
 }

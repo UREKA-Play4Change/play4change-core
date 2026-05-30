@@ -6,6 +6,8 @@ import com.ureka.play4change.domain.identity.AuthProvider
 import com.ureka.play4change.domain.identity.User
 import com.ureka.play4change.domain.identity.UserRepository
 import com.ureka.play4change.domain.identity.UserRole
+import com.ureka.play4change.domain.topic.PageResult
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import java.util.UUID
 
@@ -38,6 +40,18 @@ class UserRepositoryAdapter(
             createdAt = user.createdAt
         )
         return jpa.save(entity).toDomain()
+    }
+
+    override fun findAll(page: Int, size: Int): PageResult<User> {
+        val pageable = PageRequest.of(page, size)
+        val result = jpa.findAll(pageable)
+        return PageResult(
+            content = result.content.map { it.toDomain() },
+            page = page,
+            size = size,
+            totalElements = result.totalElements,
+            totalPages = result.totalPages
+        )
     }
 
     private fun UserEntity.toDomain(): User = User(
