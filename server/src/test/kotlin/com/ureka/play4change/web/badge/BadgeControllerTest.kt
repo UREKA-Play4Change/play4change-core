@@ -5,6 +5,7 @@ import com.ureka.play4change.application.port.BadgeQueryUseCase
 import com.ureka.play4change.application.port.RecentEarnerDto
 import com.ureka.play4change.application.port.TopicBadgeStatsDto
 import com.ureka.play4change.application.port.UserBadgeDto
+import com.ureka.play4change.auth.adapter.inbound.security.RateLimitService
 import com.ureka.play4change.auth.application.TokenService
 import com.ureka.play4change.infra.config.SecurityConfig
 import com.ureka.play4change.web.admin.AdminBadgeController
@@ -36,6 +37,9 @@ class BadgeControllerTest {
 
     @MockkBean
     private lateinit var tokenService: TokenService
+
+    @MockkBean
+    private lateinit var rateLimitService: RateLimitService
 
     @MockkBean
     private lateinit var meterRegistry: MeterRegistry
