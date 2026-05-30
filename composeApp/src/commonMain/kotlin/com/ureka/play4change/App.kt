@@ -23,6 +23,8 @@ import com.ureka.play4change.features.profile.presentation.ProfileEffect
 import com.ureka.play4change.features.profile.ui.ProfileScreen
 import com.ureka.play4change.features.splash.presentation.SplashEffect
 import com.ureka.play4change.features.splash.ui.SplashScreen
+import com.ureka.play4change.features.struggle.presentation.StruggleEffect
+import com.ureka.play4change.features.struggle.ui.StruggleScreen
 import com.ureka.play4change.features.task.presentation.TaskEffect
 import com.ureka.play4change.features.task.ui.TaskScreen
 
@@ -98,8 +100,9 @@ fun App(root: RootComponent) {
                     is RootComponent.Child.Task -> {
                         LaunchedEffect(child.component) {
                             child.component.effects.collect { effect ->
-                                when (effect as TaskEffect) {
+                                when (val e = effect as TaskEffect) {
                                     TaskEffect.NavigateBack -> root.navigateBack()
+                                    is TaskEffect.NavigateToStruggle -> root.navigateToStruggle(e.enrollmentId)
                                 }
                             }
                         }
@@ -135,6 +138,16 @@ fun App(root: RootComponent) {
                             }
                         }
                         ExploreScreen(child.component)
+                    }
+                    is RootComponent.Child.Struggle -> {
+                        LaunchedEffect(child.component) {
+                            child.component.effects.collect { effect ->
+                                when (effect as StruggleEffect) {
+                                    StruggleEffect.NavigateToHome -> root.navigateToHome()
+                                }
+                            }
+                        }
+                        StruggleScreen(child.component)
                     }
                 }
             }
