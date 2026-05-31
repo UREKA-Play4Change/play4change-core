@@ -6,6 +6,7 @@ import java.time.OffsetDateTime
 
 data class TaskResponse(
     val assignmentId: String,
+    val enrollmentId: String,
     val title: String,
     val description: String,
     val hint: String?,
@@ -20,6 +21,7 @@ data class TaskResponse(
                 .mapNotNull { originalIdx -> template.options?.getOrNull(originalIdx) }
             return TaskResponse(
                 assignmentId = assignment.id,
+                enrollmentId = assignment.enrollmentId,
                 title = template.title,
                 description = template.description,
                 hint = template.hint,

@@ -32,6 +32,7 @@ import kotlinx.serialization.json.Json
 @Serializable
 private data class TaskResponseDto(
     val assignmentId: String,
+    val enrollmentId: String = "",
     val title: String,
     val description: String,
     val hint: String? = null,
@@ -94,6 +95,7 @@ class HttpTaskRepository(
         val dto = json.decodeFromString<TaskResponseDto>(response.bodyAsText())
         return TaskDetail(
             userTaskId = dto.assignmentId,
+            enrollmentId = dto.enrollmentId,
             title = dto.title,
             description = dto.description,
             hint = dto.hint ?: "",

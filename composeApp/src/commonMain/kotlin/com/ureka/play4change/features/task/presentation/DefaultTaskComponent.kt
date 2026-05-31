@@ -12,6 +12,7 @@ import com.ureka.play4change.features.task.domain.model.TaskContent
 import com.ureka.play4change.features.task.domain.repository.TaskRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
 import kotlin.coroutines.cancellation.CancellationException
 
 class DefaultTaskComponent(
@@ -34,7 +35,7 @@ class DefaultTaskComponent(
         scope.launch {
             try {
                 val task = repository.getTask(userTaskId)
-                updateState { copy(isLoading = false, task = task) }
+                updateState { copy(isLoading = false, task = task, enrollmentId = task.enrollmentId) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: NetworkException) {
@@ -179,17 +180,37 @@ class DefaultTaskComponent(
         val taskId = state.value.task?.userTaskId ?: return
         safeLaunch(scope) {
             val result = repository.submitAnswer(taskId, selected)
-            unlockBack()
-            updateState {
-                copy(
-                    submitted = true,
-                    isCorrect = result.isCorrect,
-                    pointsAwarded = result.pointsAwarded,
-                    totalPoints = result.totalPoints,
-                    struggleTriggered = result.struggleTriggered,
-                    submission = SubmissionState.Resolved(result.isCorrect),
-                    isBackBlocked = false
-                )
+            if (!result.isCorrect && !result.struggleTriggered) {
+                // First wrong attempt — assignment is still PENDING on the server.
+                // Flash the wrong-answer state briefly, then reset so the learner can retry.
+                updateState { copy(wrongAnswerFeedback = true) }
+                delay(1200L)
+                updateState {
+                    copy(
+                        wrongAnswerFeedback = false,
+                        selectedIndex = null,
+                        hintVisible = false,
+                        showHint = false
+                    )
+                }
+            } else {
+                // Final submission: correct, or second wrong (struggle triggered).
+                unlockBack()
+                updateState {
+                    copy(
+                        submitted = true,
+                        isCorrect = result.isCorrect,
+                        pointsAwarded = result.pointsAwarded,
+                        totalPoints = result.totalPoints,
+                        struggleTriggered = result.struggleTriggered,
+                        submission = SubmissionState.Resolved(result.isCorrect),
+                        isBackBlocked = false
+                    )
+                }
+                if (result.struggleTriggered) {
+                    val enrollmentId = state.value.enrollmentId
+                    emitEffect(TaskEffect.NavigateToStruggle(enrollmentId))
+                }
             }
         }
     }

@@ -506,6 +506,7 @@ private fun LegacyQuizContent(
 
     task.options.forEachIndexed { index, option ->
         val optionState = when {
+            state.wrongAnswerFeedback && state.selectedIndex == index -> OptionState.Wrong
             !state.submitted && state.selectedIndex == index -> OptionState.Selected
             state.submitted && state.selectedIndex == index  ->
                 if (state.isCorrect) OptionState.Correct else OptionState.Wrong
@@ -514,15 +515,16 @@ private fun LegacyQuizContent(
         TaskOptionButton(
             text = option,
             optionState = optionState,
-            onClick = { onEvent(TaskEvents.SelectOption(index)) }
+            onClick = { if (!state.wrongAnswerFeedback) onEvent(TaskEvents.SelectOption(index)) }
         )
     }
 
     val submitState = when {
-        state.submitted                                    -> "continue"
-        state.selectedIndex != null && state.isLoading     -> "loading"
-        state.selectedIndex != null                        -> "submit"
-        else                                               -> "idle"
+        state.submitted                                        -> "continue"
+        state.wrongAnswerFeedback                             -> "loading"
+        state.selectedIndex != null && state.isLoading        -> "loading"
+        state.selectedIndex != null                           -> "submit"
+        else                                                   -> "idle"
     }
     AnimatedContent(
         targetState = submitState,

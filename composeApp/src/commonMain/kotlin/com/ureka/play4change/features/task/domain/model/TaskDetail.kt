@@ -2,6 +2,7 @@ package com.ureka.play4change.features.task.domain.model
 
 data class TaskDetail(
     val userTaskId: String,
+    val enrollmentId: String = "",
     val title: String,
     val description: String,
     val hint: String,
