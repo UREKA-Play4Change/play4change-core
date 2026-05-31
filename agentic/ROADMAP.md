@@ -89,7 +89,7 @@ submission persists after app restart. Kill and reopen the app — no re-login r
 
 ## Phase 05 — Mobile Client: Notifications & Smart Fetching
 
-**Status:** `IN PROGRESS`
+**Status:** `DONE`
 **Phase file:** [phases/phase-05-mobile-notifications.md](phases/phase-05-mobile-notifications.md)
 
 **Goal:** Push notifications for daily task reminders at 8 PM user local time if task not done,
