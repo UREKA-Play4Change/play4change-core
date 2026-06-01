@@ -110,7 +110,7 @@ class PeerReviewService(
         val verdictTopicId = enrollmentRepository.findAssignmentById(review.submissionAssignmentId)
             ?.let { enrollmentRepository.findById(it.enrollmentId) }?.topicId ?: "unknown"
         registry.counter(
-            "reviews.verdicts.submitted.total",
+            "reviews_verdicts_submitted_total",
             "verdict", command.verdict.name.lowercase(),
             "topic_id", verdictTopicId
         ).increment()
