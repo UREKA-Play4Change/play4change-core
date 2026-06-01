@@ -37,7 +37,6 @@ The server is split into five bounded contexts: **Identity**, **Topic**, **Enrol
 
 - Docker + Docker Compose
 - JDK 21 (for local Gradle builds outside Docker)
-- Node 20+ (for web client development only)
 
 ## Quick Start
 
@@ -88,13 +87,12 @@ Copy `.env.example` to `.env` and fill in the required values.
 play4change/
 ├── server/          # Spring Boot REST API (Clean Architecture, 5 bounded contexts)
 ├── composeApp/      # Kotlin Multiplatform mobile app (Android + iOS)
+├── iosApp/          # iOS app entry point
 ├── ai-agent/        # LangChain4j + Mistral AI agent
 ├── common/          # Shared Kotlin models
-├── client/          # React web portal
+├── client/          # Web portal build target (source lives in a separate repo)
 ├── infra/           # Docker configs — Nginx, Postgres init, Prometheus, Grafana
-├── scripts/         # Operational scripts (setup, health, db, logs, admin, tests)
-├── docs/adr/        # Architecture Decision Records (ADR-001 – ADR-016)
-└── demo/            # HOW_TO_RUN.md + runnable HTTP client files
+└── scripts/         # Operational scripts (setup, health, db, logs, admin, tests)
 ```
 
 ## API
