@@ -19,6 +19,9 @@ captures
 node_modules/
 .env
 IMPLEMENTATION.md
+google-services.json
+client_secret*.json
+detekt-baseline-test.xml
 2026-*.json
 zap-report.html
 zap-report.json
