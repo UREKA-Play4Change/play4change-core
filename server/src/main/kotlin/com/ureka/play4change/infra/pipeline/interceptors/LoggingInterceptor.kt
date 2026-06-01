@@ -11,14 +11,12 @@ class LoggingInterceptor : HandlerInterceptor {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val TIMER_ATTR = "request.timer.start"
-
     override fun preHandle(
         request: HttpServletRequest,
         response: HttpServletResponse,
         handler: Any
     ): Boolean {
-        request.setAttribute(TIMER_ATTR, System.currentTimeMillis())
+        request.setAttribute(TIMER_ATTRIBUTE, System.currentTimeMillis())
         log.debug("--> {} {}", request.method, request.requestURI)
         return true
     }
@@ -29,7 +27,7 @@ class LoggingInterceptor : HandlerInterceptor {
         handler: Any,
         ex: Exception?
     ) {
-        val startMs = request.getAttribute(TIMER_ATTR) as? Long ?: return
+        val startMs = request.getAttribute(TIMER_ATTRIBUTE) as? Long ?: return
         val durationMs = System.currentTimeMillis() - startMs
         val status = response.status
         val method = request.method
@@ -44,5 +42,9 @@ class LoggingInterceptor : HandlerInterceptor {
         // (http_server_requests_seconds_* family). Do NOT duplicate them here — having
         // two registrations with different tag-key sets causes a Prometheus label
         // inconsistency exception and corrupts the entire metric family.
+    }
+
+    private companion object {
+        const val TIMER_ATTRIBUTE = "request.timer.start"
     }
 }
