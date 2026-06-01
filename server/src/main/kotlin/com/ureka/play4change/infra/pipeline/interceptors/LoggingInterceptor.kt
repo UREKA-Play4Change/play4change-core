@@ -1,21 +1,16 @@
 package com.ureka.play4change.infra.pipeline.interceptors
 
-import io.micrometer.core.instrument.MeterRegistry
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.HandlerInterceptor
-import java.util.concurrent.TimeUnit
 
 @Component
-class LoggingInterceptor(
-    private val meterRegistry: MeterRegistry
-) : HandlerInterceptor {
+class LoggingInterceptor : HandlerInterceptor {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    // Store timer start in request attribute — survives through to afterCompletion
     private val TIMER_ATTR = "request.timer.start"
 
     override fun preHandle(
@@ -25,7 +20,7 @@ class LoggingInterceptor(
     ): Boolean {
         request.setAttribute(TIMER_ATTR, System.currentTimeMillis())
         log.debug("--> {} {}", request.method, request.requestURI)
-        return true // true = continue processing, false = stop here
+        return true
     }
 
     override fun afterCompletion(
@@ -40,29 +35,14 @@ class LoggingInterceptor(
         val method = request.method
         val path = request.requestURI
 
-        // Normalise path for metrics — replace IDs with {id} placeholder
-        // so Prometheus doesn't create a new metric per unique UUID
-        val normalisedPath = normalisePath(path)
-
         if (ex != null) {
             log.error("<-- {} {} → {} [{}ms] ERROR: {}", method, path, status, durationMs, ex.message)
         } else {
             log.info("<-- {} {} → {} [{}ms]", method, path, status, durationMs)
         }
-
-        // Prometheus histogram — feeds Grafana "API latency by endpoint" panel
-        meterRegistry.timer(
-            "http.server.requests",
-            "method", method,
-            "uri", normalisedPath,
-            "status", status.toString()
-        ).record(durationMs, TimeUnit.MILLISECONDS)
-    }
-
-    // Replace UUIDs and numeric IDs in paths so Prometheus cardinality stays low
-    private fun normalisePath(path: String): String {
-        return path
-            .replace(Regex("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"), "{id}")
-            .replace(Regex("/\\d+"), "/{id}")
+        // HTTP metrics are recorded automatically by Spring Boot's WebMvcMetricsFilter
+        // (http_server_requests_seconds_* family). Do NOT duplicate them here — having
+        // two registrations with different tag-key sets causes a Prometheus label
+        // inconsistency exception and corrupts the entire metric family.
     }
 }
