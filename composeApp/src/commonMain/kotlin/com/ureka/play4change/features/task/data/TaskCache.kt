@@ -16,8 +16,11 @@ import kotlin.time.Duration.Companion.hours
  */
 class TaskCache(
     private val defaultTtlHours: Long = DEFAULT_TTL_HOURS,
-    private val clock: Clock = Clock.System
+    private val clock: Clock? = null
 ) {
+
+    // Avoids using Clock.System as a default parameter value, which fails on Kotlin/Native
+    private val effectiveClock: Clock get() = clock ?: kotlinx.datetime.Clock.System
 
     private data class Entry(val data: String, val expiresAt: Instant)
 
@@ -32,23 +35,23 @@ class TaskCache(
      */
     suspend fun getOrFetch(key: String, fetch: suspend () -> String): String {
         // Fast path: cache hit outside the lock
-        cache[key]?.takeIf { it.expiresAt > clock.now() }?.let { return it.data }
+        cache[key]?.takeIf { it.expiresAt > effectiveClock.now() }?.let { return it.data }
 
         val keyMutex = globalMutex.withLock {
             keyMutexes.getOrPut(key) { Mutex() }
         }
         return keyMutex.withLock {
             // Double-check after acquiring per-key lock
-            cache[key]?.takeIf { it.expiresAt > clock.now() }?.let { return@withLock it.data }
+            cache[key]?.takeIf { it.expiresAt > effectiveClock.now() }?.let { return@withLock it.data }
             val result = fetch()
-            cache[key] = Entry(result, clock.now().plus(defaultTtlHours.hours))
+            cache[key] = Entry(result, effectiveClock.now().plus(defaultTtlHours.hours))
             result
         }
     }
 
     /** Returns the cached value for [key] without triggering a fetch; null if absent or expired. */
     fun get(key: String): String? =
-        cache[key]?.takeIf { it.expiresAt > clock.now() }?.data
+        cache[key]?.takeIf { it.expiresAt > effectiveClock.now() }?.data
 
     /** Removes the cached entry for [key]. */
     fun invalidate(key: String) {
