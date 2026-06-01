@@ -34,6 +34,14 @@ class DeviceTokenRepositoryAdapter(
     override fun findByUserId(userId: String): List<DeviceToken> =
         jpa.findByUserId(userId).map { it.toDomain() }
 
+    override fun findAll(): List<DeviceToken> =
+        jpa.findAll().map { it.toDomain() }
+
+    @Transactional
+    override fun updateLastNotifiedAt(id: String, at: OffsetDateTime) {
+        jpa.updateLastNotifiedAt(id, at)
+    }
+
     private fun DeviceTokenEntity.toDomain() = DeviceToken(
         id = id,
         userId = userId,
