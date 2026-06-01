@@ -10,6 +10,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.arkivanov.decompose.retainedComponent
 import com.ureka.play4change.core.component.root.DefaultRootComponent
 import com.ureka.play4change.core.component.root.RootComponent
+import com.ureka.play4change.features.auth.platform.ActivityHolder
+import com.ureka.play4change.features.auth.platform.SocialLoginController
 
 class MainActivity : ComponentActivity() {
 
@@ -18,9 +20,27 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+
+        // Bind the activity and create the Facebook login controller before the UI loads.
+        ActivityHolder.bind(this)
+        SocialLoginController.current = SocialLoginController()
+
         root = retainedComponent { DefaultRootComponent(it) }
         setContent { App(root) }
         handleIntent(intent)
+    }
+
+    override fun onDestroy() {
+        SocialLoginController.current = null
+        ActivityHolder.release()
+        super.onDestroy()
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        @Suppress("DEPRECATION")
+        super.onActivityResult(requestCode, resultCode, data)
+        SocialLoginController.current?.onActivityResult(requestCode, resultCode, data)
     }
 
     override fun onNewIntent(intent: Intent) {
