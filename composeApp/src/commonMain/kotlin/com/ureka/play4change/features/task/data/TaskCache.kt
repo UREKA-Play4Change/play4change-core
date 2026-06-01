@@ -2,7 +2,6 @@ package com.ureka.play4change.features.task.data
 
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
-import kotlin.time.Instant
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -16,10 +15,10 @@ import kotlinx.coroutines.sync.withLock
  */
 class TaskCache(
     private val defaultTtlHours: Long = DEFAULT_TTL_HOURS,
-    private val nowProvider: () -> Instant = { Clock.System.now() }
+    private val nowMs: () -> Long = { Clock.System.now().toEpochMilliseconds() }
 ) {
 
-    private data class Entry(val data: String, val expiresAt: Instant)
+    private data class Entry(val data: String, val expiresAtMs: Long)
 
     private val cache = HashMap<String, Entry>()
     private val keyMutexes = HashMap<String, Mutex>()
@@ -32,23 +31,23 @@ class TaskCache(
      */
     suspend fun getOrFetch(key: String, fetch: suspend () -> String): String {
         // Fast path: cache hit outside the lock
-        cache[key]?.takeIf { it.expiresAt > nowProvider() }?.let { return it.data }
+        cache[key]?.takeIf { it.expiresAtMs > nowMs() }?.let { return it.data }
 
         val keyMutex = globalMutex.withLock {
             keyMutexes.getOrPut(key) { Mutex() }
         }
         return keyMutex.withLock {
             // Double-check after acquiring per-key lock
-            cache[key]?.takeIf { it.expiresAt > nowProvider() }?.let { return@withLock it.data }
+            cache[key]?.takeIf { it.expiresAtMs > nowMs() }?.let { return@withLock it.data }
             val result = fetch()
-            cache[key] = Entry(result, nowProvider().plus(defaultTtlHours.hours))
+            cache[key] = Entry(result, nowMs() + defaultTtlHours.hours.inWholeMilliseconds)
             result
         }
     }
 
     /** Returns the cached value for [key] without triggering a fetch; null if absent or expired. */
     fun get(key: String): String? =
-        cache[key]?.takeIf { it.expiresAt > nowProvider() }?.data
+        cache[key]?.takeIf { it.expiresAtMs > nowMs() }?.data
 
     /** Removes the cached entry for [key]. */
     fun invalidate(key: String) {
