@@ -2,7 +2,7 @@ package com.ureka.play4change.features.task.data
 
 import kotlinx.datetime.Clock
 import kotlin.time.Duration.Companion.hours
-import kotlin.time.Instant
+import kotlinx.datetime.Instant
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
