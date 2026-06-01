@@ -1,6 +1,6 @@
 # Phase 05 — Mobile Client: Notifications & Smart Fetching
 
-**Status:** `IN PROGRESS`
+**Status:** `DONE`
 **Goal:** Push notifications for daily task reminders at 8 PM user local time if task not done,
 WorkManager background fetch with battery/connectivity constraints, cache warm-up on
 charging + good WiFi.
@@ -53,7 +53,7 @@ charging + good WiFi.
 ---
 
 ### Task 5.2 — Daily reminder scheduler: server-side job at 8 PM user timezone
-- [ ] **What:** Add a server-side scheduled job that runs every hour, checks which users
+- [x] **What:** Add a server-side scheduled job that runs every hour, checks which users
       have not completed today's task, and sends a push notification to their registered
       device if the current time is 8 PM in the user's local timezone.
 - **Design constraints:**
@@ -88,7 +88,7 @@ charging + good WiFi.
 ---
 
 ### Task 5.3 — WorkManager background fetch: constraints
-- [ ] **What:** Add a WorkManager periodic work request that fetches the next day's task
+- [x] **What:** Add a WorkManager periodic work request that fetches the next day's task
       data in the background, subject to battery and connectivity constraints.
 - **Design constraints:**
   - **Work request configuration:**
@@ -124,7 +124,7 @@ charging + good WiFi.
 ---
 
 ### Task 5.4 — Cache warm-up strategy on WorkManager execution
-- [ ] **What:** When the background worker runs, pre-fetch and cache not just today's task
+- [x] **What:** When the background worker runs, pre-fetch and cache not just today's task
       but also the next 3 days' worth of roadmap data so the app feels fast when the user
       opens it.
 - **Design constraints:**
@@ -153,7 +153,7 @@ charging + good WiFi.
 ---
 
 ### Task 5.5 — Manual test recipe for Phase 05
-- [ ] **What:** Write the full end-to-end manual test recipe for Phase 05 in
+- [x] **What:** Write the full end-to-end manual test recipe for Phase 05 in
       `agentic/manual-testing/phase-05-recipe.md`.
 - **Design constraints:** The recipe must cover: push notification receipt at 8 PM,
       WorkManager enqueue verification, cache warm-up on WiFi.
