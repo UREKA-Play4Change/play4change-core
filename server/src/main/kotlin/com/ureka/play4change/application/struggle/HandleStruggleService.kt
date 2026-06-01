@@ -83,7 +83,7 @@ class HandleStruggleService(
             }
             registry.counter("struggle_sessions_total", "error_pattern", errorPatternTag).increment()
             registry.counter(
-                "struggle.sessions.created.total",
+                "struggle_sessions_created_total",
                 "topic_id", enrollment.topicId
             ).increment()
 
