@@ -67,6 +67,9 @@ dependencies {
     implementation("software.amazon.awssdk:s3:2.25.31")
     implementation("org.apache.pdfbox:pdfbox:3.0.1")
     implementation("org.jsoup:jsoup:1.17.2")
+
+    // Phase 5 — push notifications (FCM via Firebase Admin SDK)
+    implementation("com.google.firebase:firebase-admin:9.3.0")
 }
 
 kotlin {
