@@ -39,6 +39,11 @@ kotlin {
             // Phase 5 — background fetch
             implementation("androidx.work:work-runtime-ktx:2.9.1")
             implementation("io.insert-koin:koin-androidx-workmanager:3.5.3")
+            // Social auth
+            implementation(libs.androidx.credentials)
+            implementation(libs.androidx.credentials.play.services)
+            implementation(libs.googleid)
+            implementation(libs.facebook.login)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
@@ -130,6 +135,10 @@ android {
                 "String", "FIREBASE_SENDER_ID",
                 "\"${project.findProperty("FIREBASE_SENDER_ID") ?: ""}\""
             )
+            buildConfigField(
+                "String", "GOOGLE_WEB_CLIENT_ID",
+                "\"${project.findProperty("GOOGLE_WEB_CLIENT_ID") ?: "679377422465-3imvt77k53msgvcdgsomi5s7jg1b0091.apps.googleusercontent.com"}\""
+            )
         }
         release {
             isMinifyEnabled = false
@@ -153,6 +162,10 @@ android {
             buildConfigField(
                 "String", "FIREBASE_SENDER_ID",
                 "\"${project.findProperty("FIREBASE_SENDER_ID") ?: ""}\""
+            )
+            buildConfigField(
+                "String", "GOOGLE_WEB_CLIENT_ID",
+                "\"${project.findProperty("GOOGLE_WEB_CLIENT_ID") ?: "679377422465-3imvt77k53msgvcdgsomi5s7jg1b0091.apps.googleusercontent.com"}\""
             )
         }
     }
