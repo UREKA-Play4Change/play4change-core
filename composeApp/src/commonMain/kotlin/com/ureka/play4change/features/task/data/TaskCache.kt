@@ -1,10 +1,10 @@
 package com.ureka.play4change.features.task.data
 
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
-import kotlin.time.Duration.Companion.hours
 
 /**
  * In-memory TTL cache for API responses, keyed by endpoint URL.
