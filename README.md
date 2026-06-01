@@ -7,19 +7,34 @@
 
 ## 1. What is Play4Change
 
-Play4Change is an adaptive learning platform that delivers gamified daily challenges on sustainability and digital literacy. Users enrol in AI-generated topics, complete multiple-choice and photo tasks, and earn points through a peer-review majority-vote system. The backend is complete; a KMP (Android/iOS/Desktop) frontend is planned.
+Play4Change is an adaptive learning platform for civic literacy and urban sustainability. It is built around three pillars:
+
+- **Engagement** — gamified daily challenges delivered through a mobile app, with streaks and progress tracking to sustain participation
+- **Personalisation** — AI-driven adaptive paths that detect learning difficulties and reuse previously validated remediation paths across users with similar profiles
+- **Recognition** — microcompetencies certified by badges, awarded on topic completion, building a progressive competency portfolio for each citizen
+
+Users enrol in AI-generated topics, complete multiple-choice and photo tasks, and earn points through a peer-review majority-vote system. The platform comprises a KMP mobile client (Android/iOS), a React web portal, a stateless REST server, and an AI agent.
 
 ---
 
 ## 2. Architecture
 
-The backend follows Clean Architecture with Domain-Driven Design. All business rules live in pure Kotlin domain and application layers with no framework dependencies. Infrastructure adapters implement outbound ports — JPA repositories, Redis cache, MinIO storage, Mistral AI, and OAuth verifiers are all swappable without touching domain code. The five bounded contexts are **Identity** (auth, tokens), **Topic** (AI content pipeline), **Enrollment** (daily task progression), **Struggle** (adaptive remediation), and **PeerReview** (collective assessment).
+The system is composed of four components:
+
+| Component | Description |
+|---|---|
+| **Mobile client** | Kotlin Multiplatform + Compose Multiplatform; shared logic for Android and iOS; MVI pattern with Decompose |
+| **Web portal** | React; public landing page and restricted admin portal (topic management, AI content review, metrics) |
+| **REST server** | Kotlin + Spring Boot; stateless, horizontally scalable; coordinates all business logic |
+| **AI agent** | LangChain4j + Mistral; generates and adapts learning content; pgvector for semantic retrieval and adaptive path reuse |
+
+The server follows Clean Architecture with Domain-Driven Design. All business rules live in pure Kotlin domain and application layers with no framework dependencies. Infrastructure adapters implement outbound ports — JPA repositories, Redis cache, MinIO storage, and the Mistral AI client are all swappable without touching domain code. The five bounded contexts are **Identity** (auth, tokens), **Topic** (AI content pipeline), **Enrollment** (daily task progression), **Struggle** (adaptive remediation), and **PeerReview** (collective assessment).
 
 | Layer | What lives here |
 |---|---|
 | `domain/` | Pure Kotlin — entities, value objects, domain repository interfaces |
 | `application/` | Use cases, inbound/outbound ports (interfaces), orchestrators |
-| `infrastructure/` | JPA adapters, Redis, MinIO, Mistral/LangChain4j, OAuth |
+| `infrastructure/` | JPA adapters, Redis, MinIO, Mistral/LangChain4j, Resend (magic link) |
 | `web/` | Spring MVC controllers, DTOs, security filter chain |
 
 ---
@@ -34,7 +49,7 @@ The backend follows Clean Architecture with Domain-Driven Design. All business r
 | AI | LangChain4j 0.36 + Mistral AI (`mistral-small-latest`) |
 | Cache | Redis 7 (Spring Data / Lettuce) |
 | File Storage | MinIO (S3-compatible, AWS SDK) |
-| Auth | Magic link (Resend) + Google OAuth (JWKS) + Facebook OAuth |
+| Auth | Magic link (SHA-256, Resend API) |
 | Observability | Micrometer + Prometheus + Grafana |
 | Migrations | Flyway (V1–V10) |
 | Containerisation | Docker Compose (6 services) |
@@ -45,10 +60,12 @@ The backend follows Clean Architecture with Domain-Driven Design. All business r
 
 Full setup instructions — prerequisites, health checks, environment variables, service verification, and reset commands — are in **[demo/HOW_TO_RUN.md](demo/HOW_TO_RUN.md)**.
 
-Start everything:
+All operational scripts live in [`scripts/`](scripts/README.md). Start everything:
 
 ```bash
-docker compose up --build
+./scripts/setup.sh         # wipe + build + start everything + tunnel
+./scripts/check-health.sh      # wait for all services to report healthy
+./scripts/minio-init.sh        # create required MinIO bucket (first run only)
 ```
 
 Verify the server is up:
@@ -72,7 +89,6 @@ All endpoints are documented interactively at **http://localhost:8080/swagger-ui
 |---|---|---|
 | `POST` | `/auth/magic-link` | Request a magic link email |
 | `GET` | `/auth/verify?token=` | Verify token → returns JWT pair |
-| `POST` | `/auth/oauth` | Login/register via Google or Facebook |
 | `POST` | `/auth/refresh` | Rotate refresh token → new JWT pair |
 | `DELETE` | `/auth/logout` | Revoke refresh token (entire family) |
 
@@ -129,7 +145,7 @@ All decisions are documented in [`docs/adr/`](docs/adr/) (ADR-001 through ADR-01
 | ADR-008 | Client Architecture: Decompose + MVI + Domain-Driven Feature Slices |
 | ADR-009 | Deployment Strategy: Docker Compose over Kubernetes + AWS |
 | ADR-010 | BaseView Scaffold Upgrade: Edge-to-Edge Insets, Navigation Drawer, and Log-Out Placement |
-| ADR-011 | Passwordless Authentication: Magic Link + OAuth 2.0 (Google & Facebook) |
+| ADR-011 | Passwordless Authentication: Magic Link |
 | ADR-012 | Topic Content Pipeline: Async Generation, File Storage, and Content Extraction |
 | ADR-013 | Learning Flow: Day Progression, Struggle Detection, and Caching Strategy |
 | ADR-014 | Peer Review: Cost-Free Assessment Through Collective Correction |
@@ -144,7 +160,7 @@ All decisions are documented in [`docs/adr/`](docs/adr/) (ADR-001 through ADR-01
 
 The [`demo/`](demo/) directory also contains runnable JetBrains HTTP Client files:
 
-- **[demo/auth.http](demo/auth.http)** — passwordless magic link and OAuth login flow
+- **[demo/auth.http](demo/auth.http)** — passwordless magic link authentication flow
 - **[demo/admin_topic.http](demo/admin_topic.http)** — admin PDF upload and async AI generation
 - **[demo/peer_review.http](demo/peer_review.http)** — collective assessment 3-verdict majority flow
 
@@ -155,12 +171,11 @@ The [`demo/`](demo/) directory also contains runnable JetBrains HTTP Client file
 There is no seeded admin account. Promote a user to `ADMIN` manually after they have
 signed in at least once (so a `users` row exists):
 
-```sql
-UPDATE users SET role = 'ADMIN' WHERE email = 'your@email.com';
+```bash
+./scripts/promote-admin.sh your@email.com
 ```
 
-Run this directly against the live database (e.g. `psql` or a DB client connected to
-the Docker Compose container). The change takes effect on the user's next login.
+The change takes effect on the user's next login.
 
 ---
 

@@ -59,7 +59,7 @@ task-delivery:
 
 ```bash
 # From the project root — this builds all containers and starts cloudflared
-./start-dev.sh
+./scripts/setup.sh
 ```
 
 Wait until the server is healthy:
