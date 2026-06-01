@@ -36,6 +36,9 @@ kotlin {
             implementation(libs.koin.android)
             implementation(libs.androidx.security.crypto)
             implementation(libs.firebase.messaging.ktx)
+            // Phase 5 — background fetch
+            implementation("androidx.work:work-runtime-ktx:2.9.1")
+            implementation("io.insert-koin:koin-androidx-workmanager:3.5.3")
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
