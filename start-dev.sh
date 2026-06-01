@@ -4,8 +4,8 @@ if [ -f .env ]; then
   export $(grep -v '^#' .env | xargs)
 fi
 
-# echo "### Cleaning containers and volumes..."
-# docker compose down -v
+echo "### Cleaning containers and volumes..."
+docker compose down -v
 
 echo "### Building a new project..."
 docker compose up --build -d

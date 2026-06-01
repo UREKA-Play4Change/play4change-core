@@ -94,7 +94,7 @@ class LearnerFlowMetricsTest {
         taskInstanceId = null
     )
 
-    // ── Task 1: tasks.submitted.total counter ────────────────────────────────
+    // ── Task 1: tasks_submitted_total counter ────────────────────────────────
 
     @Test
     fun `submitAnswer records tasks_submitted_total with result=correct and topic_id`() {
@@ -136,7 +136,7 @@ class LearnerFlowMetricsTest {
 
         assertTrue(result.isRight()) { "Expected Right but got: $result" }
 
-        val counter = meterRegistry.find("tasks.submitted.total")
+        val counter = meterRegistry.find("tasks_submitted_total")
             .tags("result", "correct", "topic_id", topicId)
             .counter()
 
@@ -185,7 +185,7 @@ class LearnerFlowMetricsTest {
         // selectedOption=3 maps to optionOrder[3]=3, which != correctAnswer(0) → incorrect
         taskService.submitAnswer(SubmitAnswerCommand(userId, assignmentId, 3, null))
 
-        val counter = meterRegistry.find("tasks.submitted.total")
+        val counter = meterRegistry.find("tasks_submitted_total")
             .tags("result", "incorrect", "topic_id", topicId)
             .counter()
 
@@ -193,7 +193,7 @@ class LearnerFlowMetricsTest {
         assertTrue(counter!!.count() > 0)
     }
 
-    // ── Task 2: reviews.verdicts.submitted.total counter ─────────────────────
+    // ── Task 2: reviews_verdicts_submitted_total counter ─────────────────────
 
     @Test
     fun `submitVerdict records reviews_verdicts_submitted_total with verdict and topic_id`() {
@@ -245,7 +245,7 @@ class LearnerFlowMetricsTest {
             SubmitVerdictCommand(userId, reviewId, ReviewVerdict.CORRECT, null)
         )
 
-        val counter = meterRegistry.find("reviews.verdicts.submitted.total")
+        val counter = meterRegistry.find("reviews_verdicts_submitted_total")
             .tags("verdict", "correct", "topic_id", topicId)
             .counter()
 

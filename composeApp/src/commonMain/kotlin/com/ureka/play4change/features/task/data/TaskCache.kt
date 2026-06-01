@@ -1,10 +1,10 @@
 package com.ureka.play4change.features.task.data
 
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
-import kotlin.time.Duration.Companion.hours
 
 /**
  * In-memory TTL cache for API responses, keyed by endpoint URL.
@@ -16,7 +16,7 @@ import kotlin.time.Duration.Companion.hours
  */
 class TaskCache(
     private val defaultTtlHours: Long = DEFAULT_TTL_HOURS,
-    private val clock: Clock = Clock.System
+    private val nowProvider: () -> Instant = { Clock.System.now() }
 ) {
 
     private data class Entry(val data: String, val expiresAt: Instant)
@@ -32,23 +32,23 @@ class TaskCache(
      */
     suspend fun getOrFetch(key: String, fetch: suspend () -> String): String {
         // Fast path: cache hit outside the lock
-        cache[key]?.takeIf { it.expiresAt > clock.now() }?.let { return it.data }
+        cache[key]?.takeIf { it.expiresAt > nowProvider() }?.let { return it.data }
 
         val keyMutex = globalMutex.withLock {
             keyMutexes.getOrPut(key) { Mutex() }
         }
         return keyMutex.withLock {
             // Double-check after acquiring per-key lock
-            cache[key]?.takeIf { it.expiresAt > clock.now() }?.let { return@withLock it.data }
+            cache[key]?.takeIf { it.expiresAt > nowProvider() }?.let { return@withLock it.data }
             val result = fetch()
-            cache[key] = Entry(result, clock.now().plus(defaultTtlHours.hours))
+            cache[key] = Entry(result, nowProvider().plus(defaultTtlHours.hours))
             result
         }
     }
 
     /** Returns the cached value for [key] without triggering a fetch; null if absent or expired. */
     fun get(key: String): String? =
-        cache[key]?.takeIf { it.expiresAt > clock.now() }?.data
+        cache[key]?.takeIf { it.expiresAt > nowProvider() }?.data
 
     /** Removes the cached entry for [key]. */
     fun invalidate(key: String) {

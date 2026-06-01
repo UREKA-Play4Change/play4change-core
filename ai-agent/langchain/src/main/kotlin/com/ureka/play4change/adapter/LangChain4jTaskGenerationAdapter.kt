@@ -101,7 +101,6 @@ class LangChain4jTaskGenerationAdapter(
             val durationMs = generationTimer.stop(
                 meterRegistry.timer(
                     "ai.generation.duration",
-                    "topic_id", request.topicId,
                     "generation_phase", "GENERATION"
                 )
             ) / 1_000_000
@@ -170,7 +169,6 @@ class LangChain4jTaskGenerationAdapter(
             analysisTimer.stop(
                 meterRegistry.timer(
                     "ai.generation.duration",
-                    "topic_id", context.topicId,
                     "generation_phase", "ANALYSIS"
                 )
             )

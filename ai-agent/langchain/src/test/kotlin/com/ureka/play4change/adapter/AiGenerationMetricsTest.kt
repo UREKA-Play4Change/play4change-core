@@ -86,7 +86,7 @@ class AiGenerationMetricsTest {
 
         // Verify the timer was recorded
         val timer = meterRegistry.find("ai.generation.duration")
-            .tags("generation_phase", "GENERATION")
+            .tag("generation_phase", "GENERATION")
             .timer()
 
         assertNotNull(timer) { "Expected ai.generation.duration timer with generation_phase=GENERATION" }
@@ -99,7 +99,7 @@ class AiGenerationMetricsTest {
     }
 
     @Test
-    fun `generateTasks timer includes topic_id tag`() = runTest {
+    fun `generateTasks timer is recorded with generation_phase tag`() = runTest {
         val meterRegistry = SimpleMeterRegistry()
 
         val chatModel = mockk<ChatLanguageModel>()
@@ -144,9 +144,9 @@ class AiGenerationMetricsTest {
         adapter.generateTasks(request)
 
         val timer = meterRegistry.find("ai.generation.duration")
-            .tags("topic_id", "topic-abc-123", "generation_phase", "GENERATION")
+            .tag("generation_phase", "GENERATION")
             .timer()
 
-        assertNotNull(timer) { "Expected timer with topic_id=topic-abc-123 and generation_phase=GENERATION" }
+        assertNotNull(timer) { "Expected timer with generation_phase=GENERATION" }
     }
 }
