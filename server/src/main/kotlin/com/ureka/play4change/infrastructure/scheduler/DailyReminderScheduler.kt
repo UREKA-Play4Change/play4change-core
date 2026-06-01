@@ -52,26 +52,24 @@ open class DailyReminderScheduler(
         if (nowInTz.hour != REMINDER_HOUR) return
 
         val todayInTz = nowInTz.toLocalDate()
-        if (deviceToken.lastNotifiedAt?.atZoneSameInstant(tz)?.toLocalDate() == todayInTz) return
-
+        val alreadyNotifiedToday = deviceToken.lastNotifiedAt?.atZoneSameInstant(tz)?.toLocalDate() == todayInTz
         val enrollments = enrollmentRepository.findActiveByUserId(deviceToken.userId)
-        if (enrollments.isEmpty()) return
-
         val hasSubmittedToday = enrollments.any { enrollment ->
             enrollmentRepository.findAssignmentsByEnrollmentId(enrollment.id).any { assignment ->
                 assignment.submittedAt?.atZoneSameInstant(tz)?.toLocalDate() == todayInTz
             }
         }
-        if (hasSubmittedToday) return
 
-        val topicName = topicRepository.findById(enrollments.first().topicId)?.title ?: "your topic"
-        pushNotificationPort.send(
-            deviceToken,
-            "Your daily challenge is waiting \uD83C\uDFAF",
-            "Complete today's task in $topicName to keep your streak."
-        )
-        deviceTokenRepository.updateLastNotifiedAt(deviceToken.id, OffsetDateTime.now())
-        logger.info("Daily reminder sent to user {}", deviceToken.userId)
+        if (!alreadyNotifiedToday && enrollments.isNotEmpty() && !hasSubmittedToday) {
+            val topicName = topicRepository.findById(enrollments.first().topicId)?.title ?: "your topic"
+            pushNotificationPort.send(
+                deviceToken,
+                "Your daily challenge is waiting \uD83C\uDFAF",
+                "Complete today's task in $topicName to keep your streak."
+            )
+            deviceTokenRepository.updateLastNotifiedAt(deviceToken.id, OffsetDateTime.now())
+            logger.info("Daily reminder sent to user {}", deviceToken.userId)
+        }
     }
 
     private companion object {
