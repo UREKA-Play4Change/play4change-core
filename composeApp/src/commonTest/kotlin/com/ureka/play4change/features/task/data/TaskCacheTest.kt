@@ -3,7 +3,6 @@ package com.ureka.play4change.features.task.data
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
-import kotlin.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -12,15 +11,15 @@ import kotlin.test.assertTrue
 class TaskCacheTest {
 
     /** Controllable time source for TTL assertions. */
-    private class TestClock(var now: Instant) {
-        fun advanceBy(seconds: Long) { now = Instant.fromEpochSeconds(now.epochSeconds + seconds) }
-        val provider: () -> Instant = { now }
+    private class TestClock(var nowMs: Long) {
+        fun advanceBy(seconds: Long) { nowMs += seconds * 1000 }
+        val provider: () -> Long = { nowMs }
     }
 
     @Test
     fun `fresh cache entry is returned without a network call`() = runTest {
-        val clock = TestClock(Instant.fromEpochSeconds(0))
-        val cache = TaskCache(nowProvider = clock.provider)
+        val clock = TestClock(0L)
+        val cache = TaskCache(nowMs = clock.provider)
         var fetchCount = 0
 
         // First call — populates the cache
@@ -34,8 +33,8 @@ class TaskCacheTest {
 
     @Test
     fun `expired cache entry triggers a network fetch`() = runTest {
-        val clock = TestClock(Instant.fromEpochSeconds(0))
-        val cache = TaskCache(defaultTtlHours = 6, nowProvider = clock.provider)
+        val clock = TestClock(0L)
+        val cache = TaskCache(defaultTtlHours = 6, nowMs = clock.provider)
         var fetchCount = 0
 
         cache.getOrFetch("key") { fetchCount++; "data-v1" }
