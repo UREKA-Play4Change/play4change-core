@@ -279,7 +279,7 @@ class TaskService(
         ).increment()
 
         registry.counter(
-            "tasks.submitted.total",
+            "tasks_submitted_total",
             "result", if (isCorrect) "correct" else "incorrect",
             "topic_id", savedEnrollment.topicId
         ).increment()
