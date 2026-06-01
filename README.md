@@ -60,10 +60,12 @@ The server follows Clean Architecture with Domain-Driven Design. All business ru
 
 Full setup instructions — prerequisites, health checks, environment variables, service verification, and reset commands — are in **[demo/HOW_TO_RUN.md](demo/HOW_TO_RUN.md)**.
 
-Start everything:
+All operational scripts live in [`scripts/`](scripts/README.md). Start everything:
 
 ```bash
-docker compose up --build
+./scripts/setup.sh         # wipe + build + start everything + tunnel
+./scripts/check-health.sh      # wait for all services to report healthy
+./scripts/minio-init.sh        # create required MinIO bucket (first run only)
 ```
 
 Verify the server is up:
@@ -169,12 +171,11 @@ The [`demo/`](demo/) directory also contains runnable JetBrains HTTP Client file
 There is no seeded admin account. Promote a user to `ADMIN` manually after they have
 signed in at least once (so a `users` row exists):
 
-```sql
-UPDATE users SET role = 'ADMIN' WHERE email = 'your@email.com';
+```bash
+./scripts/promote-admin.sh your@email.com
 ```
 
-Run this directly against the live database (e.g. `psql` or a DB client connected to
-the Docker Compose container). The change takes effect on the user's next login.
+The change takes effect on the user's next login.
 
 ---
 
