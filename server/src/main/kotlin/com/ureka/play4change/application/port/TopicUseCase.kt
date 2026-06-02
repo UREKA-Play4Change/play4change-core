@@ -19,7 +19,6 @@ data class CreateUrlTopicCommand(
     val category: String,
     val url: String,
     val taskCount: Int,
-    val subscriptionWindowDays: Int,
     val audienceLevel: AudienceLevel,
     val language: String,
     val expiresAt: OffsetDateTime
@@ -32,7 +31,6 @@ data class CreatePdfTopicCommand(
     val pdfBytes: ByteArray,
     val fileName: String,
     val taskCount: Int,
-    val subscriptionWindowDays: Int,
     val audienceLevel: AudienceLevel,
     val language: String,
     val expiresAt: OffsetDateTime
@@ -42,7 +40,7 @@ data class CreatePdfTopicCommand(
         if (other !is CreatePdfTopicCommand) return false
         return title == other.title && description == other.description &&
             category == other.category && fileName == other.fileName &&
-            taskCount == other.taskCount && subscriptionWindowDays == other.subscriptionWindowDays &&
+            taskCount == other.taskCount &&
             audienceLevel == other.audienceLevel && language == other.language &&
             expiresAt == other.expiresAt && pdfBytes.contentEquals(other.pdfBytes)
     }

@@ -20,24 +20,15 @@ data class TopicResponse(
     val category: String,
     val status: String,
     val createdAt: OffsetDateTime,
-
-    // Aliased fields — match web frontend field names
-    val durationDays: Int,
     val difficulty: String,
-
-    // Legacy fields — kept so existing demo/CLI clients are not broken
     val contentSourceType: String,
     val taskCount: Int,
-    val subscriptionWindowDays: Int,
     val audienceLevel: String,
     val language: String,
     val expiresAt: OffsetDateTime,
     val createdBy: String,
-
     val stats: TopicStats? = null,
     val contentTruncated: Boolean,
-
-    // Phase 02, Task 2.8 — generation pipeline phase state
     val currentPhase: String,
     val phaseUpdatedAt: OffsetDateTime,
     val generationLog: List<PhaseLogEntry>? = null
@@ -56,11 +47,9 @@ data class TopicResponse(
                 category = topic.category,
                 status = topic.status.name,
                 createdAt = topic.createdAt,
-                durationDays = topic.subscriptionWindowDays,
                 difficulty = topic.audienceLevel.name,
                 contentSourceType = topic.contentSourceType.name,
                 taskCount = topic.taskCount,
-                subscriptionWindowDays = topic.subscriptionWindowDays,
                 audienceLevel = topic.audienceLevel.name,
                 language = topic.language,
                 expiresAt = topic.expiresAt,

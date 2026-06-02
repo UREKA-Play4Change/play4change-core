@@ -21,7 +21,7 @@ psql() {
 }
 
 # Check the user exists before promoting
-EXISTING=$(psql -v email="$EMAIL" -c "SELECT id, email, role FROM users WHERE email = :'email';")
+EXISTING=$(psql -c "SELECT id, email, role FROM users WHERE email = '$EMAIL';")
 
 if [[ -z "$EXISTING" ]]; then
   echo "ERROR: No user found with email '$EMAIL'."
@@ -37,10 +37,10 @@ if [[ "$CURRENT_ROLE" == "ADMIN" ]]; then
 fi
 
 # Promote
-psql -v email="$EMAIL" -c "UPDATE users SET role = 'ADMIN' WHERE email = :'email';"
+psql -c "UPDATE users SET role = 'ADMIN' WHERE email = '$EMAIL';"
 
 # Confirm
-UPDATED=$(psql -v email="$EMAIL" -c "SELECT role FROM users WHERE email = :'email';")
+UPDATED=$(psql -c "SELECT role FROM users WHERE email = '$EMAIL';")
 
 if [[ "$UPDATED" == "ADMIN" ]]; then
   echo "OK: '$EMAIL' promoted to ADMIN."

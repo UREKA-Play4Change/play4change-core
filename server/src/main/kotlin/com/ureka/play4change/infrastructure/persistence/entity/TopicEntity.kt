@@ -31,9 +31,6 @@ class TopicEntity(
     @Column(name = "task_count", nullable = false)
     val taskCount: Int,
 
-    @Column(name = "subscription_window_days", nullable = false)
-    val subscriptionWindowDays: Int = 7,
-
     @Column(name = "expires_at", nullable = false)
     val expiresAt: OffsetDateTime,
 

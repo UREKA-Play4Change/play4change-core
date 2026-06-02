@@ -11,7 +11,6 @@ data class Topic(
     val contentSourceRef: String,
     val rawExtractedText: String?,
     val taskCount: Int,
-    val subscriptionWindowDays: Int,
     val expiresAt: OffsetDateTime,
     val audienceLevel: AudienceLevel,
     val language: String,

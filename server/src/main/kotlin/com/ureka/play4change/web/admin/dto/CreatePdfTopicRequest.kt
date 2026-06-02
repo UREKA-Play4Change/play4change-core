@@ -6,7 +6,6 @@ data class CreatePdfTopicRequest(
     val title: String = "",
     val description: String = "",
     val category: String = "",
-    val durationDays: Int = 5,
     val difficulty: String = "BEGINNER",
     val language: String = "en",
     val taskCount: Int? = null,

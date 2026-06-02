@@ -34,10 +34,8 @@ class TopicController(
         @Valid @RequestBody request: CreateUrlTopicRequest,
         @AuthenticationPrincipal adminId: String
     ): ResponseEntity<TopicResponse> {
-        val url = request.urls.first()
-        val duration = request.durationDays
-        val taskCount = request.taskCount ?: (request.durationDays * 3)
-        val expiresAt = request.expiresAt ?: OffsetDateTime.now().plusDays((request.durationDays + 30).toLong())
+        val taskCount = request.taskCount ?: 10
+        val expiresAt = request.expiresAt ?: OffsetDateTime.now().plusDays(90)
         val audience = runCatching { AudienceLevel.valueOf(request.difficulty.uppercase()) }
             .getOrDefault(AudienceLevel.BEGINNER)
 
@@ -45,9 +43,8 @@ class TopicController(
             title = request.title,
             description = request.description,
             category = request.category,
-            url = url,
+            url = request.url,
             taskCount = taskCount,
-            subscriptionWindowDays = duration,
             audienceLevel = audience,
             language = request.language,
             expiresAt = expiresAt
@@ -61,8 +58,8 @@ class TopicController(
         @RequestPart file: MultipartFile,
         @AuthenticationPrincipal adminId: String
     ): ResponseEntity<TopicResponse> {
-        val taskCount = request.taskCount ?: (request.durationDays * 3)
-        val expiresAt = request.expiresAt ?: OffsetDateTime.now().plusDays((request.durationDays + 30).toLong())
+        val taskCount = request.taskCount ?: 10
+        val expiresAt = request.expiresAt ?: OffsetDateTime.now().plusDays(90)
         val audience = runCatching { AudienceLevel.valueOf(request.difficulty.uppercase()) }
             .getOrDefault(AudienceLevel.BEGINNER)
 
@@ -73,7 +70,6 @@ class TopicController(
             pdfBytes = file.bytes,
             fileName = file.originalFilename ?: "upload.pdf",
             taskCount = taskCount,
-            subscriptionWindowDays = request.durationDays,
             audienceLevel = audience,
             language = request.language,
             expiresAt = expiresAt
