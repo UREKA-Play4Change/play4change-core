@@ -4,8 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,8 +15,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.AccountTree
-import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.EmojiObjects
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -29,7 +25,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -49,11 +44,8 @@ import com.ureka.play4change.features.about.presentation.AboutEvents
 import com.ureka.play4change.features.about.presentation.DefaultAboutComponent
 import org.jetbrains.compose.resources.stringResource
 import play4change.composeapp.generated.resources.Res
-import play4change.composeapp.generated.resources.about_architecture_body
-import play4change.composeapp.generated.resources.about_architecture_title
 import play4change.composeapp.generated.resources.about_author_label
 import play4change.composeapp.generated.resources.about_author_name
-import play4change.composeapp.generated.resources.about_built_with
 import play4change.composeapp.generated.resources.about_footer
 import play4change.composeapp.generated.resources.about_institution
 import play4change.composeapp.generated.resources.about_project_body
@@ -63,18 +55,7 @@ import play4change.composeapp.generated.resources.about_supervisors
 import play4change.composeapp.generated.resources.about_title
 import play4change.composeapp.generated.resources.app_tagline
 
-private val techStack = listOf(
-    "Kotlin Multiplatform",
-    "Compose Multiplatform",
-    "Decompose",
-    "Ktor",
-    "Spring Boot",
-    "PostgreSQL + pgvector",
-    "Mistral AI",
-    "Flyway"
-)
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(component: DefaultAboutComponent) {
     BaseView(
@@ -143,42 +124,6 @@ fun AboutScreen(component: DefaultAboutComponent) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 22.sp
                     )
-                }
-
-                // Architecture
-                AboutCard(
-                    title = stringResource(Res.string.about_architecture_title),
-                    icon = Icons.Rounded.AccountTree
-                ) {
-                    Text(
-                        text = stringResource(Res.string.about_architecture_body),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 22.sp
-                    )
-                }
-
-                // Built With
-                AboutCard(
-                    title = stringResource(Res.string.about_built_with),
-                    icon = Icons.Rounded.Code
-                ) {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
-                        verticalArrangement = Arrangement.spacedBy(Spacing.xxs)
-                    ) {
-                        techStack.forEach { tech ->
-                            SuggestionChip(
-                                onClick = {},
-                                label = {
-                                    Text(
-                                        text = tech,
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
-                                }
-                            )
-                        }
-                    }
                 }
 
                 // Author
