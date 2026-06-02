@@ -2,7 +2,6 @@ package com.ureka.play4change.features.auth.domain.repository
 
 import com.ureka.play4change.features.auth.domain.model.AuthResult
 import com.ureka.play4change.features.auth.domain.model.MagicLinkResult
-import com.ureka.play4change.features.auth.domain.model.SocialProvider
 
 interface AuthRepository {
     /** Step 1 of magic link: send the email. Returns success/failure of sending. */
@@ -10,12 +9,6 @@ interface AuthRepository {
 
     /** Step 2 of magic link: exchange the token from the link for auth tokens. */
     suspend fun verifyMagicLink(token: String): AuthResult?
-
-    /**
-     * OAuth login — client platform SDK completes the OAuth dance and provides the
-     * [idToken]. Defaults to empty string for mock/test implementations that ignore it.
-     */
-    suspend fun socialLogin(provider: SocialProvider, idToken: String = ""): AuthResult?
 
     /** Silent token refresh using stored refresh token. */
     suspend fun refresh(refreshToken: String): AuthResult?

@@ -3,9 +3,7 @@ package com.ureka.play4change.features.auth.presentation
 import com.arkivanov.decompose.ComponentContext
 import com.ureka.play4change.core.component.base.BaseComponent
 import com.ureka.play4change.core.error.AppError
-import com.ureka.play4change.features.auth.domain.model.SocialProvider
 import com.ureka.play4change.features.auth.domain.repository.AuthRepository
-import com.ureka.play4change.features.auth.platform.SocialAuthLauncher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -14,7 +12,6 @@ import kotlin.coroutines.cancellation.CancellationException
 class DefaultLoginComponent(
     componentContext: ComponentContext,
     private val repository: AuthRepository,
-    private val socialAuthLauncher: SocialAuthLauncher? = null,
 ) : BaseComponent<LoginState, LoginEvents>(componentContext, LoginState()), LoginComponent {
 
     private var countdownJob: Job? = null
@@ -24,7 +21,6 @@ class DefaultLoginComponent(
             is LoginEvents.EmailChanged  -> updateState { copy(email = event.email, emailError = null) }
             LoginEvents.Submit           -> submit()
             LoginEvents.Resend           -> resend()
-            is LoginEvents.SocialLogin   -> handleSocialLogin(event.provider)
             is LoginEvents.TokenChanged  -> updateState { copy(tokenInput = event.value, error = null) }
             LoginEvents.VerifyToken      -> verifyToken()
         }
@@ -42,42 +38,6 @@ class DefaultLoginComponent(
                 repository.sendMagicLink(email)
                 updateState { copy(loadingAction = null, linkSent = true, stage = LoginStage.LinkSent) }
                 startCountdown()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                updateState {
-                    copy(
-                        loadingAction = null,
-                        error = AppError.ServerError.Unexpected(e.message)
-                    )
-                }
-            }
-        }
-    }
-
-    private fun handleSocialLogin(provider: SocialProvider) {
-        val launcher = socialAuthLauncher
-        if (launcher == null) {
-            updateState { copy(error = AppError.ServerError.Unexpected("Social login not available on this platform")) }
-            return
-        }
-        scope.launch {
-            updateState { copy(loadingAction = LoginLoadingAction.Social(provider), error = null) }
-            try {
-                val idToken = launcher.launch(provider)
-                if (idToken == null) {
-                    // User cancelled the native sign-in dialog
-                    updateState { copy(loadingAction = null) }
-                    return@launch
-                }
-                repository.socialLogin(provider, idToken)?.let {
-                    emitEffect(LoginEffect.NavigateToHome)
-                } ?: updateState {
-                    copy(
-                        loadingAction = null,
-                        error = AppError.ServerError.Unexpected("Social login failed")
-                    )
-                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

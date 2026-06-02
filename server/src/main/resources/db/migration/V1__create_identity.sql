@@ -6,7 +6,7 @@ CREATE TABLE users (
     name               VARCHAR(255),
     avatar_url         TEXT,
     role               VARCHAR(10)  NOT NULL DEFAULT 'USER',         -- USER | ADMIN
-    provider           VARCHAR(20)  NOT NULL,                        -- MAGIC_LINK | GOOGLE | FACEBOOK
+    provider           VARCHAR(20)  NOT NULL,                        -- MAGIC_LINK
     provider_id        VARCHAR(255),
     preferred_language VARCHAR(10)  NOT NULL DEFAULT 'en',
     audience_level     VARCHAR(20)  NOT NULL DEFAULT 'BEGINNER',     -- BEGINNER | INTERMEDIATE | ADVANCED

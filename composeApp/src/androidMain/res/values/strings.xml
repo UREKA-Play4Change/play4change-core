@@ -1,8 +1,3 @@
 <resources>
     <string name="app_name">Play4Change</string>
-
-    <!-- Replace with your real Facebook App ID from developers.facebook.com -->
-    <string name="facebook_app_id">000000000000000</string>
-    <!-- Must be fb + your App ID (e.g. fb1234567890) -->
-    <string name="fb_login_protocol_scheme">fb000000000000000</string>
 </resources>

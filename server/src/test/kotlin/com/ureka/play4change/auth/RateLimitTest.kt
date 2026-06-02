@@ -6,8 +6,6 @@ import com.ureka.play4change.auth.adapter.inbound.security.RateLimitService
 import com.ureka.play4change.auth.adapter.inbound.web.AuthController
 import com.ureka.play4change.auth.application.TokenService
 import com.ureka.play4change.auth.port.inbound.AuthUseCase
-import com.ureka.play4change.auth.port.inbound.OAuthUseCase
-import com.ureka.play4change.application.port.DeviceTokenUseCase
 import com.ureka.play4change.infra.config.SecurityConfig
 import io.github.bucket4j.TimeMeter
 import io.micrometer.core.instrument.MeterRegistry
@@ -43,8 +41,6 @@ class RateLimitTest {
     @Autowired lateinit var timeMeter: TimeMeter
 
     @MockkBean lateinit var authUseCase: AuthUseCase
-    @MockkBean lateinit var oAuthUseCase: OAuthUseCase
-    @MockkBean lateinit var deviceTokenUseCase: DeviceTokenUseCase
     // TokenService implements TokenUseCase — one mock satisfies both injection points
     @MockkBean lateinit var tokenService: TokenService
     @MockkBean lateinit var meterRegistry: MeterRegistry

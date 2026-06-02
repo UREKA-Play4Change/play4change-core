@@ -2,13 +2,11 @@ package com.ureka.play4change.features.auth.presentation
 
 import com.ureka.play4change.core.component.base.ComponentState
 import com.ureka.play4change.core.error.AppError
-import com.ureka.play4change.features.auth.domain.model.SocialProvider
 
 enum class LoginStage { EmailEntry, LinkSent }
 
 sealed class LoginLoadingAction {
     data object Email : LoginLoadingAction()
-    data class Social(val provider: SocialProvider) : LoginLoadingAction()
     data object Token : LoginLoadingAction()
 }
 
@@ -25,4 +23,3 @@ data class LoginState(
 ) : ComponentState
 
 val LoginState.isEmailLoading: Boolean get() = loadingAction is LoginLoadingAction.Email
-val LoginState.loadingProvider: SocialProvider? get() = (loadingAction as? LoginLoadingAction.Social)?.provider
