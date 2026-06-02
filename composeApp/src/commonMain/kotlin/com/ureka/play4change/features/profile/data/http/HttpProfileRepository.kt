@@ -140,13 +140,14 @@ class HttpProfileRepository(
 
         return enrolledTopics.map { topic ->
             val earnedBadge = earnedByTitle[topic.title.trim().lowercase()]
+            val isCompleted = topic.enrollmentStatus?.uppercase() == "COMPLETED"
             Badge(
-                id          = topic.id,
-                titleKey    = topic.title,   // resolveBadgeTitle falls back to the key itself
+                id             = topic.id,
+                titleKey       = topic.title,
                 descriptionKey = topic.title,
-                iconType    = BadgeIconType.STAR,
-                isUnlocked  = earnedBadge != null,
-                unlockedAt  = earnedBadge?.let {
+                iconType       = BadgeIconType.STAR,
+                isUnlocked     = earnedBadge != null || isCompleted,
+                unlockedAt     = earnedBadge?.let {
                     runCatching { Instant.parse(it.earnedAt).toEpochMilliseconds() }.getOrNull()
                 }
             )
