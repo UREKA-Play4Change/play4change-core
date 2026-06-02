@@ -88,9 +88,7 @@
   <!-- Branding -->
   <string name="app_play4change">PLAY4CHANGE</string>
 
-  <!-- Auth — Social + Register -->
-  <string name="auth_continue_google">Continuer avec Google</string>
-  <string name="auth_continue_facebook">Continuer avec Facebook</string>
+  <!-- Auth — Register -->
   <string name="auth_no_account">Vous n'avez pas de compte ?</string>
   <string name="auth_register">S'inscrire</string>
   <string name="auth_have_account">Vous avez déjà un compte ?</string>
