@@ -17,7 +17,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,27 +25,19 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Code
-import androidx.compose.material.icons.rounded.ExpandLess
-import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -108,18 +99,13 @@ fun LoginScreen(component: DefaultLoginComponent) {
                 .padding(innerPadding)
         ) {
             // ── Decorative background blobs ───────────────────────────────
-            // Violet blob — top centre, partially clipped off-screen
             Box(
                 modifier = Modifier
                     .size(460.dp)
                     .offset(y = (-160).dp)
-                    .background(
-                        MaterialTheme.colorScheme.primaryContainer,
-                        CircleShape
-                    )
+                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
                     .align(Alignment.TopCenter)
             )
-            // Teal blob — bottom-start, partially off-screen
             Box(
                 modifier = Modifier
                     .size(340.dp)
@@ -146,7 +132,6 @@ fun LoginScreen(component: DefaultLoginComponent) {
 
                 Spacer(Modifier.height(Spacing.xxl))
 
-                // Form card — content animates inside
                 ElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.extraLarge,
@@ -180,19 +165,47 @@ fun LoginScreen(component: DefaultLoginComponent) {
                     }
                 }
 
-                // Debug token section — below card, only when link sent
+                // Token input — open below card once link is sent
                 AnimatedVisibility(
                     visible = state.linkSent,
                     enter = expandVertically() + fadeIn(),
                     exit = shrinkVertically() + fadeOut()
                 ) {
-                    DebugTokenSection(
-                        tokenInput = state.tokenInput,
-                        onTokenChange = { onEvent(LoginEvents.TokenChanged(it)) },
-                        onVerifyToken = { onEvent(LoginEvents.VerifyToken) },
-                        isTokenVerifying = state.loadingAction is LoginLoadingAction.Token,
-                        modifier = Modifier.padding(top = Spacing.m)
-                    )
+                    Column(
+                        modifier = Modifier
+                            .padding(top = Spacing.m)
+                            .fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.s)
+                    ) {
+                        OutlinedTextField(
+                            value = state.tokenInput,
+                            onValueChange = { onEvent(LoginEvents.TokenChanged(it)) },
+                            label = { Text(stringResource(Res.string.login_debug_token_label)) },
+                            supportingText = {
+                                Text(stringResource(Res.string.login_debug_token_helper))
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            shape = MaterialTheme.shapes.medium
+                        )
+                        Button(
+                            onClick = { onEvent(LoginEvents.VerifyToken) },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = state.tokenInput.isNotBlank() &&
+                                state.loadingAction !is LoginLoadingAction.Token,
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            if (state.loadingAction is LoginLoadingAction.Token) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text(stringResource(Res.string.login_debug_verify))
+                            }
+                        }
+                    }
                 }
 
                 Spacer(Modifier.height(Spacing.xxxl))
@@ -342,93 +355,6 @@ private fun LinkSentContent(
                 else
                     stringResource(Res.string.login_resend)
             )
-        }
-    }
-}
-
-// ── Debug section ─────────────────────────────────────────────────────────────
-
-@Composable
-private fun DebugTokenSection(
-    tokenInput: String,
-    onTokenChange: (String) -> Unit,
-    onVerifyToken: () -> Unit,
-    isTokenVerifying: Boolean,
-    modifier: Modifier = Modifier
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-    ) {
-        Column(modifier = Modifier.padding(Spacing.m)) {
-            TextButton(
-                onClick = { expanded = !expanded },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Code,
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.width(Spacing.xs))
-                Text(
-                    text = "Developer",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.weight(1f)
-                )
-                Icon(
-                    imageVector = if (expanded) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            AnimatedVisibility(
-                visible = expanded,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(Spacing.s),
-                    modifier = Modifier.padding(top = Spacing.xs)
-                ) {
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-                    )
-                    OutlinedTextField(
-                        value = tokenInput,
-                        onValueChange = onTokenChange,
-                        label = { Text(stringResource(Res.string.login_debug_token_label)) },
-                        supportingText = {
-                            Text(stringResource(Res.string.login_debug_token_helper))
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        shape = MaterialTheme.shapes.medium
-                    )
-                    Button(
-                        onClick = onVerifyToken,
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = tokenInput.isNotBlank() && !isTokenVerifying,
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        if (isTokenVerifying) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Text(stringResource(Res.string.login_debug_verify))
-                        }
-                    }
-                }
-            }
         }
     }
 }
