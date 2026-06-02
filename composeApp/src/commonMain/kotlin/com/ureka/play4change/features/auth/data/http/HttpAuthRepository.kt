@@ -2,14 +2,12 @@
 
 package com.ureka.play4change.features.auth.data.http
 
-import com.ureka.play4change.auth.AuthProvider
 import com.ureka.play4change.auth.AuthTokens
 import com.ureka.play4change.core.network.NetworkError
 import com.ureka.play4change.core.network.NetworkException
 import com.ureka.play4change.core.network.TokenStorage
 import com.ureka.play4change.features.auth.domain.model.AuthResult
 import com.ureka.play4change.features.auth.domain.model.MagicLinkResult
-import com.ureka.play4change.features.auth.domain.model.SocialProvider
 import com.ureka.play4change.features.auth.domain.repository.AuthRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
@@ -36,9 +34,6 @@ private data class MagicLinkRequestBody(val email: String)
 
 @Serializable
 private data class MagicLinkVerifyBody(val token: String)
-
-@Serializable
-private data class OAuthRequestBody(val provider: AuthProvider, val idToken: String)
 
 @Serializable
 private data class RefreshRequestBody(val refreshToken: String)
@@ -87,18 +82,6 @@ class HttpAuthRepository(
             else ->
                 throw NetworkException(NetworkError.Unknown("HTTP ${response.status.value}"))
         }
-    }
-
-    override suspend fun socialLogin(provider: SocialProvider, idToken: String): AuthResult? {
-        if (idToken.isBlank()) return null
-        val response = client.post("auth/oauth") {
-            contentType(ContentType.Application.Json)
-            setBody(OAuthRequestBody(provider.toAuthProvider(), idToken))
-        }
-        if (!response.status.isSuccess()) return null
-        val body = Json.decodeFromString<TokenResponseBody>(response.bodyAsText())
-        tokenStorage.store(body.accessToken, body.refreshToken)
-        return body.toAuthResult()
     }
 
     override suspend fun refresh(refreshToken: String): AuthResult? {
@@ -157,10 +140,5 @@ class HttpAuthRepository(
         json["sub"]?.jsonPrimitive?.content ?: ""
     } catch (_: Exception) {
         ""
-    }
-
-    private fun SocialProvider.toAuthProvider(): AuthProvider = when (this) {
-        SocialProvider.GOOGLE -> AuthProvider.GOOGLE
-        SocialProvider.FACEBOOK -> AuthProvider.FACEBOOK
     }
 }
