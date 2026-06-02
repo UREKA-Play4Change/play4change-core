@@ -1,199 +1,137 @@
 # Play4Change
 
-**Author:** Radesh Ilesh Gamanbhai Govind (A51620) — ISEL Engenharia Informática, Projecto e Seminário 2025/26
-**Supervisors:** Prof. Nuno Datia · Prof. António Serrador · Prof. Michel Vorenhout
+Adaptive and gamified learning platform for civic education.
 
----
+## Overview
 
-## 1. What is Play4Change
+Play4Change turns civic literacy into a daily habit through three pillars: **Engagement** (gamified daily challenges with streaks), **Personalisation** (an AI agent that adapts learning paths per citizen and reuses validated remediation paths via pgvector similarity search), and **Recognition** (micro-competency badges awarded on topic completion). The platform runs as a Kotlin Multiplatform mobile app, a React web portal, a stateless Spring Boot REST server, and a LangChain4j AI agent — all orchestrated with Docker Compose.
 
-Play4Change is an adaptive learning platform that delivers gamified daily challenges on sustainability and digital literacy. Users enrol in AI-generated topics, complete multiple-choice and photo tasks, and earn points through a peer-review majority-vote system. The backend is complete; a KMP (Android/iOS/Desktop) frontend is planned.
+## Architecture
 
----
-
-## 2. Architecture
-
-The backend follows Clean Architecture with Domain-Driven Design. All business rules live in pure Kotlin domain and application layers with no framework dependencies. Infrastructure adapters implement outbound ports — JPA repositories, Redis cache, MinIO storage, Mistral AI, and OAuth verifiers are all swappable without touching domain code. The five bounded contexts are **Identity** (auth, tokens), **Topic** (AI content pipeline), **Enrollment** (daily task progression), **Struggle** (adaptive remediation), and **PeerReview** (collective assessment).
-
-| Layer | What lives here |
+| Component | Description |
 |---|---|
-| `domain/` | Pure Kotlin — entities, value objects, domain repository interfaces |
-| `application/` | Use cases, inbound/outbound ports (interfaces), orchestrators |
-| `infrastructure/` | JPA adapters, Redis, MinIO, Mistral/LangChain4j, OAuth |
-| `web/` | Spring MVC controllers, DTOs, security filter chain |
+| **Mobile client** | Kotlin Multiplatform + Compose Multiplatform — Android and iOS from a single codebase; MVI with Decompose |
+| **Web portal** | React — public landing page and restricted admin portal |
+| **REST server** | Kotlin + Spring Boot — stateless, horizontally scalable; Clean Architecture with DDD |
+| **AI agent** | LangChain4j + Mistral — generates learning content; pgvector for semantic retrieval and adaptive path reuse |
 
----
+The server is split into five bounded contexts: **Identity**, **Topic**, **Enrollment**, **Struggle**, and **PeerReview**.
 
-## 3. Tech Stack
+## Tech Stack
 
-| Component | Technology |
+| | |
 |---|---|
 | Language | Kotlin 2.x |
-| Framework | Spring Boot 3.2 |
-| Database | PostgreSQL 16 + pgvector |
-| AI | LangChain4j 0.36 + Mistral AI (`mistral-small-latest`) |
-| Cache | Redis 7 (Spring Data / Lettuce) |
-| File Storage | MinIO (S3-compatible, AWS SDK) |
-| Auth | Magic link (Resend) + Google OAuth (JWKS) + Facebook OAuth |
-| Observability | Micrometer + Prometheus + Grafana |
-| Migrations | Flyway (V1–V10) |
-| Containerisation | Docker Compose (6 services) |
+| Mobile | Kotlin Multiplatform, Compose Multiplatform, Decompose |
+| Web | React, Vite, TypeScript |
+| Server | Spring Boot 3.2, Arrow Either |
+| Database | PostgreSQL 16 + pgvector, Flyway |
+| AI | LangChain4j 0.36 + Mistral (`mistral-small-latest`) |
+| Cache | Redis 7 |
+| Storage | MinIO (S3-compatible) |
+| Auth | Magic link (SHA-256, Resend) → JWT |
+| Observability | Micrometer, Prometheus, Grafana |
+| Deploy | Docker Compose, GitHub Actions |
 
----
+## Prerequisites
 
-## 4. Running Locally
+- Docker + Docker Compose
+- JDK 21 (for local Gradle builds outside Docker)
 
-Full setup instructions — prerequisites, health checks, environment variables, service verification, and reset commands — are in **[demo/HOW_TO_RUN.md](demo/HOW_TO_RUN.md)**.
-
-Start everything:
+## Quick Start
 
 ```bash
-docker compose up --build
+./scripts/setup.sh          # wipe, build, start all services, open tunnel
+./scripts/check-health.sh   # wait for all services to report healthy
+./scripts/minio-init.sh     # create the MinIO bucket (first run only)
 ```
 
-Verify the server is up:
+Verify the server:
 
 ```bash
 curl http://localhost:8080/actuator/health
 # {"status":"UP"}
 ```
 
-Swagger UI: **http://localhost:8080/swagger-ui.html**
+## Services
 
----
-
-## 5. API
-
-All endpoints are documented interactively at **http://localhost:8080/swagger-ui.html** (no auth required to browse). The JWT bearer scheme is pre-configured in the UI.
-
-### Auth
-
-| Method | Path | Description |
+| Service | URL | Default credentials |
 |---|---|---|
-| `POST` | `/auth/magic-link` | Request a magic link email |
-| `GET` | `/auth/verify?token=` | Verify token → returns JWT pair |
-| `POST` | `/auth/oauth` | Login/register via Google or Facebook |
-| `POST` | `/auth/refresh` | Rotate refresh token → new JWT pair |
-| `DELETE` | `/auth/logout` | Revoke refresh token (entire family) |
+| REST API | http://localhost:8080 | — |
+| Swagger UI | http://localhost:8080/swagger-ui.html | — |
+| Grafana | http://localhost:3000 | admin / admin |
+| Prometheus | http://localhost:9090 | — |
+| MinIO console | http://localhost:9001 | minioadmin / minioadmin |
 
-### Admin — Topics
+## Configuration
 
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/admin/topics` | Create topic from URL (async AI generation) |
-| `POST` | `/admin/topics/pdf` | Create topic from PDF upload (multipart) |
-| `GET` | `/admin/topics` | List all topics (optional `?status=` filter) |
-| `GET` | `/admin/topics/{id}` | Get topic by ID (poll for `ACTIVE` status) |
-| `POST` | `/admin/topics/{id}/regenerate` | Re-trigger AI generation from stored content |
+Copy `.env.example` to `.env` and fill in the required values.
 
-### User — Learning
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/topics/{topicId}/enroll` | Enrol in a topic |
-| `GET` | `/topics/{topicId}/enrollment` | Get enrollment status and points |
-| `GET` | `/tasks/today?topicId=` | Get today's task (optional `X-Timezone` header) |
-| `POST` | `/tasks/{assignmentId}/submit` | Submit multiple-choice answer |
-| `POST` | `/tasks/{assignmentId}/submit-photo` | Submit photo for TODO_ACTION task |
-| `GET` | `/topics/{topicId}/roadmap` | Full day-by-day task status roadmap |
-
-### User — Struggle (Adaptive Remediation)
-
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/struggle/enrollment/{enrollmentId}` | Get active struggle session |
-| `POST` | `/struggle/{sessionId}/tasks/{taskId}/submit` | Submit adaptive task answer |
-
-### User — Peer Review
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/reviews/{reviewId}/verdict` | Submit verdict (`CORRECT`/`INCORRECT`) |
-| `GET` | `/reviews/pending?topicId=` | Get pending reviews assigned to current user |
-
----
-
-## 6. Key Architectural Decisions
-
-All decisions are documented in [`docs/adr/`](docs/adr/) (ADR-001 through ADR-016).
-
-| ADR | Decision |
+| Variable | Description |
 |---|---|
-| ADR-001 | Result Type: Custom Implementation → Arrow Either |
-| ADR-002 | Communication Architecture: Hybrid REST + gRPC *(superseded by ADR-006)* |
-| ADR-003 | AI Content Generation: Batch vs On-Demand |
-| ADR-004 | Internationalisation Strategy: Hybrid Server + Client |
-| ADR-005 | Adaptive Learning Path Architecture |
-| ADR-006 | AI Agent: gRPC Service → Gradle Module Boundary |
-| ADR-007 | AI Content Generation Pipeline |
-| ADR-008 | Client Architecture: Decompose + MVI + Domain-Driven Feature Slices |
-| ADR-009 | Deployment Strategy: Docker Compose over Kubernetes + AWS |
-| ADR-010 | BaseView Scaffold Upgrade: Edge-to-Edge Insets, Navigation Drawer, and Log-Out Placement |
-| ADR-011 | Passwordless Authentication: Magic Link + OAuth 2.0 (Google & Facebook) |
-| ADR-012 | Topic Content Pipeline: Async Generation, File Storage, and Content Extraction |
-| ADR-013 | Learning Flow: Day Progression, Struggle Detection, and Caching Strategy |
-| ADR-014 | Peer Review: Cost-Free Assessment Through Collective Correction |
-| ADR-015 | Observability Strategy: Custom Metrics, Prometheus, and Grafana |
-| ADR-016 | Authentication Hardening: Security Audit and Remediation |
+| `JWT_SECRET` | HS256 signing secret (min 32 chars) |
+| `MISTRAL_API_KEY` | Mistral AI key for content generation |
+| `RESEND_API_KEY` | Resend API key for magic link emails |
+| `RESEND_FROM` | Sender address (e.g. `noreply@yourdomain.com`) |
+| `MINIO_ROOT_USER` | MinIO root user (default: `minioadmin`) |
+| `MINIO_ROOT_PASSWORD` | MinIO root password (default: `minioadmin`) |
+| `DB_USER` | PostgreSQL user (default: `play4change`) |
+| `DB_PASS` | PostgreSQL password (default: `play4change`) |
+| `FRONTEND_ORIGIN` | Allowed CORS origin (e.g. `https://yourdomain.com`) |
+| `SPRING_PROFILES_ACTIVE` | `dev`, `test`, or `prod` |
+| `GRAFANA_ADMIN_PASSWORD` | Grafana admin password |
 
----
+## Project Structure
 
-## 7. Demo
-
-**[demo/DEMO_SCRIPT.md](demo/DEMO_SCRIPT.md)** — self-contained walkthrough covering all 5 bounded contexts in ~15 minutes. Follows auth → topic creation → enrollment → struggle → peer review → badge → observability.
-
-The [`demo/`](demo/) directory also contains runnable JetBrains HTTP Client files:
-
-- **[demo/auth.http](demo/auth.http)** — passwordless magic link and OAuth login flow
-- **[demo/admin_topic.http](demo/admin_topic.http)** — admin PDF upload and async AI generation
-- **[demo/peer_review.http](demo/peer_review.http)** — collective assessment 3-verdict majority flow
-
----
-
-## 8. First admin user
-
-There is no seeded admin account. Promote a user to `ADMIN` manually after they have
-signed in at least once (so a `users` row exists):
-
-```sql
-UPDATE users SET role = 'ADMIN' WHERE email = 'your@email.com';
+```
+play4change/
+├── server/          # Spring Boot REST API (Clean Architecture, 5 bounded contexts)
+├── composeApp/      # Kotlin Multiplatform mobile app (Android + iOS)
+├── iosApp/          # iOS app entry point
+├── ai-agent/        # LangChain4j + Mistral AI agent
+├── common/          # Shared Kotlin models
+├── client/          # Web portal build target (source lives in a separate repo)
+├── infra/           # Docker configs — Nginx, Postgres init, Prometheus, Grafana
+└── scripts/         # Operational scripts (setup, health, db, logs, admin, tests)
 ```
 
-Run this directly against the live database (e.g. `psql` or a DB client connected to
-the Docker Compose container). The change takes effect on the user's next login.
+## API
 
----
+Full interactive docs at **http://localhost:8080/swagger-ui.html** — JWT bearer pre-configured in the UI.
 
-## 9. Observability
+| Group | Prefix | Notes |
+|---|---|---|
+| Auth | `/auth` | Magic link request, verify, refresh, logout |
+| Admin — Topics | `/admin/topics` | Create from URL or PDF, list, regenerate |
+| Learning | `/topics`, `/tasks` | Enrol, get daily task, submit answer or photo |
+| Struggle | `/struggle` | Adaptive remediation session and task submission |
+| Peer review | `/reviews` | Submit verdict, get pending reviews |
+| Admin metrics | `/admin/metrics` | Domain metrics (requires ADMIN role) |
 
-Two Grafana dashboards are provisioned automatically on `docker compose up`. Access at **http://localhost:3000** (admin / admin).
+## First Admin User
 
-| Dashboard | What it shows |
-|---|---|
-| AI Generation Latency | P50 / P95 / P99 of Mistral API call duration, per generation phase |
-| Learner Flow Metrics | Task submission rate (correct vs incorrect), struggle trigger rate, peer review verdict throughput |
+There is no seeded admin account. After any user signs in at least once, promote them:
 
-Prometheus scrapes the server on port 9090. Raw metrics: **http://localhost:9090**.
+```bash
+./scripts/promote-admin.sh your@email.com
+```
 
----
+## Tests
 
-## 10. Tests
-
-210 unit tests across 39 test classes. No Spring context required — all tests run as pure JVM.
-
-Selected highlights:
-
-| Class | Area |
-|---|---|
-| `AiGenerationMetricsTest` | AI timer with `generation_phase` and `topic_id` tags |
-| `LearnerFlowMetricsTest` | tasks.submitted / struggle.sessions.created / reviews.verdicts counters |
-| `AuthControllerValidationTest` | Bean validation on auth endpoints |
-| `ErrorPatternClassifierTest` | Struggle pattern classification rules |
-| `DayIndexCalculatorTest` | Day progression, timezone boundary cases |
-| `MagicLinkServiceTest` | Hash storage, atomic claim, concurrency path |
-| `EnrollmentPrerequisiteGateTest` | DAG prerequisite enforcement |
+210 unit tests, no Spring context required — all run as pure JVM.
 
 ```bash
 ./gradlew :server:test
 ./gradlew :ai-agent:langchain:test
+./scripts/run-tests.sh all
 ```
+
+Security scan (fails if CVSS ≥ 7.0):
+
+```bash
+./scripts/check-deps.sh
+```
+
+## License
+
+See [LICENSE](LICENSE).
