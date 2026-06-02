@@ -16,6 +16,7 @@ import com.ureka.play4change.config.TaskDeliveryProperties
 import com.ureka.play4change.domain.identity.UserRepository
 import com.ureka.play4change.application.struggle.ErrorPatternClassifier
 import com.ureka.play4change.application.struggle.HandleStruggleService
+import com.ureka.play4change.domain.struggle.StruggleRepository
 import com.ureka.play4change.domain.enrollment.AssignmentStatus
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
 import com.ureka.play4change.domain.enrollment.EnrollmentStatus
@@ -48,6 +49,7 @@ class TaskService(
     private val userRepository: UserRepository,
     private val languageGatingService: LanguageGatingService,
     private val handleStruggleService: HandleStruggleService,
+    private val struggleRepository: StruggleRepository,
     private val peerReviewUseCase: PeerReviewUseCase,
     private val badgeIssuancePort: BadgeIssuancePort,
     private val registry: MeterRegistry,
@@ -64,6 +66,11 @@ class TaskService(
             }
 
             val assignments = enrollmentRepository.findAssignmentsByEnrollmentId(enrollment.id)
+
+            // Re-route to open struggle session if one exists (user navigated away mid-struggle)
+            if (struggleRepository.findOpenByEnrollmentId(enrollment.id) != null) {
+                return@either TodayTaskResult.StruggleOpen(enrollment.id)
+            }
 
             val dayIndex: Int
             if (taskDeliveryProperties.devMode) {
@@ -94,7 +101,16 @@ class TaskService(
                     return@either TodayTaskResult.NotAvailableYet(OffsetDateTime.now().plusYears(100))
                 }
             } else {
-                // Prod mode: calendar-day-based, unlocks at midnight in user's timezone
+                // Prod mode: serve any reset PENDING task (e.g. from a resolved struggle) before
+                // doing calendar-day logic — the reset assignment may be from a prior calendar day.
+                val resetPending = assignments.firstNotNullOfOrNull { a ->
+                    if (a.status == AssignmentStatus.PENDING) {
+                        taskTemplateRepository.findById(a.taskTemplateId)?.let { Pair(a, it) }
+                    } else null
+                }
+                if (resetPending != null) return@either TodayTaskResult.Available(resetPending.first, resetPending.second)
+
+                // Calendar-day-based unlock at midnight in user's timezone
                 dayIndex = DayIndexCalculator.compute(enrollment.enrolledAt, timezone)
 
                 val existingPair = assignments.firstNotNullOfOrNull { a ->
@@ -102,9 +118,7 @@ class TaskService(
                     if (template?.dayIndex == dayIndex) Pair(a, template) else null
                 }
                 if (existingPair != null) {
-                    if (existingPair.first.status == AssignmentStatus.PENDING) {
-                        return@either TodayTaskResult.Available(existingPair.first, existingPair.second)
-                    }
+                    // existingPair was already SUBMITTED (we checked PENDING above); nothing left today
                     return@either TodayTaskResult.NotAvailableYet(
                         DayIndexCalculator.startOfTomorrow(timezone)
                     )
@@ -204,33 +218,30 @@ class TaskService(
 
         var struggleTriggered = false
 
-        val updatedAssignment = if (isCorrect || assignment.wrongAttemptCount >= 1) {
-            // Final submission (correct OR 2nd wrong attempt)
-            if (!isCorrect && assignment.wrongAttemptCount == 1) {
-                // 2nd wrong — classify and trigger struggle
-                val pattern = ErrorPatternClassifier.classify(assignment, command.selectedOption, template)
-                handleStruggleService.triggerAsync(
-                    enrollmentId = assignment.enrollmentId,
-                    assignmentId = assignment.id,
-                    errorPattern = pattern,
-                    template = template,
-                    userId = command.userId
-                )
-                struggleTriggered = true
-                log.info(
-                    "Struggle triggered for user {} on assignment {}, pattern={}",
-                    command.userId, assignment.id, pattern
-                )
-            }
+        val updatedAssignment = if (isCorrect) {
             assignment.markSubmitted(
-                isCorrect = isCorrect,
+                isCorrect = true,
                 pointsAwarded = pointsAwarded,
                 selectedOption = command.selectedOption
             )
         } else {
-            // 1st wrong — record attempt, keep PENDING
-            assignment.copy(
-                wrongAttemptCount = assignment.wrongAttemptCount + 1,
+            // Wrong answer — immediately final, trigger struggle
+            val pattern = ErrorPatternClassifier.classify(assignment, command.selectedOption, template)
+            handleStruggleService.triggerAsync(
+                enrollmentId = assignment.enrollmentId,
+                assignmentId = assignment.id,
+                errorPattern = pattern,
+                template = template,
+                userId = command.userId
+            )
+            struggleTriggered = true
+            log.info(
+                "Struggle triggered for user {} on assignment {}, pattern={}",
+                command.userId, assignment.id, pattern
+            )
+            assignment.markSubmitted(
+                isCorrect = false,
+                pointsAwarded = 0,
                 selectedOption = command.selectedOption
             )
         }
