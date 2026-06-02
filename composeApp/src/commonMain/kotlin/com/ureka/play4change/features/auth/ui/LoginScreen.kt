@@ -9,30 +9,25 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -46,9 +41,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
@@ -61,23 +53,17 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.ureka.play4change.core.BaseView
 import com.ureka.play4change.design.Spacing
 import com.ureka.play4change.design.components.LogoSize
 import com.ureka.play4change.design.components.UrekaLogo
-import com.ureka.play4change.features.auth.domain.model.SocialProvider
 import com.ureka.play4change.features.auth.presentation.DefaultLoginComponent
 import com.ureka.play4change.features.auth.presentation.LoginEvents
 import com.ureka.play4change.features.auth.presentation.LoginLoadingAction
 import com.ureka.play4change.features.auth.presentation.LoginState
 import com.ureka.play4change.features.auth.presentation.isEmailLoading
-import com.ureka.play4change.features.auth.presentation.loadingProvider
 import org.jetbrains.compose.resources.stringResource
 import play4change.composeapp.generated.resources.Res
-import play4change.composeapp.generated.resources.auth_continue_facebook
-import play4change.composeapp.generated.resources.auth_continue_google
-import play4change.composeapp.generated.resources.auth_or_divider
 import play4change.composeapp.generated.resources.login_cta
 import play4change.composeapp.generated.resources.login_email_error_invalid
 import play4change.composeapp.generated.resources.login_email_label
@@ -136,29 +122,11 @@ fun LoginScreen(component: DefaultLoginComponent) {
                         isTokenVerifying = state.loadingAction is LoginLoadingAction.Token
                     )
                 } else {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        LoginFormContent(
-                            state = state,
-                            onEmailChange = { onEvent(LoginEvents.EmailChanged(it)) },
-                            onSubmit = { onEvent(LoginEvents.Submit) }
-                        )
-
-                        Spacer(Modifier.height(Spacing.xl))
-                        OrDivider()
-                        Spacer(Modifier.height(Spacing.m))
-                        val anyLoading = state.loadingAction != null
-                        GoogleSignInButton(
-                            onClick = { onEvent(LoginEvents.SocialLogin(SocialProvider.GOOGLE)) },
-                            isLoading = state.loadingProvider == SocialProvider.GOOGLE,
-                            enabled = !anyLoading || state.loadingProvider == SocialProvider.GOOGLE
-                        )
-                        Spacer(Modifier.height(Spacing.s))
-                        FacebookSignInButton(
-                            onClick = { onEvent(LoginEvents.SocialLogin(SocialProvider.FACEBOOK)) },
-                            isLoading = state.loadingProvider == SocialProvider.FACEBOOK,
-                            enabled = !anyLoading || state.loadingProvider == SocialProvider.FACEBOOK
-                        )
-                    }
+                    LoginFormContent(
+                        state = state,
+                        onEmailChange = { onEvent(LoginEvents.EmailChanged(it)) },
+                        onSubmit = { onEvent(LoginEvents.Submit) }
+                    )
                 }
             }
 
@@ -233,89 +201,6 @@ private fun LoginFormContent(
             } else {
                 Text(stringResource(Res.string.login_cta), style = MaterialTheme.typography.labelLarge)
             }
-        }
-    }
-}
-
-@Composable
-private fun OrDivider() {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        HorizontalDivider(Modifier.weight(1f))
-        Text(
-            stringResource(Res.string.auth_or_divider),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = Spacing.s)
-        )
-        HorizontalDivider(Modifier.weight(1f))
-    }
-}
-
-@Composable
-private fun GoogleSignInButton(onClick: () -> Unit, isLoading: Boolean, enabled: Boolean) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth().height(52.dp),
-        shape = MaterialTheme.shapes.medium,
-        colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = Color.White,
-            contentColor = Color(0xFF1F1F1F)
-        ),
-        border = BorderStroke(1.dp, Color(0xFFDADADA)),
-        enabled = enabled
-    ) {
-        if (isLoading) {
-            CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-        } else {
-            GoogleGIcon(Modifier.size(20.dp))
-            Spacer(Modifier.width(Spacing.s))
-            Text(
-                stringResource(Res.string.auth_continue_google),
-                style = MaterialTheme.typography.labelLarge
-            )
-        }
-    }
-}
-
-@Composable
-private fun GoogleGIcon(modifier: Modifier) {
-    Canvas(modifier) {
-        val cx = size.width / 2; val cy = size.height / 2; val r = size.width * 0.45f
-        val colors = listOf(Color(0xFF4285F4), Color(0xFF34A853), Color(0xFFFBBC05), Color(0xFFEA4335))
-        val sweeps = listOf(90f, 90f, 90f, 90f)
-        var startAngle = -30f
-        colors.forEachIndexed { i, c ->
-            drawArc(
-                c, startAngle, sweeps[i], false,
-                topLeft = Offset(cx - r, cy - r), size = Size(r * 2, r * 2),
-                style = Stroke(width = size.width * 0.15f, cap = StrokeCap.Butt)
-            )
-            startAngle += sweeps[i]
-        }
-    }
-}
-
-@Composable
-private fun FacebookSignInButton(onClick: () -> Unit, isLoading: Boolean, enabled: Boolean) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth().height(52.dp),
-        shape = MaterialTheme.shapes.medium,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF1877F2),
-            contentColor = Color.White
-        ),
-        enabled = enabled
-    ) {
-        if (isLoading) {
-            CircularProgressIndicator(Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
-        } else {
-            Text("f", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
-            Spacer(Modifier.width(Spacing.s))
-            Text(
-                stringResource(Res.string.auth_continue_facebook),
-                style = MaterialTheme.typography.labelLarge
-            )
         }
     }
 }
