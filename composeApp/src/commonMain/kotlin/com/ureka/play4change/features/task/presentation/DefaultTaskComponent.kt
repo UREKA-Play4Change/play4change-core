@@ -5,6 +5,7 @@ import com.arkivanov.essenty.backhandler.BackCallback
 import com.ureka.play4change.core.component.base.BaseComponent
 import com.ureka.play4change.core.error.AppError
 import com.ureka.play4change.core.component.stateful.safeLaunch
+import com.ureka.play4change.core.network.NetworkError
 import com.ureka.play4change.core.network.NetworkException
 import com.ureka.play4change.core.network.toAppError
 import com.ureka.play4change.core.network.toNetworkError
@@ -39,7 +40,13 @@ class DefaultTaskComponent(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: NetworkException) {
-                updateState { copy(isLoading = false, networkError = e.error, error = e.error.toAppError()) }
+                if (e.error is NetworkError.StruggleOpen) {
+                    // Open struggle session — navigate directly without showing an error
+                    updateState { copy(isLoading = false) }
+                    emitEffect(TaskEffect.NavigateToStruggle(e.error.enrollmentId))
+                } else {
+                    updateState { copy(isLoading = false, networkError = e.error, error = e.error.toAppError()) }
+                }
             } catch (e: Exception) {
                 val netError = e.toNetworkError()
                 updateState { copy(isLoading = false, networkError = netError, error = netError.toAppError()) }
@@ -180,37 +187,23 @@ class DefaultTaskComponent(
         val taskId = state.value.task?.userTaskId ?: return
         safeLaunch(scope) {
             val result = repository.submitAnswer(taskId, selected)
-            if (!result.isCorrect && !result.struggleTriggered) {
-                // First wrong attempt — assignment is still PENDING on the server.
-                // Flash the wrong-answer state briefly, then reset so the learner can retry.
-                updateState { copy(wrongAnswerFeedback = true) }
-                delay(1200L)
-                updateState {
-                    copy(
-                        wrongAnswerFeedback = false,
-                        selectedIndex = null,
-                        hintVisible = false,
-                        showHint = false
-                    )
-                }
-            } else {
-                // Final submission: correct, or second wrong (struggle triggered).
-                unlockBack()
-                updateState {
-                    copy(
-                        submitted = true,
-                        isCorrect = result.isCorrect,
-                        pointsAwarded = result.pointsAwarded,
-                        totalPoints = result.totalPoints,
-                        struggleTriggered = result.struggleTriggered,
-                        submission = SubmissionState.Resolved(result.isCorrect),
-                        isBackBlocked = false
-                    )
-                }
-                if (result.struggleTriggered) {
-                    val enrollmentId = state.value.enrollmentId
-                    emitEffect(TaskEffect.NavigateToStruggle(enrollmentId))
-                }
+            unlockBack()
+            updateState {
+                copy(
+                    submitted = true,
+                    isCorrect = result.isCorrect,
+                    pointsAwarded = result.pointsAwarded,
+                    totalPoints = result.totalPoints,
+                    struggleTriggered = result.struggleTriggered,
+                    submission = SubmissionState.Resolved(result.isCorrect),
+                    isBackBlocked = false
+                )
+            }
+            if (result.struggleTriggered) {
+                // Let the user see the result overlay before navigating to the struggle path
+                delay(2500L)
+                val enrollmentId = state.value.enrollmentId
+                emitEffect(TaskEffect.NavigateToStruggle(enrollmentId))
             }
         }
     }
