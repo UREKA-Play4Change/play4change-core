@@ -274,6 +274,9 @@ class TaskService(
                 if (submittedCount >= topic.taskCount) {
                     enrollmentRepository.save(savedEnrollment.complete())
                     log.info("Enrollment {} completed for user {} on topic {}", savedEnrollment.id, command.userId, savedEnrollment.topicId)
+                    // Trigger badge issuance on completion in case the last answer was wrong
+                    // (the earlier triggerBadgeIssuance only fires for correct answers)
+                    if (!isCorrect) badgeIssuancePort.issueBadge(command.userId, savedEnrollment.topicId, savedEnrollment.id)
                 }
             }
         }
