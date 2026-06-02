@@ -8,6 +8,7 @@ import com.ureka.play4change.domain.struggle.StruggleSession
 import com.ureka.play4change.domain.struggle.StruggleStatus
 import com.ureka.play4change.domain.enrollment.TaskShuffleSeed
 import com.ureka.play4change.domain.topic.TaskTemplate
+import com.ureka.play4change.domain.topic.TaskTemplateRepository
 import com.ureka.play4change.domain.topic.TopicModuleRepository
 import com.ureka.play4change.domain.topic.TopicRepository
 import com.ureka.play4change.model.GenerationStatus
@@ -32,6 +33,7 @@ class HandleStruggleService(
     private val enrollmentRepository: EnrollmentRepository,
     private val topicRepository: TopicRepository,
     private val topicModuleRepository: TopicModuleRepository,
+    private val taskTemplateRepository: TaskTemplateRepository,
     private val taskGenerationPort: TaskGenerationPort,
     private val registry: MeterRegistry,
     @Value("\${ai.mistral.timeout-seconds:60}") private val timeoutSeconds: Long
@@ -41,6 +43,36 @@ class HandleStruggleService(
 
     @Async("generationExecutor")
     fun triggerAsync(
+        enrollmentId: String,
+        assignmentId: String,
+        errorPattern: ErrorPattern,
+        template: TaskTemplate,
+        userId: String
+    ) = doTrigger(enrollmentId, assignmentId, errorPattern, template, userId)
+
+    /**
+     * Spawns a follow-up struggle session after the learner failed one or more
+     * tasks in a previous adaptive session. The same [StruggleSession.originalTaskAssignmentId]
+     * is preserved so the chain always traces back to the one main-path task.
+     */
+    @Async("generationExecutor")
+    fun triggerFromPreviousSession(previousSession: StruggleSession, userId: String) {
+        val originalAssignment = enrollmentRepository.findAssignmentById(previousSession.originalTaskAssignmentId) ?: run {
+            log.error("Original assignment {} not found for follow-up struggle", previousSession.originalTaskAssignmentId)
+            return
+        }
+        val template = taskTemplateRepository.findById(originalAssignment.taskTemplateId) ?: run {
+            log.error("Template {} not found for follow-up struggle", originalAssignment.taskTemplateId)
+            return
+        }
+        doTrigger(previousSession.enrollmentId, previousSession.originalTaskAssignmentId, previousSession.errorPattern, template, userId)
+    }
+
+    // ---------------------------------------------------------------------------
+    // Core generation logic (shared by both trigger paths)
+    // ---------------------------------------------------------------------------
+
+    private fun doTrigger(
         enrollmentId: String,
         assignmentId: String,
         errorPattern: ErrorPattern,
