@@ -3,7 +3,6 @@ package com.ureka.play4change.application.badge
 import com.ureka.play4change.application.port.BadgeIssuancePort
 import com.ureka.play4change.domain.badge.Badge
 import com.ureka.play4change.domain.badge.BadgeRepository
-import com.ureka.play4change.domain.enrollment.AssignmentStatus
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
 import com.ureka.play4change.domain.topic.TopicRepository
 import org.slf4j.LoggerFactory
@@ -26,19 +25,22 @@ class BadgeIssuanceService(
             return
         }
         val assignments = enrollmentRepository.findAssignmentsByEnrollmentId(enrollmentId)
-        val correctCount = assignments.count { it.isCorrect == true && it.status != AssignmentStatus.PENDING }
-        if (correctCount >= topic.taskCount) {
+        val submittedCount = assignments.count { it.submittedAt != null }
+        if (submittedCount >= topic.taskCount) {
             issueIfNotYetEarned(userId, topicId)
         } else {
             log.debug(
-                "Badge not yet earned for user {} in topic {} — {}/{} tasks correct",
-                userId, topicId, correctCount, topic.taskCount
+                "Badge not yet earned for user {} in topic {} — {}/{} tasks submitted",
+                userId, topicId, submittedCount, topic.taskCount
             )
         }
     }
 
     private fun issueIfNotYetEarned(userId: String, topicId: String) {
-        val microCompetence = badgeRepository.findMicroCompetenceByTopicId(topicId) ?: return
+        val microCompetence = badgeRepository.findMicroCompetenceByTopicId(topicId) ?: run {
+            log.warn("Badge issuance skipped — no MicroCompetence found for topic {} (was INDEXING phase run for this topic?)", topicId)
+            return
+        }
         if (badgeRepository.findBadgeByUserIdAndMicroCompetenceId(userId, microCompetence.id) != null) return
         badgeRepository.saveBadge(
             Badge(
