@@ -96,10 +96,6 @@ app:
 resend:
   from: ${RESEND_FROM:noreply@play4change.app}
 
-google:
-  oauth:
-    client-id: ${GOOGLE_CLIENT_ID:}
-
 minio:
   endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
   access-key: ${MINIO_ACCESS_KEY:minioadmin}
@@ -123,17 +119,4 @@ springdoc:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
-
-# ── Push notifications ────────────────────────────────────────────────────────
-# FCM (Android): set FIREBASE_SERVICE_ACCOUNT_JSON to the full service-account JSON string.
-fcm:
-  service-account-json: "${FIREBASE_SERVICE_ACCOUNT_JSON:}"
-
-# APNs (iOS): set APNS_KEY_ID, APNS_TEAM_ID, APNS_PRIVATE_KEY (base64 PKCS8 EC key from .p8 file).
-apns:
-  key-id: "${APNS_KEY_ID:}"
-  team-id: "${APNS_TEAM_ID:}"
-  private-key: "${APNS_PRIVATE_KEY:}"
-  bundle-id: com.ureka.play4change
-  production: false
 
