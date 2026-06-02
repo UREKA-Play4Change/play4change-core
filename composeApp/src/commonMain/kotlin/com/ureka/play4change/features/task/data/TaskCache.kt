@@ -10,7 +10,7 @@ import kotlinx.coroutines.sync.withLock
  *
  * - Thread-safe via [ConcurrentHashMap]-equivalent (HashMap + [Mutex] per key).
  * - Default TTL: 6 hours.
- * - Lost on app kill — acceptable because [BackgroundFetchWorker] re-warms it.
+ * - Lost on app kill — re-populated on next network request.
  * - Concurrent reads for the same key are deduplicated: only one [fetch] is in-flight at a time.
  */
 class TaskCache(
