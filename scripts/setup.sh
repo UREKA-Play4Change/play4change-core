@@ -13,8 +13,8 @@ if [ -f .env ]; then
   set -a; source .env; set +a
 fi
 
-echo "### Cleaning containers and volumes..."
-docker compose down -v
+# echo "### Cleaning containers and volumes..."
+# docker compose down -v
 
 echo "### Building and starting all services..."
 docker compose up --build -d
@@ -25,11 +25,11 @@ CREDS_FILE="$HOME/.cloudflared/$TUNNEL_ID.json"
 TOKEN_FILE="$HOME/.cloudflared/${TUNNEL_ID}.token"
 
 if [ -n "${CLOUDFLARE_TUNNEL_TOKEN:-}" ]; then
-  cloudflared tunnel run --protocol http2 --token "$CLOUDFLARE_TUNNEL_TOKEN"
+  cloudflared tunnel run --protocol http --token "$CLOUDFLARE_TUNNEL_TOKEN"
 elif [ -f "$TOKEN_FILE" ]; then
-  cloudflared tunnel run --protocol http2 --token "$(cat "$TOKEN_FILE")"
+  cloudflared tunnel run --protocol http --token "$(cat "$TOKEN_FILE")"
 elif [ -f "$CREDS_FILE" ]; then
-  cloudflared tunnel run --protocol http2 "$TUNNEL_ID"
+  cloudflared tunnel run --protocol http "$TUNNEL_ID"
 else
   echo ""
   echo "ERROR: Cloudflare tunnel credentials not found. Provide one of:"
