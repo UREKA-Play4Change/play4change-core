@@ -21,6 +21,7 @@ import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import kotlinx.datetime.TimeZone
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -88,6 +89,10 @@ class HttpTaskRepository(
                 throw NetworkException(NetworkError.TaskGenerationPending)
             HttpStatusCode.NotFound ->
                 throw NetworkException(NetworkError.NoTaskAvailable)
+            HttpStatusCode.Conflict -> {
+                val enrollmentId = response.headers["X-Open-Struggle-Enrollment"] ?: ""
+                throw NetworkException(NetworkError.StruggleOpen(enrollmentId))
+            }
             HttpStatusCode.OK -> { /* fall through to parse */ }
             else ->
                 throw NetworkException(networkErrorFromStatus(response.status.value))
@@ -113,6 +118,9 @@ class HttpTaskRepository(
             contentType(ContentType.Application.Json)
             setBody(SubmitAnswerRequestDto(selectedOption = selectedIndex))
             header("X-Timezone", TimeZone.currentSystemDefault().id)
+        }
+        if (!response.status.isSuccess()) {
+            throw NetworkException(networkErrorFromStatus(response.status.value))
         }
         val dto = json.decodeFromString<SubmitResultDto>(response.bodyAsText())
         return SubmitResult(
