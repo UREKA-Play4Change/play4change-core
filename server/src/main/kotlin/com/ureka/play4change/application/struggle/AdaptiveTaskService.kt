@@ -92,10 +92,9 @@ class AdaptiveTaskService(
 
             struggleRepository.save(resolvedSession)
 
-            if (isCorrect) {
-                val updatedEnrollment = enrollment.addPoints(pointsAwarded)
-                enrollmentRepository.save(updatedEnrollment)
-            }
+            val enrollmentAfterTask = if (isCorrect) enrollment.addPoints(pointsAwarded) else enrollment
+            val enrollmentToSave = if (allComplete) enrollmentAfterTask.incrementStreak() else enrollmentAfterTask
+            if (enrollmentToSave !== enrollment) enrollmentRepository.save(enrollmentToSave)
 
             if (allComplete) {
                 // Reset the original task assignment so the learner can retry it once (ADR-013 Decision 5)
