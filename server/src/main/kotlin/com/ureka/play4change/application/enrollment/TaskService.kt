@@ -255,9 +255,8 @@ class TaskService(
 
         val updatedEnrollment = if (isCorrect) {
             enrollment.addPoints(pointsAwarded).incrementStreak()
-        } else if (updatedAssignment.status != AssignmentStatus.PENDING) {
-            enrollment.resetStreak()
         } else {
+            // Wrong answer: keep the streak intact — completing the struggle path will increment it
             enrollment
         }
 
