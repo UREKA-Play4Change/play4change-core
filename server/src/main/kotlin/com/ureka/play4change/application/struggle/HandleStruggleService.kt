@@ -6,6 +6,7 @@ import com.ureka.play4change.domain.struggle.ErrorPattern
 import com.ureka.play4change.domain.struggle.StruggleRepository
 import com.ureka.play4change.domain.struggle.StruggleSession
 import com.ureka.play4change.domain.struggle.StruggleStatus
+import com.ureka.play4change.domain.enrollment.TaskShuffleSeed
 import com.ureka.play4change.domain.topic.TaskTemplate
 import com.ureka.play4change.domain.topic.TopicModuleRepository
 import com.ureka.play4change.domain.topic.TopicRepository
@@ -46,6 +47,7 @@ class HandleStruggleService(
         template: TaskTemplate,
         userId: String
     ) {
+        var session: StruggleSession? = null
         try {
             val enrollment = enrollmentRepository.findById(enrollmentId) ?: run {
                 log.error("Enrollment {} not found for struggle trigger", enrollmentId)
@@ -61,7 +63,7 @@ class HandleStruggleService(
                 return
             }
 
-            val session = struggleRepository.save(
+            session = struggleRepository.save(
                 StruggleSession(
                     id = UUID.randomUUID().toString(),
                     enrollmentId = enrollmentId,
@@ -75,17 +77,21 @@ class HandleStruggleService(
                 )
             )
 
-            val errorPatternTag = when (errorPattern) {
-                ErrorPattern.WRONG_CONCEPT -> "wrong_concept"
-                ErrorPattern.PARTIAL_UNDERSTANDING -> "partial_understanding"
-                ErrorPattern.READING_ERROR -> "reading_error"
-                ErrorPattern.TIME_PRESSURE -> "time_pressure"
+            try {
+                val errorPatternTag = when (errorPattern) {
+                    ErrorPattern.WRONG_CONCEPT -> "wrong_concept"
+                    ErrorPattern.PARTIAL_UNDERSTANDING -> "partial_understanding"
+                    ErrorPattern.READING_ERROR -> "reading_error"
+                    ErrorPattern.TIME_PRESSURE -> "time_pressure"
+                }
+                registry.counter("struggle_sessions_total", "error_pattern", errorPatternTag).increment()
+                registry.counter(
+                    "struggle_sessions_created_total",
+                    "topic_id", enrollment.topicId
+                ).increment()
+            } catch (ex: Exception) {
+                log.warn("Metrics registration failed (non-fatal): {}", ex.message)
             }
-            registry.counter("struggle_sessions_total", "error_pattern", errorPatternTag).increment()
-            registry.counter(
-                "struggle_sessions_created_total",
-                "topic_id", enrollment.topicId
-            ).increment()
 
             val context = StruggleContext(
                 userId = userId,
@@ -124,10 +130,12 @@ class HandleStruggleService(
                         .mapIndexed { idx, task ->
                             val options = task.optionsJson
                                 ?.let { parseOptionsJson(it) }
-                            val shuffledOrder = (options?.indices?.toMutableList() ?: mutableListOf())
-                                .also { it.shuffle() }
+                            val taskId = UUID.randomUUID().toString()
+                            val shuffledOrder = if (options != null) {
+                                TaskShuffleSeed.shuffleOptions(options.size, userId, taskId, session.id)
+                            } else emptyList()
                             AdaptiveTask(
-                                id = UUID.randomUUID().toString(),
+                                id = taskId,
                                 struggleSessionId = session.id,
                                 title = task.title,
                                 description = task.description,
@@ -153,6 +161,10 @@ class HandleStruggleService(
             )
         } catch (ex: Exception) {
             log.error("Unexpected error during struggle generation for enrollment {}: {}", enrollmentId, ex.message, ex)
+            session?.let {
+                runCatching { struggleRepository.save(it.abandon()) }
+                    .onFailure { e -> log.error("Failed to abandon session {} after error: {}", it.id, e.message) }
+            }
         }
     }
 
@@ -161,7 +173,7 @@ class HandleStruggleService(
             ErrorPattern.WRONG_CONCEPT -> com.ureka.play4change.model.ErrorPattern.CONCEPTUAL_MISUNDERSTANDING
             ErrorPattern.PARTIAL_UNDERSTANDING -> com.ureka.play4change.model.ErrorPattern.PROCEDURAL_ERROR
             ErrorPattern.READING_ERROR -> com.ureka.play4change.model.ErrorPattern.UNCLEAR_INSTRUCTIONS
-            ErrorPattern.TIME_PRESSURE -> com.ureka.play4change.model.ErrorPattern.UNKNOWN
+            ErrorPattern.TIME_PRESSURE -> com.ureka.play4change.model.ErrorPattern.TIME_PRESSURE
         }
 
     private fun parseOptionsJson(jsonStr: String): List<String>? = runCatching {
