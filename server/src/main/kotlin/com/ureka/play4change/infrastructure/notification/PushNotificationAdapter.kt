@@ -45,7 +45,7 @@ class PushNotificationAdapter(
     private val firebaseApp: FirebaseApp? by lazy { initFirebase() }
     private val apnsClient: HttpClient = HttpClient.newBuilder()
         .version(HttpClient.Version.HTTP_2)
-        .connectTimeout(Duration.ofSeconds(10))
+        .connectTimeout(Duration.ofSeconds(APNS_CONNECT_TIMEOUT_SECONDS))
         .build()
 
     override fun send(deviceToken: DeviceToken, title: String, body: String) {
@@ -86,8 +86,8 @@ class PushNotificationAdapter(
             .build()
         runCatching {
             val response = apnsClient.send(request, HttpResponse.BodyHandlers.ofString())
-            if (response.statusCode() == 200) {
-                logger.debug("APNs sent to token ending …{}", token.takeLast(8))
+            if (response.statusCode() == HTTP_OK) {
+                logger.debug("APNs sent to token ending …{}", token.takeLast(TOKEN_LOG_SUFFIX_LENGTH))
             } else {
                 logger.error("APNs push failed: {} {}", response.statusCode(), response.body())
             }
@@ -104,6 +104,12 @@ class PushNotificationAdapter(
             .issuedAt(Date())
             .signWith(privateKey, Jwts.SIG.ES256)
             .compact()
+    }
+
+    private companion object {
+        const val APNS_CONNECT_TIMEOUT_SECONDS = 10L
+        const val HTTP_OK = 200
+        const val TOKEN_LOG_SUFFIX_LENGTH = 8
     }
 
     private fun initFirebase(): FirebaseApp? {
