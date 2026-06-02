@@ -4,7 +4,6 @@ import com.ureka.play4change.di.features.aboutModule
 import com.ureka.play4change.di.features.authModule
 import com.ureka.play4change.di.features.exploreModule
 import com.ureka.play4change.di.features.homeModule
-import com.ureka.play4change.di.features.notificationModule
 import com.ureka.play4change.di.features.peerReviewModule
 import com.ureka.play4change.di.features.profileModule
 import com.ureka.play4change.di.features.splashModule
@@ -17,7 +16,6 @@ val appModule = module {
         platformModule, coreModule,
         splashModule, authModule, homeModule, taskModule,
         profileModule, aboutModule, exploreModule,
-        struggleModule, peerReviewModule,
-        notificationModule
+        struggleModule, peerReviewModule
     )
 }
