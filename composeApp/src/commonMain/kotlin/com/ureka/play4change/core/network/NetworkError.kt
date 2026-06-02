@@ -32,4 +32,7 @@ sealed class NetworkError {
 
     /** 404 on GET /tasks/today — the user has no task available today (already completed or not yet due). */
     data object NoTaskAvailable : NetworkError()
+
+    /** 409 on GET /tasks/today — an open struggle session exists; route to it instead of showing a task. */
+    data class StruggleOpen(val enrollmentId: String) : NetworkError()
 }
