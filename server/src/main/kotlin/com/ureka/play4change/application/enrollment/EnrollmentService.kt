@@ -64,8 +64,15 @@ class EnrollmentService(
             }
         }
 
-        ensure(enrollmentRepository.findByUserIdAndTopicId(command.userId, command.topicId) == null) {
-            Conflict.ConcurrentModification
+        val existingEnrollment = enrollmentRepository.findByUserIdAndTopicId(command.userId, command.topicId)
+        if (existingEnrollment != null) {
+            ensure(existingEnrollment.status == EnrollmentStatus.PAUSED) {
+                Conflict.ConcurrentModification
+            }
+            log.info("User {} re-enrolling in topic {} — reactivating paused enrollment {}", command.userId, command.topicId, existingEnrollment.id)
+            return@either enrollmentRepository.save(
+                existingEnrollment.copy(status = EnrollmentStatus.ACTIVE, lastActivityAt = OffsetDateTime.now())
+            )
         }
 
         val modules = topicModuleRepository.findByTopicId(command.topicId)
