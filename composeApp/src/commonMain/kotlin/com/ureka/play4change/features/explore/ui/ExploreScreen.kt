@@ -345,12 +345,14 @@ private fun TopicCard(
                         Text("Completed", style = MaterialTheme.typography.labelLarge)
                     }
                     topic.isAbandoned -> Button(
-                        onClick = {},
-                        enabled = false,
+                        onClick = onEnroll,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium
+                        shape = MaterialTheme.shapes.medium,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
                     ) {
-                        Text("Abandoned", style = MaterialTheme.typography.labelLarge)
+                        Text(stringResource(Res.string.explore_join), style = MaterialTheme.typography.labelLarge)
                     }
                     topic.isLocked -> Button(
                         onClick = {},
