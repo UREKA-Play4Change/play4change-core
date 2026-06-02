@@ -8,12 +8,7 @@ import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import com.arkivanov.essenty.lifecycle.resume
 import com.ureka.play4change.core.component.root.DefaultRootComponent
 import com.ureka.play4change.di.appModule
-import com.ureka.play4change.features.notification.domain.repository.NotificationRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.koin.core.context.startKoin
-import org.koin.mp.KoinPlatform.getKoin
 
 private val koinInit by lazy {
     startKoin { modules(appModule) }
@@ -24,27 +19,6 @@ private var deepLinkHandler: ((String) -> Unit)? = null
 
 fun handleMagicLinkToken(token: String) {
     deepLinkHandler?.invoke(token)
-}
-
-/**
- * Called from Swift AppDelegate's
- * `application(_:didRegisterForRemoteNotificationsWithDeviceToken:)`.
- *
- * Swift side:
- * ```swift
- * func application(_ application: UIApplication,
- *                  didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
- *     let hex = deviceToken.map { String(format: "%02x", $0) }.joined()
- *     MainViewControllerKt.handleAPNsToken(tokenHex: hex)
- * }
- * ```
- */
-fun handleAPNsToken(tokenHex: String) {
-    CoroutineScope(Dispatchers.Default).launch {
-        runCatching {
-            getKoin().get<NotificationRepository>().registerDeviceToken(tokenHex, "IOS")
-        }
-    }
 }
 
 fun MainViewController() = ComposeUIViewController {
