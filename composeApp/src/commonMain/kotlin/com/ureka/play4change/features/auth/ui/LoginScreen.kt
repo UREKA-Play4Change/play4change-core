@@ -23,10 +23,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -35,7 +37,9 @@ import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material3.Button
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -97,52 +101,102 @@ fun LoginScreen(component: DefaultLoginComponent) {
         component = component,
         topBar = {}
     ) { state, onEvent, innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
-                .imePadding()
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // ── Brand header ─────────────────────────────────────────────
-            Spacer(Modifier.height(Spacing.xxxl))
-            UrekaLogo(size = LogoSize.Large)
-            Spacer(Modifier.height(Spacing.xxl))
-
-            // ── Form / confirmation ───────────────────────────────────────
-            AnimatedContent(
-                targetState = state.linkSent,
-                transitionSpec = {
-                    slideInVertically { it / 3 } + fadeIn(tween(300)) togetherWith
-                    slideOutVertically { -it / 3 } + fadeOut(tween(200))
-                },
-                label = "login_stage",
+            // ── Decorative background blobs ───────────────────────────────
+            // Violet blob — top centre, partially clipped off-screen
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Spacing.l)
-            ) { linkSent ->
-                if (linkSent) {
-                    LinkSentContent(
-                        email = state.email,
-                        countdown = state.resendCountdown,
-                        isLoading = state.isEmailLoading,
-                        onResend = { onEvent(LoginEvents.Resend) },
+                    .size(460.dp)
+                    .offset(y = (-160).dp)
+                    .background(
+                        MaterialTheme.colorScheme.primaryContainer,
+                        CircleShape
+                    )
+                    .align(Alignment.TopCenter)
+            )
+            // Teal blob — bottom-start, partially off-screen
+            Box(
+                modifier = Modifier
+                    .size(340.dp)
+                    .offset(x = (-100).dp, y = 100.dp)
+                    .background(
+                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.65f),
+                        CircleShape
+                    )
+                    .align(Alignment.BottomStart)
+            )
+
+            // ── Content ───────────────────────────────────────────────────
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .imePadding()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = Spacing.l),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(Modifier.height(Spacing.xxxl))
+
+                UrekaLogo(size = LogoSize.Large)
+
+                Spacer(Modifier.height(Spacing.xxl))
+
+                // Form card — content animates inside
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.extraLarge,
+                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 3.dp)
+                ) {
+                    AnimatedContent(
+                        targetState = state.linkSent,
+                        transitionSpec = {
+                            slideInVertically { it / 3 } + fadeIn(tween(320)) togetherWith
+                            slideOutVertically { -it / 3 } + fadeOut(tween(200))
+                        },
+                        label = "login_stage",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(Spacing.xl)
+                    ) { linkSent ->
+                        if (linkSent) {
+                            LinkSentContent(
+                                email = state.email,
+                                countdown = state.resendCountdown,
+                                isLoading = state.isEmailLoading,
+                                onResend = { onEvent(LoginEvents.Resend) }
+                            )
+                        } else {
+                            LoginFormContent(
+                                state = state,
+                                onEmailChange = { onEvent(LoginEvents.EmailChanged(it)) },
+                                onSubmit = { onEvent(LoginEvents.Submit) }
+                            )
+                        }
+                    }
+                }
+
+                // Debug token section — below card, only when link sent
+                AnimatedVisibility(
+                    visible = state.linkSent,
+                    enter = expandVertically() + fadeIn(),
+                    exit = shrinkVertically() + fadeOut()
+                ) {
+                    DebugTokenSection(
                         tokenInput = state.tokenInput,
                         onTokenChange = { onEvent(LoginEvents.TokenChanged(it)) },
                         onVerifyToken = { onEvent(LoginEvents.VerifyToken) },
-                        isTokenVerifying = state.loadingAction is LoginLoadingAction.Token
-                    )
-                } else {
-                    LoginFormContent(
-                        state = state,
-                        onEmailChange = { onEvent(LoginEvents.EmailChanged(it)) },
-                        onSubmit = { onEvent(LoginEvents.Submit) }
+                        isTokenVerifying = state.loadingAction is LoginLoadingAction.Token,
+                        modifier = Modifier.padding(top = Spacing.m)
                     )
                 }
-            }
 
-            Spacer(Modifier.height(Spacing.xxxl))
+                Spacer(Modifier.height(Spacing.xxxl))
+            }
         }
     }
 }
@@ -157,22 +211,21 @@ private fun LoginFormContent(
 ) {
     Column(
         horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(Spacing.xs),
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(
             text = stringResource(Res.string.login_welcome),
             style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.ExtraBold,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onSurface
         )
+        Spacer(Modifier.height(Spacing.xs))
         Text(
             text = stringResource(Res.string.login_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-
-        Spacer(Modifier.height(Spacing.l))
+        Spacer(Modifier.height(Spacing.xl))
 
         OutlinedTextField(
             value = state.email,
@@ -200,15 +253,16 @@ private fun LoginFormContent(
                 focusedLabelColor = MaterialTheme.colorScheme.primary
             )
         )
-
-        Spacer(Modifier.height(Spacing.xs))
+        Spacer(Modifier.height(Spacing.m))
 
         Button(
             onClick = onSubmit,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp),
-            enabled = !state.isEmailLoading && state.email.isNotBlank() && state.emailError == null,
+            enabled = !state.isEmailLoading &&
+                state.email.isNotBlank() &&
+                state.emailError == null,
             shape = MaterialTheme.shapes.medium
         ) {
             if (state.isEmailLoading) {
@@ -234,11 +288,7 @@ private fun LinkSentContent(
     email: String,
     countdown: Int,
     isLoading: Boolean,
-    onResend: () -> Unit,
-    tokenInput: String,
-    onTokenChange: (String) -> Unit,
-    onVerifyToken: () -> Unit,
-    isTokenVerifying: Boolean
+    onResend: () -> Unit
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -252,9 +302,9 @@ private fun LinkSentContent(
             text = stringResource(Res.string.login_link_sent_title),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurface
         )
-
         Spacer(Modifier.height(Spacing.s))
 
         val bodyText = buildAnnotatedString {
@@ -272,9 +322,7 @@ private fun LinkSentContent(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
-
         Spacer(Modifier.height(Spacing.xs))
-
         Text(
             text = stringResource(Res.string.login_link_expires),
             style = MaterialTheme.typography.bodySmall,
@@ -295,30 +343,24 @@ private fun LinkSentContent(
                     stringResource(Res.string.login_resend)
             )
         }
-
-        // ── Debug token section ───────────────────────────────────────────
-        Spacer(Modifier.height(Spacing.xxl))
-        DebugTokenSection(
-            tokenInput = tokenInput,
-            onTokenChange = onTokenChange,
-            onVerifyToken = onVerifyToken,
-            isTokenVerifying = isTokenVerifying
-        )
     }
 }
+
+// ── Debug section ─────────────────────────────────────────────────────────────
 
 @Composable
 private fun DebugTokenSection(
     tokenInput: String,
     onTokenChange: (String) -> Unit,
     onVerifyToken: () -> Unit,
-    isTokenVerifying: Boolean
+    isTokenVerifying: Boolean,
+    modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
     ) {
         Column(modifier = Modifier.padding(Spacing.m)) {
@@ -329,7 +371,7 @@ private fun DebugTokenSection(
                 Icon(
                     imageVector = Icons.Rounded.Code,
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(14.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(Modifier.width(Spacing.xs))
@@ -342,11 +384,10 @@ private fun DebugTokenSection(
                 Icon(
                     imageVector = if (expanded) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(14.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-
             AnimatedVisibility(
                 visible = expanded,
                 enter = expandVertically() + fadeIn(),
@@ -356,13 +397,16 @@ private fun DebugTokenSection(
                     verticalArrangement = Arrangement.spacedBy(Spacing.s),
                     modifier = Modifier.padding(top = Spacing.xs)
                 ) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                    Spacer(Modifier.height(Spacing.xs))
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                    )
                     OutlinedTextField(
                         value = tokenInput,
                         onValueChange = onTokenChange,
                         label = { Text(stringResource(Res.string.login_debug_token_label)) },
-                        supportingText = { Text(stringResource(Res.string.login_debug_token_helper)) },
+                        supportingText = {
+                            Text(stringResource(Res.string.login_debug_token_helper))
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         shape = MaterialTheme.shapes.medium
@@ -397,7 +441,7 @@ private fun AnimatedCheckCircle() {
     LaunchedEffect(Unit) { started = true }
     val progress by animateFloatAsState(
         targetValue = if (started) 1f else 0f,
-        animationSpec = tween(600, easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)),
+        animationSpec = tween(700, easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)),
         label = "check"
     )
     val color = MaterialTheme.colorScheme.secondary
