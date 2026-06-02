@@ -6,7 +6,6 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
-    alias(libs.plugins.googleServices)
     id("org.owasp.dependencycheck") version "10.0.4"
 }
 
@@ -35,15 +34,6 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.koin.android)
             implementation(libs.androidx.security.crypto)
-            implementation(libs.firebase.messaging.ktx)
-            // Phase 5 — background fetch
-            implementation("androidx.work:work-runtime-ktx:2.9.1")
-            implementation("io.insert-koin:koin-androidx-workmanager:3.5.3")
-            // Social auth
-            implementation(libs.androidx.credentials)
-            implementation(libs.androidx.credentials.play.services)
-            implementation(libs.googleid)
-            implementation(libs.facebook.login)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
@@ -119,26 +109,6 @@ android {
                 "Boolean", "USE_MOCKS",
                 "${project.findProperty("USE_MOCKS") ?: "false"}"
             )
-            buildConfigField(
-                "String", "FIREBASE_APP_ID",
-                "\"${project.findProperty("FIREBASE_APP_ID") ?: ""}\""
-            )
-            buildConfigField(
-                "String", "FIREBASE_PROJECT_ID",
-                "\"${project.findProperty("FIREBASE_PROJECT_ID") ?: ""}\""
-            )
-            buildConfigField(
-                "String", "FIREBASE_API_KEY",
-                "\"${project.findProperty("FIREBASE_API_KEY") ?: ""}\""
-            )
-            buildConfigField(
-                "String", "FIREBASE_SENDER_ID",
-                "\"${project.findProperty("FIREBASE_SENDER_ID") ?: ""}\""
-            )
-            buildConfigField(
-                "String", "GOOGLE_WEB_CLIENT_ID",
-                "\"${project.findProperty("GOOGLE_WEB_CLIENT_ID") ?: "679377422465-3imvt77k53msgvcdgsomi5s7jg1b0091.apps.googleusercontent.com"}\""
-            )
         }
         release {
             isMinifyEnabled = false
@@ -147,26 +117,6 @@ android {
                 "\"${project.findProperty("BASE_URL") ?: "http://10.0.2.2:8080"}\""
             )
             buildConfigField("Boolean", "USE_MOCKS", "false")
-            buildConfigField(
-                "String", "FIREBASE_APP_ID",
-                "\"${project.findProperty("FIREBASE_APP_ID") ?: ""}\""
-            )
-            buildConfigField(
-                "String", "FIREBASE_PROJECT_ID",
-                "\"${project.findProperty("FIREBASE_PROJECT_ID") ?: ""}\""
-            )
-            buildConfigField(
-                "String", "FIREBASE_API_KEY",
-                "\"${project.findProperty("FIREBASE_API_KEY") ?: ""}\""
-            )
-            buildConfigField(
-                "String", "FIREBASE_SENDER_ID",
-                "\"${project.findProperty("FIREBASE_SENDER_ID") ?: ""}\""
-            )
-            buildConfigField(
-                "String", "GOOGLE_WEB_CLIENT_ID",
-                "\"${project.findProperty("GOOGLE_WEB_CLIENT_ID") ?: "679377422465-3imvt77k53msgvcdgsomi5s7jg1b0091.apps.googleusercontent.com"}\""
-            )
         }
     }
     compileOptions {
