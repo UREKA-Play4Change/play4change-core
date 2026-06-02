@@ -14,5 +14,3 @@ data class AuthResult(
     /** Legacy accessor — returns accessToken. Keeps existing mock code compiling. */
     val token: String get() = tokens.accessToken
 }
-
-enum class SocialProvider { GOOGLE, FACEBOOK }
