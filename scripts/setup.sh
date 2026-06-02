@@ -25,11 +25,11 @@ CREDS_FILE="$HOME/.cloudflared/$TUNNEL_ID.json"
 TOKEN_FILE="$HOME/.cloudflared/${TUNNEL_ID}.token"
 
 if [ -n "${CLOUDFLARE_TUNNEL_TOKEN:-}" ]; then
-  cloudflared tunnel run --protocol http --token "$CLOUDFLARE_TUNNEL_TOKEN"
+  cloudflared tunnel run --token "$CLOUDFLARE_TUNNEL_TOKEN"
 elif [ -f "$TOKEN_FILE" ]; then
-  cloudflared tunnel run --protocol http --token "$(cat "$TOKEN_FILE")"
+  cloudflared tunnel run --token "$(cat "$TOKEN_FILE")"
 elif [ -f "$CREDS_FILE" ]; then
-  cloudflared tunnel run --protocol http "$TUNNEL_ID"
+  cloudflared tunnel run "$TUNNEL_ID"
 else
   echo ""
   echo "ERROR: Cloudflare tunnel credentials not found. Provide one of:"
