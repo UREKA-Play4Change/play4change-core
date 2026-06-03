@@ -66,10 +66,14 @@ class PgVectorDeduplicationService(
         return SimilarityMatch(branchId = branchId, similarity = similarity, strategy = strategy)
     }
 
-    fun storeStruggleEmbedding(struggleEventId: String, embedding: FloatArray) {
+    fun persistBranch(eventId: String, branchId: String, embedding: FloatArray) {
         jdbc.update(
-            "UPDATE struggle_events SET embedding = ?::vector WHERE id = ?",
-            embedding.toVectorString(), struggleEventId
+            "INSERT INTO struggle_events(id, embedding) VALUES (?, ?::vector)",
+            eventId, embedding.toVectorString()
+        )
+        jdbc.update(
+            "INSERT INTO adaptive_branches(id, struggle_event_id, status) VALUES (?, ?, 'COMPLETED')",
+            branchId, eventId
         )
     }
 
