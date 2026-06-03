@@ -4,6 +4,8 @@ import com.ureka.play4change.features.struggle.domain.model.AdaptiveSubmitResult
 import com.ureka.play4change.features.struggle.domain.model.AdaptiveTask
 import com.ureka.play4change.features.struggle.domain.model.StruggleSession
 import com.ureka.play4change.features.struggle.domain.repository.StruggleRepository
+import com.ureka.play4change.core.network.NetworkException
+import com.ureka.play4change.core.network.networkErrorFromStatus
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.post
@@ -12,6 +14,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -60,6 +63,9 @@ class HttpStruggleRepository(
     override suspend fun getSession(enrollmentId: String): StruggleSession? {
         val response = client.get("struggle/enrollment/$enrollmentId")
         if (response.status == HttpStatusCode.NotFound) return null
+        if (!response.status.isSuccess()) {
+            throw NetworkException(networkErrorFromStatus(response.status.value))
+        }
         val dto = json.decodeFromString<StruggleSessionDto>(response.bodyAsText())
         return dto.toSession()
     }
@@ -72,6 +78,9 @@ class HttpStruggleRepository(
         val response = client.post("struggle/$sessionId/tasks/$taskId/submit") {
             contentType(ContentType.Application.Json)
             setBody(SubmitAdaptiveTaskRequestDto(selectedOption))
+        }
+        if (!response.status.isSuccess()) {
+            throw NetworkException(networkErrorFromStatus(response.status.value))
         }
         val dto = json.decodeFromString<AdaptiveSubmitResultDto>(response.bodyAsText())
         return AdaptiveSubmitResult(
