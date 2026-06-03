@@ -17,19 +17,17 @@ class JdbcTopicStatsRepository(private val jdbc: JdbcTemplate) : TopicStatsRepos
         )
 
         // Single combined query — one DB round-trip per topic.
-        // LEFT JOIN so topics with no task_assignments still return the enrollment counts.
         private val SINGLE_SQL = """
             SELECT
                 COUNT(DISTINCT e.id)                                                                AS enrolled_users,
                 COALESCE(
                     COUNT(DISTINCT CASE WHEN e.status = 'COMPLETED' THEN e.user_id END)::numeric
                     / NULLIF(COUNT(DISTINCT e.user_id), 0), 0)                                     AS completion_rate,
-                COALESCE(SUM(ta.points_awarded) FILTER (WHERE ta.is_correct = true), 0)            AS total_score,
+                COALESCE(SUM(e.total_points_earned), 0)                                            AS total_score,
                 COUNT(DISTINCT CASE WHEN e.status = 'ACTIVE'
                     AND e.last_activity_at > NOW() - INTERVAL '7 days'
                     THEN e.user_id END)                                                             AS active_users
             FROM enrollments e
-            LEFT JOIN task_assignments ta ON ta.enrollment_id = e.id
             WHERE e.topic_id = ?
         """.trimIndent()
 
@@ -44,12 +42,11 @@ class JdbcTopicStatsRepository(private val jdbc: JdbcTemplate) : TopicStatsRepos
                     COALESCE(
                         COUNT(DISTINCT CASE WHEN e.status = 'COMPLETED' THEN e.user_id END)::numeric
                         / NULLIF(COUNT(DISTINCT e.user_id), 0), 0)                                     AS completion_rate,
-                    COALESCE(SUM(ta.points_awarded) FILTER (WHERE ta.is_correct = true), 0)            AS total_score,
+                    COALESCE(SUM(e.total_points_earned), 0)                                            AS total_score,
                     COUNT(DISTINCT CASE WHEN e.status = 'ACTIVE'
                         AND e.last_activity_at > NOW() - INTERVAL '7 days'
                         THEN e.user_id END)                                                             AS active_users
                 FROM enrollments e
-                LEFT JOIN task_assignments ta ON ta.enrollment_id = e.id
                 WHERE e.topic_id IN ($placeholders)
                 GROUP BY e.topic_id
             """.trimIndent()
