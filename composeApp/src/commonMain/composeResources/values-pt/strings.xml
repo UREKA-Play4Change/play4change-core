@@ -36,6 +36,7 @@
   <string name="home_enroll_prompt_cta">Explorar tópicos</string>
   <string name="home_daily_reviews">Revisões do Dia</string>
   <string name="home_review_cta">Rever →</string>
+  <string name="home_struggle_cta">Continuar percurso de consolidação →</string>
 
   <!-- Task -->
   <string name="task_question_label">Questão</string>
@@ -111,6 +112,7 @@
 
   <!-- Badges -->
   <string name="badges_title">Conquistas</string>
+  <string name="badges_empty">Inscreve-te num tópico e completa todas as tarefas para ganhar o teu primeiro emblema.</string>
   <string name="badge_locked">Bloqueado</string>
   <string name="badge_first_task">Primeiro Passo</string>
   <string name="badge_first_task_desc">Completa a tua primeira tarefa</string>
@@ -160,10 +162,24 @@
   <!-- Common -->
   <string name="ok">OK</string>
   <string name="cancel">Cancelar</string>
-  <string name="error_unexpected">Ocorreu um erro inesperado.</string>
-  <string name="error_network">Não foi possível conectar. Verifica a tua ligação à internet.</string>
-  <string name="error_auth_required">Autenticação necessária. Por favor, inicia sessão.</string>
-  <string name="error_service_unavailable">Serviço temporariamente indisponível. Por favor, tenta mais tarde.</string>
-  <string name="error_not_found">O recurso solicitado não foi encontrado.</string>
+  <string name="retry">Tentar novamente</string>
   <string name="loading">A carregar…</string>
+
+  <!-- Error titles -->
+  <string name="error_network_title">Sem ligação</string>
+  <string name="error_auth_title">Sessão expirada</string>
+  <string name="error_service_title">Serviço indisponível</string>
+  <string name="error_not_found_title">Não encontrado</string>
+  <string name="error_unexpected_title">Algo correu mal</string>
+
+  <!-- Error messages -->
+  <string name="error_network">Verifica a tua ligação e tenta novamente.</string>
+  <string name="error_auth_required">A tua sessão expirou. Inicia sessão para continuar.</string>
+  <string name="error_service_unavailable">Estamos com dificuldades do nosso lado. Tenta novamente dentro de momentos.</string>
+  <string name="error_not_found">Não encontrámos o que procuras.</string>
+  <string name="error_unexpected">Algo correu mal. Tenta novamente.</string>
+
+  <!-- Error actions -->
+  <string name="error_try_again">Tentar novamente</string>
+  <string name="error_sign_in">Iniciar sessão</string>
 </resources>
