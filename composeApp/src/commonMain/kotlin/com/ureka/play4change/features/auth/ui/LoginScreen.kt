@@ -96,6 +96,7 @@ fun LoginScreen(component: DefaultLoginComponent) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
+                .imePadding()
                 .padding(innerPadding)
         ) {
             // ── Decorative background blobs ───────────────────────────────
@@ -121,12 +122,11 @@ fun LoginScreen(component: DefaultLoginComponent) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .imePadding()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = Spacing.l),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(Modifier.height(Spacing.xxxl))
+                Spacer(Modifier.height(Spacing.huge))
 
                 UrekaLogo(size = LogoSize.Large)
 
@@ -208,7 +208,7 @@ fun LoginScreen(component: DefaultLoginComponent) {
                     }
                 }
 
-                Spacer(Modifier.height(Spacing.xxxl))
+                Spacer(Modifier.height(Spacing.xl))
             }
         }
     }
