@@ -52,6 +52,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
@@ -89,6 +91,7 @@ import play4change.composeapp.generated.resources.home_no_task
 import play4change.composeapp.generated.resources.home_pts_suffix
 import play4change.composeapp.generated.resources.home_review_cta
 import play4change.composeapp.generated.resources.home_start_challenge
+import play4change.composeapp.generated.resources.home_struggle_cta
 import play4change.composeapp.generated.resources.home_todays_challenge
 import play4change.composeapp.generated.resources.home_todays_challenges
 import play4change.composeapp.generated.resources.home_your_score
@@ -233,6 +236,25 @@ fun HomeScreen(component: DefaultHomeComponent) {
             )
         }
 
+        Box(Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .size(460.dp)
+                    .offset(y = (-160).dp)
+                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
+                    .align(Alignment.TopCenter)
+            )
+            Box(
+                modifier = Modifier
+                    .size(340.dp)
+                    .offset(x = (-100).dp, y = 100.dp)
+                    .background(
+                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.65f),
+                        CircleShape
+                    )
+                    .align(Alignment.BottomStart)
+            )
+        }
         if (state.isLoading) {
             HomeShimmer(modifier = Modifier.padding(innerPadding))
         } else {
@@ -358,6 +380,11 @@ fun HomeScreen(component: DefaultHomeComponent) {
 
                     items(data.todayTasks, key = { it.topicId }) { entry ->
                         when {
+                            entry.struggleOpen -> StruggleTaskCard(
+                                topicTitle = entry.topicTitle,
+                                onContinue = { onEvent(HomeEvents.ContinueStruggle(entry.struggleEnrollmentId)) },
+                                modifier = Modifier.padding(horizontal = Spacing.l)
+                            )
                             entry.completed -> CompletedTaskCard(
                                 topicTitle = entry.topicTitle,
                                 modifier = Modifier.padding(horizontal = Spacing.l)
@@ -573,6 +600,55 @@ private fun GeneratingTaskCard(
                         text = stringResource(Res.string.home_task_generating),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StruggleTaskCard(
+    topicTitle: String,
+    onContinue: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    ElevatedCard(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        onClick = onContinue
+    ) {
+        Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.error)
+            )
+            Column(modifier = Modifier.padding(Spacing.l)) {
+                if (topicTitle.isNotEmpty()) {
+                    Text(
+                        text = topicTitle,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(Modifier.height(Spacing.s))
+                }
+                Button(
+                    onClick = onContinue,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(
+                        text = stringResource(Res.string.home_struggle_cta),
+                        style = MaterialTheme.typography.labelLarge
                     )
                 }
             }
