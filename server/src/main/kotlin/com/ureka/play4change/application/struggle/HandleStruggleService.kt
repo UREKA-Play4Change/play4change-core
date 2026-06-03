@@ -12,6 +12,7 @@ import com.ureka.play4change.domain.topic.TaskTemplateRepository
 import com.ureka.play4change.domain.topic.TopicModuleRepository
 import com.ureka.play4change.domain.topic.TopicRepository
 import com.ureka.play4change.model.GenerationStatus
+import com.ureka.play4change.model.ReuseStrategy
 import com.ureka.play4change.model.StruggleContext
 import com.ureka.play4change.port.TaskGenerationPort
 import kotlinx.coroutines.runBlocking
@@ -169,7 +170,9 @@ class HandleStruggleService(
                             AdaptiveTask(
                                 id = taskId,
                                 struggleSessionId = session.id,
-                                branchId = branch.branchId,
+                                // FULL_REUSE copies are user-tracking rows — not canonical.
+                                // Set branchId = null so the admin view shows only the original.
+                                branchId = if (branch.reuseStrategy == ReuseStrategy.FULL_REUSE) null else branch.branchId,
                                 title = task.title,
                                 description = task.description,
                                 hint = task.hint,
