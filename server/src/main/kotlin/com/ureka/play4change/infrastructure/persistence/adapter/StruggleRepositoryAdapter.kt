@@ -27,6 +27,9 @@ class StruggleRepositoryAdapter(
     override fun findOpenByEnrollmentId(enrollmentId: String): StruggleSession? =
         jpa.findFirstByEnrollmentIdAndStatusOrderByDetectedAtDesc(enrollmentId, "OPEN")?.toDomain()
 
+    override fun findAllByEnrollmentId(enrollmentId: String): List<StruggleSession> =
+        jpa.findByEnrollmentIdOrderByDetectedAtAsc(enrollmentId).map { it.toDomain() }
+
     override fun save(session: StruggleSession): StruggleSession {
         val enrollmentEntity = enrollmentJpa.getReferenceById(session.enrollmentId)
         val assignmentEntity = assignmentJpa.getReferenceById(session.originalTaskAssignmentId)
