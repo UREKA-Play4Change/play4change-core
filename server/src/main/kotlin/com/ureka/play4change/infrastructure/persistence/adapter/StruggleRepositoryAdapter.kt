@@ -70,6 +70,15 @@ class StruggleRepositoryAdapter(
     override fun findAdaptiveTasksByTopicId(topicId: String): List<AdaptiveTaskAdminView> =
         jpa.findAdaptiveTasksByTopicId(topicId).map { it.toAdminView() }
 
+    override fun findPathStatsByTopicId(topicId: String): List<StrugglePathStats> =
+        jpa.findPathStatsByTopicId(topicId).map { row ->
+            StrugglePathStats(
+                originalTaskTemplateId = row.getTaskTemplateId(),
+                errorPattern = ErrorPattern.valueOf(row.getErrorPattern()),
+                totalSessions = row.getTotalSessions()
+            )
+        }
+
     override fun findAdaptiveTaskById(taskId: String): AdaptiveTask? =
         adaptiveTaskJpa.findById(taskId).orElse(null)?.toDomain()
 
