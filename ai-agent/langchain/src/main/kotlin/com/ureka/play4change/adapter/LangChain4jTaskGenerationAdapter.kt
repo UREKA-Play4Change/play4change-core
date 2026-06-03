@@ -157,7 +157,7 @@ class LangChain4jTaskGenerationAdapter(
                 ReuseStrategy.PARTIAL_REUSE -> {
                     log.info("Partial reuse: similarity=${match.similarity} branchId=${match.branchId}")
                     meterRegistry.counter("ai.adaptive.reuse", "strategy", "partial").increment()
-                    mergeAndGenerate(match, context)
+                    mergeAndGenerate(match, context, struggleEmbedding)
                 }
 
                 ReuseStrategy.FRESH_GENERATION -> {
@@ -197,7 +197,7 @@ class LangChain4jTaskGenerationAdapter(
     private fun loadExistingBranch(branchId: String, strategy: ReuseStrategy): AdaptiveBranch {
         val tasks = jdbc.queryForList(
             """
-            SELECT id, title, description, hint, points_reward
+            SELECT id, title, description, hint, points_reward, options, correct_answer
             FROM adaptive_tasks WHERE branch_id = ? ORDER BY order_index
             """.trimIndent(),
             branchId
@@ -206,21 +206,23 @@ class LangChain4jTaskGenerationAdapter(
                 externalId = row["id"] as String,
                 title = row["title"] as String,
                 description = row["description"] as String,
-                hint = row["hint"] as String,
+                hint = row["hint"] as? String,
                 pointsReward = (row["points_reward"] as Number).toInt(),
-                embedding = FloatArray(0), // already stored, not needed
-                status = GenerationStatus.SUCCESS
+                embedding = FloatArray(0),
+                status = GenerationStatus.SUCCESS,
+                optionsJson = row["options"] as? String,
+                correctAnswerIndex = row["correct_answer"] as? Int ?: 0
             )
         }
         return AdaptiveBranch(
-            branchId = UUID.randomUUID().toString(),
+            branchId = branchId,
             subtasks = tasks,
             reuseStrategy = strategy,
             reusedFromBranchId = branchId
         )
     }
 
-    private fun mergeAndGenerate(match: SimilarityMatch, context: StruggleContext): AdaptiveBranch {
+    private fun mergeAndGenerate(match: SimilarityMatch, context: StruggleContext, embedding: FloatArray): AdaptiveBranch {
         val existing = loadExistingBranch(match.branchId!!, ReuseStrategy.PARTIAL_REUSE)
         val reuseCount = (existing.subtasks.size * match.similarity).toInt().coerceAtLeast(1)
         val reusedTasks = existing.subtasks.take(reuseCount)
@@ -234,8 +236,11 @@ class LangChain4jTaskGenerationAdapter(
             parseTasksFromJson(response.content().text(), context.moduleId)
         } else emptyList()
 
+        val branchId = UUID.randomUUID().toString()
+        deduplicationService.persistBranch(UUID.randomUUID().toString(), branchId, embedding)
+
         return AdaptiveBranch(
-            branchId = UUID.randomUUID().toString(),
+            branchId = branchId,
             subtasks = reusedTasks + freshTasks,
             reuseStrategy = ReuseStrategy.PARTIAL_REUSE,
             reusedFromBranchId = match.branchId
@@ -248,8 +253,10 @@ class LangChain4jTaskGenerationAdapter(
             UserMessage.from(StruggleAnalysisPrompt.user(context, defaultSubtaskCount))
         )
         val tasks = parseTasksFromJson(response.content().text(), context.moduleId)
+        val branchId = UUID.randomUUID().toString()
+        deduplicationService.persistBranch(UUID.randomUUID().toString(), branchId, embedding)
         return AdaptiveBranch(
-            branchId = UUID.randomUUID().toString(),
+            branchId = branchId,
             subtasks = tasks,
             reuseStrategy = ReuseStrategy.FRESH_GENERATION,
             reusedFromBranchId = null
