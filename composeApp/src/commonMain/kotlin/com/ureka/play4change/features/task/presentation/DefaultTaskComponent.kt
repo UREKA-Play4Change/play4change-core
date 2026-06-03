@@ -160,7 +160,12 @@ class DefaultTaskComponent(
             TaskEvents.Continue -> {
                 unlockBack()
                 updateState { copy(isBackBlocked = false) }
-                emitEffect(TaskEffect.NavigateBack)
+                val s = state.value
+                if (s.struggleTriggered) {
+                    emitEffect(TaskEffect.NavigateToStruggle(s.enrollmentId))
+                } else {
+                    emitEffect(TaskEffect.NavigateBack)
+                }
             }
             TaskEvents.RetryLoad -> loadTask()
         }
@@ -199,12 +204,7 @@ class DefaultTaskComponent(
                     isBackBlocked = false
                 )
             }
-            if (result.struggleTriggered) {
-                // Let the user see the result overlay before navigating to the struggle path
-                delay(2500L)
-                val enrollmentId = state.value.enrollmentId
-                emitEffect(TaskEffect.NavigateToStruggle(enrollmentId))
-            }
+            // Navigation to struggle is triggered by the user pressing Continue
         }
     }
 
