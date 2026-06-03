@@ -54,6 +54,35 @@ class AdminTaskService(
         struggleRepository.findAdaptiveTasksByTopicId(topicId)
     }
 
+    override fun updateAdaptiveTask(taskId: String, command: UpdateTaskCommand): Either<AppError, AdaptiveTaskAdminView> = either {
+        val existing = ensureNotNull(struggleRepository.findAdaptiveTaskById(taskId)) {
+            NotFound.ResourceNotFound("AdaptiveTask", taskId)
+        }
+        if (command.options != null) {
+            ensure(command.options.size >= 2) {
+                BadRequest.InvalidField("options", "must have at least 2 options")
+            }
+            if (command.correctAnswer != null) {
+                ensure(command.correctAnswer in command.options.indices) {
+                    BadRequest.InvalidField("correctAnswer", "index out of bounds for provided options")
+                }
+            }
+        }
+        struggleRepository.saveAdaptiveTask(
+            existing.copy(
+                title = command.title,
+                description = command.description,
+                hint = command.hint,
+                options = command.options,
+                correctAnswer = command.correctAnswer
+            )
+        )
+        log.info("Admin updated adaptive task {}", taskId)
+        ensureNotNull(struggleRepository.findAdaptiveTaskViewById(taskId)) {
+            NotFound.ResourceNotFound("AdaptiveTask", taskId)
+        }
+    }
+
     override fun updateTask(templateId: String, command: UpdateTaskCommand): Either<AppError, TaskTemplate> = either {
         val template = ensureNotNull(taskTemplateRepository.findById(templateId)) {
             NotFound.ResourceNotFound("TaskTemplate", templateId)

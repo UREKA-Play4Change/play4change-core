@@ -23,4 +23,5 @@ interface AdminTaskUseCase {
     fun getTasksForTopic(topicId: String): Either<AppError, List<TaskTemplateWithStats>>
     fun getStruggleTasksForTopic(topicId: String): Either<AppError, List<AdaptiveTaskAdminView>>
     fun updateTask(templateId: String, command: UpdateTaskCommand): Either<AppError, TaskTemplate>
+    fun updateAdaptiveTask(taskId: String, command: UpdateTaskCommand): Either<AppError, AdaptiveTaskAdminView>
 }

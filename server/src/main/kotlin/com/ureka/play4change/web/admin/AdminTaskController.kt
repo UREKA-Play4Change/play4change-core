@@ -37,6 +37,25 @@ class AdminTaskController(private val adminTaskUseCase: AdminTaskUseCase) {
             ifRight = { ResponseEntity.ok(it.map { view -> AdaptiveTaskAdminResponse.from(view) }) }
         )
 
+    @PutMapping("/adaptive-tasks/{taskId}")
+    fun updateAdaptiveTask(
+        @PathVariable taskId: String,
+        @Valid @RequestBody request: UpdateTaskRequest
+    ): ResponseEntity<AdaptiveTaskAdminResponse> =
+        adminTaskUseCase.updateAdaptiveTask(
+            taskId,
+            UpdateTaskCommand(
+                title = request.title,
+                description = request.description,
+                hint = request.hint,
+                options = request.options,
+                correctAnswer = request.correctAnswer
+            )
+        ).fold(
+            ifLeft = { it.toErrorResponse() },
+            ifRight = { ResponseEntity.ok(AdaptiveTaskAdminResponse.from(it)) }
+        )
+
     @PutMapping("/tasks/{templateId}")
     fun updateTask(
         @PathVariable templateId: String,
