@@ -75,7 +75,7 @@ class AdaptiveTaskService(
             }
 
             val isCorrect = originalIndex == task.correctAnswer
-            val pointsAwarded = if (isCorrect) task.pointsReward else 0
+            val pointsAwarded = 0 // adaptive tasks never award score points
 
             val updatedTask = task.copy(
                 completedAt = OffsetDateTime.now(),
@@ -94,8 +94,7 @@ class AdaptiveTaskService(
 
             struggleRepository.save(resolvedSession)
 
-            val enrollmentAfterTask = if (isCorrect) enrollment.addPoints(pointsAwarded) else enrollment
-            val enrollmentToSave = if (allCorrect) enrollmentAfterTask.incrementStreak() else enrollmentAfterTask
+            val enrollmentToSave = if (allCorrect) enrollment.incrementStreak() else enrollment
             if (enrollmentToSave !== enrollment) enrollmentRepository.save(enrollmentToSave)
 
             if (allComplete) {
