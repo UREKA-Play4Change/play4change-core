@@ -8,5 +8,7 @@ data class AdaptiveTaskAdminView(
     val sessionStatus: StruggleStatus,
     val errorPattern: ErrorPattern,
     val sessionDetectedAt: OffsetDateTime,
-    val enrollmentId: String
+    val enrollmentId: String,
+    val originalTaskTemplateId: String,
+    val originalTaskTitle: String
 )
