@@ -2,6 +2,10 @@ package com.ureka.play4change.features.struggle.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
@@ -81,6 +85,25 @@ fun StruggleScreen(component: DefaultStruggleComponent) {
             )
         }
     ) { state, onEvent, innerPadding ->
+        Box(Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .size(460.dp)
+                    .offset(y = (-160).dp)
+                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
+                    .align(Alignment.TopCenter)
+            )
+            Box(
+                modifier = Modifier
+                    .size(340.dp)
+                    .offset(x = (-100).dp, y = 100.dp)
+                    .background(
+                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.65f),
+                        CircleShape
+                    )
+                    .align(Alignment.BottomStart)
+            )
+        }
         if (state.isLoading) {
             Column(
                 modifier = Modifier
@@ -112,10 +135,10 @@ fun StruggleScreen(component: DefaultStruggleComponent) {
             StruggleContent(state, onEvent, innerPadding)
         }
 
-        // Full-screen result overlay after a correct answer
+        // Full-screen result overlay after any final submission (correct or wrong — no retry)
         ResultOverlay(
             visible = state.submitted,
-            isCorrect = true,
+            isCorrect = state.isCorrect,
             pointsAwarded = state.pointsAwarded,
             totalPoints = 0,
             struggleTriggered = false,
@@ -234,7 +257,7 @@ private fun StruggleContent(
 
         // Submit button
         Spacer(Modifier.height(Spacing.xs))
-        val canSubmit = state.selectedIndex != null && !state.wrongAnswerFeedback && !state.submitted
+        val canSubmit = state.selectedIndex != null && !state.wrongAnswerFeedback && !state.submitted && !state.isLoading
         Button(
             onClick = { onEvent(StruggleEvents.Submit) },
             enabled = canSubmit,
