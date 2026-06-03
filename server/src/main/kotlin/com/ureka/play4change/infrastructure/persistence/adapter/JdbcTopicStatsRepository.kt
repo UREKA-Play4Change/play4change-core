@@ -12,7 +12,7 @@ class JdbcTopicStatsRepository(private val jdbc: JdbcTemplate) : TopicStatsRepos
         private val ZERO = TopicStats(
             enrolledUsers = 0,
             completionRate = 0.0,
-            averageScore = 0.0,
+            totalScore = 0,
             activeUsers = 0
         )
 
@@ -24,7 +24,7 @@ class JdbcTopicStatsRepository(private val jdbc: JdbcTemplate) : TopicStatsRepos
                 COALESCE(
                     COUNT(DISTINCT CASE WHEN e.status = 'COMPLETED' THEN e.user_id END)::numeric
                     / NULLIF(COUNT(DISTINCT e.user_id), 0), 0)                                     AS completion_rate,
-                COALESCE(AVG(ta.points_awarded) FILTER (WHERE ta.points_awarded > 0), 0)           AS average_score,
+                COALESCE(SUM(ta.points_awarded) FILTER (WHERE ta.is_correct = true), 0)            AS total_score,
                 COUNT(DISTINCT CASE WHEN e.status = 'ACTIVE'
                     AND e.last_activity_at > NOW() - INTERVAL '7 days'
                     THEN e.user_id END)                                                             AS active_users
@@ -44,7 +44,7 @@ class JdbcTopicStatsRepository(private val jdbc: JdbcTemplate) : TopicStatsRepos
                     COALESCE(
                         COUNT(DISTINCT CASE WHEN e.status = 'COMPLETED' THEN e.user_id END)::numeric
                         / NULLIF(COUNT(DISTINCT e.user_id), 0), 0)                                     AS completion_rate,
-                    COALESCE(AVG(ta.points_awarded) FILTER (WHERE ta.points_awarded > 0), 0)           AS average_score,
+                    COALESCE(SUM(ta.points_awarded) FILTER (WHERE ta.is_correct = true), 0)            AS total_score,
                     COUNT(DISTINCT CASE WHEN e.status = 'ACTIVE'
                         AND e.last_activity_at > NOW() - INTERVAL '7 days'
                         THEN e.user_id END)                                                             AS active_users
@@ -61,7 +61,7 @@ class JdbcTopicStatsRepository(private val jdbc: JdbcTemplate) : TopicStatsRepos
             TopicStats(
                 enrolledUsers = rs.getInt("enrolled_users"),
                 completionRate = rs.getDouble("completion_rate"),
-                averageScore = rs.getDouble("average_score"),
+                totalScore = rs.getInt("total_score"),
                 activeUsers = rs.getInt("active_users")
             )
         }, topicId).firstOrNull() ?: ZERO
@@ -75,7 +75,7 @@ class JdbcTopicStatsRepository(private val jdbc: JdbcTemplate) : TopicStatsRepos
                 rs.getString("topic_id") to TopicStats(
                     enrolledUsers = rs.getInt("enrolled_users"),
                     completionRate = rs.getDouble("completion_rate"),
-                    averageScore = rs.getDouble("average_score"),
+                    totalScore = rs.getInt("total_score"),
                     activeUsers = rs.getInt("active_users")
                 )
             }
