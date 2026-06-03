@@ -5,6 +5,7 @@ import java.time.OffsetDateTime
 data class AdaptiveTask(
     val id: String,
     val struggleSessionId: String,
+    val branchId: String?,
     val title: String,
     val description: String,
     val hint: String?,
