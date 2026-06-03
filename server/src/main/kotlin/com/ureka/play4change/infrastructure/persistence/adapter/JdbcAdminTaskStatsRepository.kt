@@ -14,15 +14,25 @@ class JdbcAdminTaskStatsRepository(private val jdbc: JdbcTemplate) : AdminTaskSt
         val sql = """
             SELECT
                 ta.task_template_id,
-                COUNT(*)                                                          AS total_attempts,
+                SUM(
+                    CASE
+                        WHEN ta.status != 'PENDING' THEN ta.wrong_attempt_count + 1
+                        ELSE ta.wrong_attempt_count
+                    END
+                )                                                                 AS total_attempts,
                 COUNT(*) FILTER (WHERE ta.is_correct = true)                     AS success_count,
                 COALESCE(
                     COUNT(*) FILTER (WHERE ta.is_correct = true)::numeric
-                    / NULLIF(COUNT(*), 0), 0)                                     AS success_rate,
+                    / NULLIF(SUM(
+                        CASE
+                            WHEN ta.status != 'PENDING' THEN ta.wrong_attempt_count + 1
+                            ELSE ta.wrong_attempt_count
+                        END
+                    ), 0), 0)                                                     AS success_rate,
                 COALESCE(AVG(ta.points_awarded) FILTER (WHERE ta.status != 'PENDING'), 0) AS avg_points
             FROM task_assignments ta
             WHERE ta.task_template_id IN ($placeholders)
-              AND ta.status != 'PENDING'
+              AND (ta.status != 'PENDING' OR ta.wrong_attempt_count > 0)
             GROUP BY ta.task_template_id
         """.trimIndent()
         return jdbc.query(
