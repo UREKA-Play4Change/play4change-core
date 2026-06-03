@@ -39,6 +39,7 @@
   <string name="home_task_generating">Votre défi est en cours de préparation — revenez dans un instant.</string>
   <string name="home_your_score">Votre score</string>
   <string name="home_todays_challenges">Défis du jour</string>
+  <string name="home_struggle_cta">Continuer le parcours de consolidation →</string>
 
   <!-- Task -->
   <string name="task_question_label">Question</string>
@@ -115,6 +116,7 @@
 
   <!-- Badges -->
   <string name="badges_title">Badges</string>
+  <string name="badges_empty">Inscrivez-vous à un sujet et terminez toutes ses tâches pour obtenir votre premier badge.</string>
   <string name="badge_locked">Verrouillé</string>
   <string name="badge_first_task">Premier Pas</string>
   <string name="badge_first_task_desc">Terminez votre première tâche</string>
@@ -164,10 +166,24 @@
   <!-- Common -->
   <string name="ok">OK</string>
   <string name="cancel">Annuler</string>
-  <string name="error_unexpected">Une erreur inattendue s'est produite.</string>
-  <string name="error_network">Impossible de se connecter. Vérifiez votre connexion internet.</string>
-  <string name="error_auth_required">Authentification requise. Veuillez vous connecter.</string>
-  <string name="error_service_unavailable">Service temporairement indisponible. Veuillez réessayer plus tard.</string>
-  <string name="error_not_found">La ressource demandée est introuvable.</string>
+  <string name="retry">Réessayer</string>
   <string name="loading">Chargement…</string>
+
+  <!-- Error titles -->
+  <string name="error_network_title">Pas de connexion</string>
+  <string name="error_auth_title">Session expirée</string>
+  <string name="error_service_title">Service indisponible</string>
+  <string name="error_not_found_title">Introuvable</string>
+  <string name="error_unexpected_title">Quelque chose s\'est mal passé</string>
+
+  <!-- Error messages -->
+  <string name="error_network">Vérifiez votre connexion et réessayez.</string>
+  <string name="error_auth_required">Votre session a expiré. Veuillez vous connecter pour continuer.</string>
+  <string name="error_service_unavailable">Nous rencontrons des difficultés de notre côté. Veuillez réessayer dans un instant.</string>
+  <string name="error_not_found">Nous n\'avons pas trouvé ce que vous cherchez.</string>
+  <string name="error_unexpected">Quelque chose s\'est mal passé. Veuillez réessayer.</string>
+
+  <!-- Error actions -->
+  <string name="error_try_again">Réessayer</string>
+  <string name="error_sign_in">Se connecter</string>
 </resources>
