@@ -206,12 +206,12 @@ class LangChain4jTaskGenerationAdapter(
                 externalId = row["id"] as String,
                 title = row["title"] as String,
                 description = row["description"] as String,
-                hint = row["hint"] as? String,
+                hint = row["hint"] as? String ?: "",
                 pointsReward = (row["points_reward"] as Number).toInt(),
                 embedding = FloatArray(0),
                 status = GenerationStatus.SUCCESS,
-                optionsJson = row["options"] as? String,
-                correctAnswerIndex = row["correct_answer"] as? Int ?: 0
+                optionsJson = row["options"]?.toString(),
+                correctAnswerIndex = (row["correct_answer"] as? Number)?.toInt() ?: 0
             )
         }
         return AdaptiveBranch(
