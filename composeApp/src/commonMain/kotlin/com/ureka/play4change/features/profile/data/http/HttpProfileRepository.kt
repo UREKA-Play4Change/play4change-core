@@ -42,6 +42,15 @@ private data class UserBadgeDto(
 )
 
 @Serializable
+private data class TopicDto(
+    val id: String,
+    val title: String = "",
+    val enrollmentStatus: String? = null
+) {
+    val hasEnrollment: Boolean get() = enrollmentStatus != null
+}
+
+@Serializable
 private data class UpdateNameRequestDto(val name: String)
 
 @Serializable
@@ -63,10 +72,8 @@ class HttpProfileRepository(
 
     override suspend fun getProfile(userId: String): ProfileData {
         val profileResponse = client.get("profile")
-        val badgesResponse = client.get("profile/badges")
         val dto = json.decodeFromString<UserProfileDto>(profileResponse.bodyAsText())
-        val badgeDtos = json.decodeFromString<List<UserBadgeDto>>(badgesResponse.bodyAsText())
-        return dto.toProfileData(badgeDtos.map { it.toBadge() })
+        return dto.toProfileData(fetchTopicBadges())
     }
 
     override suspend fun updateName(name: String): ProfileData {
@@ -74,10 +81,8 @@ class HttpProfileRepository(
             contentType(ContentType.Application.Json)
             setBody(UpdateNameRequestDto(name))
         }
-        val badgesResponse = client.get("profile/badges")
         val dto = json.decodeFromString<UserProfileDto>(updateResponse.bodyAsText())
-        val badgeDtos = json.decodeFromString<List<UserBadgeDto>>(badgesResponse.bodyAsText())
-        return dto.toProfileData(badgeDtos.map { it.toBadge() })
+        return dto.toProfileData(fetchTopicBadges())
     }
 
     override suspend fun updatePreferences(language: String) {
@@ -115,21 +120,37 @@ class HttpProfileRepository(
         badges = badges
     )
 
-    private fun UserBadgeDto.toBadge(): Badge = Badge(
-        id = microCompetenceName,
-        titleKey = microCompetenceName,
-        descriptionKey = description,
-        iconType = microCompetenceName.toIconType(),
-        isUnlocked = true,
-        unlockedAt = runCatching { Instant.parse(earnedAt).toEpochMilliseconds() }.getOrNull()
-    )
+    /**
+     * Fetches the user's enrolled topics and earned badges, then produces one
+     * [Badge] per enrolled topic: unlocked if the server has issued a badge for
+     * that topic, locked otherwise.
+     */
+    private suspend fun fetchTopicBadges(): List<Badge> {
+        val earned = runCatching {
+            json.decodeFromString<List<UserBadgeDto>>(client.get("profile/badges").bodyAsText())
+        }.getOrElse { emptyList() }
 
-    private fun String.toIconType(): BadgeIconType = when (lowercase()) {
-        "badge_first_task" -> BadgeIconType.FIRST_STEP
-        "badge_streak_3", "badge_streak_7" -> BadgeIconType.FLAME
-        "badge_perfect_quiz" -> BadgeIconType.STAR
-        "badge_first_photo" -> BadgeIconType.CAMERA
-        "badge_explorer" -> BadgeIconType.COMPASS
-        else -> BadgeIconType.COMPASS
+        val enrolledTopics = runCatching {
+            json.decodeFromString<List<TopicDto>>(client.get("topics").bodyAsText())
+                .filter { it.hasEnrollment }
+        }.getOrElse { emptyList() }
+
+        // Index earned badges by topic title (lowercase) for O(1) lookup.
+        val earnedByTitle = earned.associateBy { it.topicTitle.trim().lowercase() }
+
+        return enrolledTopics.map { topic ->
+            val earnedBadge = earnedByTitle[topic.title.trim().lowercase()]
+            val isCompleted = topic.enrollmentStatus?.uppercase() == "COMPLETED"
+            Badge(
+                id             = topic.id,
+                titleKey       = topic.title,
+                descriptionKey = topic.title,
+                iconType       = BadgeIconType.STAR,
+                isUnlocked     = earnedBadge != null || isCompleted,
+                unlockedAt     = earnedBadge?.let {
+                    runCatching { Instant.parse(it.earnedAt).toEpochMilliseconds() }.getOrNull()
+                }
+            )
+        }
     }
 }

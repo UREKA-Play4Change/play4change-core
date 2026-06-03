@@ -2,6 +2,7 @@ package com.ureka.play4change.web.admin
 
 import com.ureka.play4change.application.port.AdminTaskUseCase
 import com.ureka.play4change.application.port.UpdateTaskCommand
+import com.ureka.play4change.domain.struggle.StrugglePathStats
 import com.ureka.play4change.error.AppError
 import com.ureka.play4change.web.admin.dto.AdaptiveTaskAdminResponse
 import com.ureka.play4change.web.admin.dto.TaskTemplateAdminResponse
@@ -35,6 +36,34 @@ class AdminTaskController(private val adminTaskUseCase: AdminTaskUseCase) {
         adminTaskUseCase.getStruggleTasksForTopic(topicId).fold(
             ifLeft = { it.toErrorResponse() },
             ifRight = { ResponseEntity.ok(it.map { view -> AdaptiveTaskAdminResponse.from(view) }) }
+        )
+
+    @GetMapping("/topics/{topicId}/struggle-path-stats")
+    fun getStrugglePathStats(
+        @PathVariable topicId: String
+    ): ResponseEntity<List<StrugglePathStats>> =
+        adminTaskUseCase.getStrugglePathStats(topicId).fold(
+            ifLeft = { it.toErrorResponse() },
+            ifRight = { ResponseEntity.ok(it) }
+        )
+
+    @PutMapping("/adaptive-tasks/{taskId}")
+    fun updateAdaptiveTask(
+        @PathVariable taskId: String,
+        @Valid @RequestBody request: UpdateTaskRequest
+    ): ResponseEntity<AdaptiveTaskAdminResponse> =
+        adminTaskUseCase.updateAdaptiveTask(
+            taskId,
+            UpdateTaskCommand(
+                title = request.title,
+                description = request.description,
+                hint = request.hint,
+                options = request.options,
+                correctAnswer = request.correctAnswer
+            )
+        ).fold(
+            ifLeft = { it.toErrorResponse() },
+            ifRight = { ResponseEntity.ok(AdaptiveTaskAdminResponse.from(it)) }
         )
 
     @PutMapping("/tasks/{templateId}")

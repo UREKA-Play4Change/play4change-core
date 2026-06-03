@@ -9,7 +9,8 @@ data class TaskQuestionStatsResponse(
     val totalAttempts: Int,
     val successCount: Int,
     val successRate: Double,
-    val avgPointsAwarded: Double
+    val avgPointsAwarded: Double,
+    val struggleTriggerCount: Int
 )
 
 data class TaskTemplateAdminResponse(
@@ -50,7 +51,8 @@ data class TaskTemplateAdminResponse(
                 totalAttempts = stats.totalAttempts,
                 successCount = stats.successCount,
                 successRate = stats.successRate,
-                avgPointsAwarded = stats.avgPointsAwarded
+                avgPointsAwarded = stats.avgPointsAwarded,
+                struggleTriggerCount = stats.struggleTriggerCount
             )
         )
     }

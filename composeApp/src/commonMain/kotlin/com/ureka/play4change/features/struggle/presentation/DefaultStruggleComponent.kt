@@ -7,6 +7,7 @@ import com.ureka.play4change.core.component.stateful.safeLaunch
 import com.ureka.play4change.core.network.NetworkException
 import com.ureka.play4change.core.network.toAppError
 import com.ureka.play4change.core.network.toNetworkError
+import com.ureka.play4change.core.network.NetworkError
 import com.ureka.play4change.features.struggle.domain.repository.StruggleRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -26,33 +27,19 @@ class DefaultStruggleComponent(
         updateState { copy(isLoading = true, error = null) }
         scope.launch {
             try {
-                val session = repository.getSession(enrollmentId)
+                // AI generation can take up to 60 s — poll until the session has tasks.
+                val session = pollUntilReady()
                 if (session == null) {
-                    // No active session — server may still be generating adaptive tasks.
-                    // Retry once after a short delay.
-                    delay(2000L)
-                    val retried = repository.getSession(enrollmentId)
-                    if (retried == null) {
-                        emitEffect(StruggleEffect.NavigateToHome)
-                        return@launch
-                    }
-                    updateState {
-                        copy(
-                            isLoading = false,
-                            sessionId = retried.sessionId,
-                            errorPattern = retried.errorPattern,
-                            tasks = retried.tasks
-                        )
-                    }
-                } else {
-                    updateState {
-                        copy(
-                            isLoading = false,
-                            sessionId = session.sessionId,
-                            errorPattern = session.errorPattern,
-                            tasks = session.tasks
-                        )
-                    }
+                    emitEffect(StruggleEffect.NavigateToHome)
+                    return@launch
+                }
+                updateState {
+                    copy(
+                        isLoading = false,
+                        sessionId = session.sessionId,
+                        errorPattern = session.errorPattern,
+                        tasks = session.tasks
+                    )
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -62,6 +49,28 @@ class DefaultStruggleComponent(
                 updateState { copy(isLoading = false, error = e.toNetworkError().toAppError()) }
             }
         }
+    }
+
+    // Poll every 3 s, up to 20 attempts (~60 s total), waiting for the session to have tasks.
+    // Transient network errors are swallowed and retried; only auth errors escape immediately.
+    // Returns null if the session never becomes ready (AI timed out / abandoned).
+    private suspend fun pollUntilReady(): com.ureka.play4change.features.struggle.domain.model.StruggleSession? {
+        repeat(20) {
+            try {
+                val session = repository.getSession(enrollmentId)
+                if (session != null && session.tasks.isNotEmpty()) return session
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: NetworkException) {
+                // Auth failures are permanent — propagate immediately.
+                if (e.error is NetworkError.Unauthorized || e.error is NetworkError.Forbidden) throw e
+                // Everything else (connection drop, timeout, 5xx) is transient — keep polling.
+            } catch (_: Exception) {
+                // Serialization or other transient error — keep polling.
+            }
+            delay(3000L)
+        }
+        return null
     }
 
     override fun onEvent(event: StruggleEvents) {
@@ -99,14 +108,18 @@ class DefaultStruggleComponent(
         val task = s.currentTask ?: return
         safeLaunch(scope) {
             val result = repository.submitTask(s.sessionId, task.taskId, selected)
+            // Adaptive tasks are one-shot — no retry regardless of correctness.
             if (!result.isCorrect) {
-                // Flash wrong and allow retry on the same adaptive task
+                // Brief wrong-answer flash, then lock the task and show the Continue overlay.
                 updateState { copy(wrongAnswerFeedback = true) }
                 delay(1200L)
                 updateState {
                     copy(
                         wrongAnswerFeedback = false,
-                        selectedIndex = null
+                        submitted = true,
+                        isCorrect = false,
+                        pointsAwarded = 0,
+                        sessionResolved = result.sessionResolved
                     )
                 }
             } else {
@@ -114,7 +127,7 @@ class DefaultStruggleComponent(
                     copy(
                         submitted = true,
                         isCorrect = true,
-                        pointsAwarded = result.pointsAwarded,
+                        pointsAwarded = 0, // adaptive tasks never award score points
                         sessionResolved = result.sessionResolved
                     )
                 }

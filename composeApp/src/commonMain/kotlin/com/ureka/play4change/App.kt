@@ -18,6 +18,7 @@ import com.ureka.play4change.features.auth.ui.LoginScreen
 import com.ureka.play4change.features.explore.presentation.ExploreEffect
 import com.ureka.play4change.features.explore.ui.ExploreScreen
 import com.ureka.play4change.features.home.presentation.HomeEffect
+import com.ureka.play4change.features.home.presentation.HomeEvents
 import com.ureka.play4change.features.home.ui.HomeScreen
 import com.ureka.play4change.features.profile.presentation.ProfileEffect
 import com.ureka.play4change.features.profile.ui.ProfileScreen
@@ -84,18 +85,27 @@ fun App(root: RootComponent) {
                         LoginScreen(child.component)
                     }
                     is RootComponent.Child.Home -> {
-                        LaunchedEffect(child.component) {
-                            child.component.effects.collect { effect ->
+                        val homeComponent = child.component
+                        // Refresh data every time this composable scope enters — fires both on
+                        // initial load AND whenever Home comes back into view after navigating
+                        // away (Task, Profile, Struggle, etc.), covering cases where lifecycle-based
+                        // doOnResume may not fire reliably on all platforms.
+                        LaunchedEffect(Unit) {
+                            homeComponent.onEvent(HomeEvents.RetryLoad)
+                        }
+                        LaunchedEffect(homeComponent) {
+                            homeComponent.effects.collect { effect ->
                                 when (val e = effect as HomeEffect) {
-                                    is HomeEffect.NavigateToTask -> root.navigateToTask(e.userTaskId)
-                                    HomeEffect.NavigateToProfile -> root.navigateToProfile()
-                                    HomeEffect.NavigateToAbout   -> root.navigateToAbout()
-                                    HomeEffect.NavigateToExplore -> root.navigateToExplore()
-                                    HomeEffect.LoggedOut         -> root.navigateToLogin()
+                                    is HomeEffect.NavigateToTask     -> root.navigateToTask(e.userTaskId)
+                                    is HomeEffect.NavigateToStruggle -> root.navigateToStruggle(e.enrollmentId)
+                                    HomeEffect.NavigateToProfile     -> root.navigateToProfile()
+                                    HomeEffect.NavigateToAbout       -> root.navigateToAbout()
+                                    HomeEffect.NavigateToExplore     -> root.navigateToExplore()
+                                    HomeEffect.LoggedOut             -> root.navigateToLogin()
                                 }
                             }
                         }
-                        HomeScreen(child.component)
+                        HomeScreen(homeComponent)
                     }
                     is RootComponent.Child.Task -> {
                         LaunchedEffect(child.component) {

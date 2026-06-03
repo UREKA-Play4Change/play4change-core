@@ -21,5 +21,6 @@ enum class ErrorPattern {
     PROCEDURAL_ERROR,                // user understands but applies wrong steps
     KNOWLEDGE_GAP,                   // prerequisite knowledge missing
     UNCLEAR_INSTRUCTIONS,            // task description caused confusion
+    TIME_PRESSURE,                   // user rushed; needs paced practice
     UNKNOWN                          // fallback — always generate fresh
 }

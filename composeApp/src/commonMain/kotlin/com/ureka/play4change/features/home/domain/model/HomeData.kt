@@ -32,7 +32,13 @@ data class TaskSummaryWithTopic(
     /** True when the learner already submitted their answer today. */
     val completed: Boolean,
     /** True when the server returned 202 — AI generation is in progress. */
-    val isGenerating: Boolean = false
+    val isGenerating: Boolean = false,
+    /** True when the server returned 409 — an adaptive struggle session is open. */
+    val struggleOpen: Boolean = false,
+    /** The enrollment ID associated with the open struggle session. */
+    val struggleEnrollmentId: String = "",
+    /** True when the server returned 404 with X-Task-Available-At — next task is coming soon. */
+    val isWaitingForNext: Boolean = false
 )
 
 data class TaskSummary(

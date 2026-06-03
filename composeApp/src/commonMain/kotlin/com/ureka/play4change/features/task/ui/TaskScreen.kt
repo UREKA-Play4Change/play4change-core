@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -110,6 +111,23 @@ fun TaskScreen(component: DefaultTaskComponent) {
         }
     ) { state, onEvent, innerPadding ->
         Box(Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .size(460.dp)
+                    .offset(y = (-160).dp)
+                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
+                    .align(Alignment.TopCenter)
+            )
+            Box(
+                modifier = Modifier
+                    .size(340.dp)
+                    .offset(x = (-100).dp, y = 100.dp)
+                    .background(
+                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.65f),
+                        CircleShape
+                    )
+                    .align(Alignment.BottomStart)
+            )
             if (state.isLoading) {
                 Column(
                     modifier = Modifier

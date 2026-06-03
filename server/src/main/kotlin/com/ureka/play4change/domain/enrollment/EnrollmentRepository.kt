@@ -5,6 +5,7 @@ interface EnrollmentRepository {
     fun findByUserIdAndTopicId(userId: String, topicId: String): Enrollment?
     fun findActiveByUserId(userId: String): List<Enrollment>
     fun findCompletedByUserId(userId: String): List<Enrollment>
+    fun findAllByUserId(userId: String): List<Enrollment>
     fun findAssignmentById(id: String): TaskAssignment?
     fun findAssignmentByEnrollmentAndTemplate(enrollmentId: String, taskTemplateId: String): TaskAssignment?
     fun findAssignmentsByEnrollmentId(enrollmentId: String): List<TaskAssignment>

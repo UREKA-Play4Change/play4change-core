@@ -21,17 +21,18 @@ class GetUserProfileService(
         val user = userRepository.findById(userId)
             ?: return NotFound.ResourceNotFound("User", userId).left()
 
-        val enrollment = enrollmentUseCase.getActiveEnrollments(userId).firstOrNull()
+        val allEnrollments = enrollmentUseCase.getActiveEnrollments(userId) +
+            enrollmentRepository.findCompletedByUserId(userId)
 
-        val totalPoints = enrollment?.totalPointsEarned ?: 0
-        val streakDays = enrollment?.streakDays ?: 0
+        val totalPoints = allEnrollments.sumOf { it.totalPointsEarned }
+        val streakDays = allEnrollments.maxOfOrNull { it.streakDays } ?: 0
 
-        val accuracy = enrollment?.let { e ->
-            val assignments = enrollmentRepository.findAssignmentsByEnrollmentId(e.id)
-            val submitted = assignments.filter { it.isCorrect != null }
-            if (submitted.isEmpty()) 0.0f
+        val allAssignments = allEnrollments.flatMap { e ->
+            enrollmentRepository.findAssignmentsByEnrollmentId(e.id)
+        }
+        val submitted = allAssignments.filter { it.isCorrect != null }
+        val accuracy = if (submitted.isEmpty()) 0.0f
             else submitted.count { it.isCorrect == true }.toFloat() / submitted.size.toFloat()
-        } ?: 0.0f
 
         return UserProfile(
             userId = user.id,

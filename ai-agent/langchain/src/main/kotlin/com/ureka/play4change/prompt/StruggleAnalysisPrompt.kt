@@ -80,6 +80,8 @@ object StruggleAnalysisPrompt {
             "The student is missing prerequisite knowledge. Fill the gap before returning to the task."
         ErrorPattern.UNCLEAR_INSTRUCTIONS ->
             "The task instructions were unclear. Provide clearer, more explicit guidance."
+        ErrorPattern.TIME_PRESSURE ->
+            "The student rushed and made errors under time pressure. Use paced, step-by-step practice tasks."
         ErrorPattern.UNKNOWN ->
             "The struggle cause is unclear. Provide general scaffolding from basic to intermediate."
     }

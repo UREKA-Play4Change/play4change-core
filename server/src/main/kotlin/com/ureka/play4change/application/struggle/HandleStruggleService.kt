@@ -6,10 +6,13 @@ import com.ureka.play4change.domain.struggle.ErrorPattern
 import com.ureka.play4change.domain.struggle.StruggleRepository
 import com.ureka.play4change.domain.struggle.StruggleSession
 import com.ureka.play4change.domain.struggle.StruggleStatus
+import com.ureka.play4change.domain.enrollment.TaskShuffleSeed
 import com.ureka.play4change.domain.topic.TaskTemplate
+import com.ureka.play4change.domain.topic.TaskTemplateRepository
 import com.ureka.play4change.domain.topic.TopicModuleRepository
 import com.ureka.play4change.domain.topic.TopicRepository
 import com.ureka.play4change.model.GenerationStatus
+import com.ureka.play4change.model.ReuseStrategy
 import com.ureka.play4change.model.StruggleContext
 import com.ureka.play4change.port.TaskGenerationPort
 import kotlinx.coroutines.runBlocking
@@ -31,6 +34,7 @@ class HandleStruggleService(
     private val enrollmentRepository: EnrollmentRepository,
     private val topicRepository: TopicRepository,
     private val topicModuleRepository: TopicModuleRepository,
+    private val taskTemplateRepository: TaskTemplateRepository,
     private val taskGenerationPort: TaskGenerationPort,
     private val registry: MeterRegistry,
     @Value("\${ai.mistral.timeout-seconds:60}") private val timeoutSeconds: Long
@@ -45,7 +49,38 @@ class HandleStruggleService(
         errorPattern: ErrorPattern,
         template: TaskTemplate,
         userId: String
+    ) = doTrigger(enrollmentId, assignmentId, errorPattern, template, userId)
+
+    /**
+     * Spawns a follow-up struggle session after the learner failed one or more
+     * tasks in a previous adaptive session. The same [StruggleSession.originalTaskAssignmentId]
+     * is preserved so the chain always traces back to the one main-path task.
+     */
+    @Async("generationExecutor")
+    fun triggerFromPreviousSession(previousSession: StruggleSession, userId: String) {
+        val originalAssignment = enrollmentRepository.findAssignmentById(previousSession.originalTaskAssignmentId) ?: run {
+            log.error("Original assignment {} not found for follow-up struggle", previousSession.originalTaskAssignmentId)
+            return
+        }
+        val template = taskTemplateRepository.findById(originalAssignment.taskTemplateId) ?: run {
+            log.error("Template {} not found for follow-up struggle", originalAssignment.taskTemplateId)
+            return
+        }
+        doTrigger(previousSession.enrollmentId, previousSession.originalTaskAssignmentId, previousSession.errorPattern, template, userId)
+    }
+
+    // ---------------------------------------------------------------------------
+    // Core generation logic (shared by both trigger paths)
+    // ---------------------------------------------------------------------------
+
+    private fun doTrigger(
+        enrollmentId: String,
+        assignmentId: String,
+        errorPattern: ErrorPattern,
+        template: TaskTemplate,
+        userId: String
     ) {
+        var session: StruggleSession? = null
         try {
             val enrollment = enrollmentRepository.findById(enrollmentId) ?: run {
                 log.error("Enrollment {} not found for struggle trigger", enrollmentId)
@@ -61,7 +96,7 @@ class HandleStruggleService(
                 return
             }
 
-            val session = struggleRepository.save(
+            session = struggleRepository.save(
                 StruggleSession(
                     id = UUID.randomUUID().toString(),
                     enrollmentId = enrollmentId,
@@ -75,17 +110,21 @@ class HandleStruggleService(
                 )
             )
 
-            val errorPatternTag = when (errorPattern) {
-                ErrorPattern.WRONG_CONCEPT -> "wrong_concept"
-                ErrorPattern.PARTIAL_UNDERSTANDING -> "partial_understanding"
-                ErrorPattern.READING_ERROR -> "reading_error"
-                ErrorPattern.TIME_PRESSURE -> "time_pressure"
+            try {
+                val errorPatternTag = when (errorPattern) {
+                    ErrorPattern.WRONG_CONCEPT -> "wrong_concept"
+                    ErrorPattern.PARTIAL_UNDERSTANDING -> "partial_understanding"
+                    ErrorPattern.READING_ERROR -> "reading_error"
+                    ErrorPattern.TIME_PRESSURE -> "time_pressure"
+                }
+                registry.counter("struggle_sessions_total", "error_pattern", errorPatternTag).increment()
+                registry.counter(
+                    "struggle_sessions_created_total",
+                    "topic_id", enrollment.topicId
+                ).increment()
+            } catch (ex: Exception) {
+                log.warn("Metrics registration failed (non-fatal): {}", ex.message)
             }
-            registry.counter("struggle_sessions_total", "error_pattern", errorPatternTag).increment()
-            registry.counter(
-                "struggle_sessions_created_total",
-                "topic_id", enrollment.topicId
-            ).increment()
 
             val context = StruggleContext(
                 userId = userId,
@@ -124,11 +163,16 @@ class HandleStruggleService(
                         .mapIndexed { idx, task ->
                             val options = task.optionsJson
                                 ?.let { parseOptionsJson(it) }
-                            val shuffledOrder = (options?.indices?.toMutableList() ?: mutableListOf())
-                                .also { it.shuffle() }
+                            val taskId = UUID.randomUUID().toString()
+                            val shuffledOrder = if (options != null) {
+                                TaskShuffleSeed.shuffleOptions(options.size, userId, taskId, session.id)
+                            } else emptyList()
                             AdaptiveTask(
-                                id = UUID.randomUUID().toString(),
+                                id = taskId,
                                 struggleSessionId = session.id,
+                                // FULL_REUSE copies are user-tracking rows — not canonical.
+                                // Set branchId = null so the admin view shows only the original.
+                                branchId = if (branch.reuseStrategy == ReuseStrategy.FULL_REUSE) null else branch.branchId,
                                 title = task.title,
                                 description = task.description,
                                 hint = task.hint,
@@ -153,6 +197,10 @@ class HandleStruggleService(
             )
         } catch (ex: Exception) {
             log.error("Unexpected error during struggle generation for enrollment {}: {}", enrollmentId, ex.message, ex)
+            session?.let {
+                runCatching { struggleRepository.save(it.abandon()) }
+                    .onFailure { e -> log.error("Failed to abandon session {} after error: {}", it.id, e.message) }
+            }
         }
     }
 
@@ -161,7 +209,7 @@ class HandleStruggleService(
             ErrorPattern.WRONG_CONCEPT -> com.ureka.play4change.model.ErrorPattern.CONCEPTUAL_MISUNDERSTANDING
             ErrorPattern.PARTIAL_UNDERSTANDING -> com.ureka.play4change.model.ErrorPattern.PROCEDURAL_ERROR
             ErrorPattern.READING_ERROR -> com.ureka.play4change.model.ErrorPattern.UNCLEAR_INSTRUCTIONS
-            ErrorPattern.TIME_PRESSURE -> com.ureka.play4change.model.ErrorPattern.UNKNOWN
+            ErrorPattern.TIME_PRESSURE -> com.ureka.play4change.model.ErrorPattern.TIME_PRESSURE
         }
 
     private fun parseOptionsJson(jsonStr: String): List<String>? = runCatching {

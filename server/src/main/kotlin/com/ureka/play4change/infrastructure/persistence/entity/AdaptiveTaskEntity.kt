@@ -31,6 +31,9 @@ class AdaptiveTaskEntity(
     @Column(name = "order_index", nullable = false)
     val orderIndex: Int,
 
+    @Column(name = "branch_id")
+    val branchId: String? = null,
+
     @Column(name = "completed_at")
     var completedAt: OffsetDateTime? = null,
 

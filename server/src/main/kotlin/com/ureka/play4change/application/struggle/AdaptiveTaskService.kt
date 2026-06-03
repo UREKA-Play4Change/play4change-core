@@ -24,7 +24,8 @@ import java.time.OffsetDateTime
 @Service
 class AdaptiveTaskService(
     private val struggleRepository: StruggleRepository,
-    private val enrollmentRepository: EnrollmentRepository
+    private val enrollmentRepository: EnrollmentRepository,
+    private val handleStruggleService: HandleStruggleService
 ) : StruggleUseCase {
 
     private val log = LoggerFactory.getLogger(AdaptiveTaskService::class.java)
@@ -74,7 +75,7 @@ class AdaptiveTaskService(
             }
 
             val isCorrect = originalIndex == task.correctAnswer
-            val pointsAwarded = if (isCorrect) task.pointsReward else 0
+            val pointsAwarded = 0 // adaptive tasks never award score points
 
             val updatedTask = task.copy(
                 completedAt = OffsetDateTime.now(),
@@ -88,34 +89,43 @@ class AdaptiveTaskService(
             val updatedSession = session.copy(adaptiveTasks = updatedTasks)
 
             val allComplete = updatedTasks.all { it.completedAt != null }
+            val allCorrect = allComplete && updatedTasks.all { it.isCorrect == true }
             val resolvedSession = if (allComplete) updatedSession.resolve() else updatedSession
 
             struggleRepository.save(resolvedSession)
 
-            if (isCorrect) {
-                val updatedEnrollment = enrollment.addPoints(pointsAwarded)
-                enrollmentRepository.save(updatedEnrollment)
-            }
+            val enrollmentToSave = if (allCorrect) enrollment.incrementStreak() else enrollment
+            if (enrollmentToSave !== enrollment) enrollmentRepository.save(enrollmentToSave)
 
             if (allComplete) {
-                // Reset the original task assignment so the learner can retry it once (ADR-013 Decision 5)
-                val originalAssignment = enrollmentRepository.findAssignmentById(session.originalTaskAssignmentId)
-                if (originalAssignment != null) {
-                    enrollmentRepository.saveAssignment(
-                        originalAssignment.copy(
-                            status = AssignmentStatus.PENDING,
-                            wrongAttemptCount = 0,
-                            submittedAt = null,
-                            selectedOption = null,
-                            isCorrect = null,
-                            pointsAwarded = 0
+                if (allCorrect) {
+                    // All adaptive tasks passed — reset original assignment so the learner can retry the main task
+                    val originalAssignment = enrollmentRepository.findAssignmentById(session.originalTaskAssignmentId)
+                    if (originalAssignment != null) {
+                        enrollmentRepository.saveAssignment(
+                            originalAssignment.copy(
+                                status = AssignmentStatus.PENDING,
+                                submittedAt = null,
+                                selectedOption = null,
+                                isCorrect = null,
+                                pointsAwarded = 0
+                                // wrongAttemptCount intentionally preserved — failure history must survive
+                                // the reset so stats can account for it when the user retries
+                            )
                         )
+                    }
+                    log.info(
+                        "Struggle session {} resolved successfully — original assignment {} reset to PENDING",
+                        session.id, session.originalTaskAssignmentId
+                    )
+                } else {
+                    // One or more adaptive tasks failed — spawn a new struggle session and keep the original locked
+                    handleStruggleService.triggerFromPreviousSession(resolvedSession, command.userId)
+                    log.info(
+                        "Struggle session {} had failures — follow-up session triggered for enrollment {}",
+                        session.id, session.enrollmentId
                     )
                 }
-                log.info(
-                    "Struggle session {} resolved for enrollment {} — original assignment {} reset to PENDING",
-                    session.id, session.enrollmentId, session.originalTaskAssignmentId
-                )
             }
 
             AdaptiveSubmitResult(

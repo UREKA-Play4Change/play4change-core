@@ -20,7 +20,7 @@ class WebMvcConfig(
         val config = CorsConfiguration()
         config.allowedOriginPatterns = allowedOrigins.split(",").map(String::trim)
         config.allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-        config.allowedHeaders = listOf("Authorization", "Content-Type", "X-Request-ID")
+        config.allowedHeaders = listOf("Authorization", "Content-Type", "X-Request-ID", "Cache-Control", "Accept")
         config.allowCredentials = true
         config.maxAge = 3600
         val source = UrlBasedCorsConfigurationSource()

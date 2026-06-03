@@ -160,7 +160,19 @@ class HttpHomeRepository(
                         topicId = topic.id,
                         topicTitle = topic.title,
                         task = null,
-                        completed = hasAvailableAtHeader
+                        completed = hasAvailableAtHeader,
+                        isWaitingForNext = hasAvailableAtHeader
+                    )
+                }
+                HttpStatusCode.Conflict -> {
+                    val enrollmentId = taskResponse.headers["X-Open-Struggle-Enrollment"] ?: ""
+                    TaskSummaryWithTopic(
+                        topicId = topic.id,
+                        topicTitle = topic.title,
+                        task = null,
+                        completed = false,
+                        struggleOpen = true,
+                        struggleEnrollmentId = enrollmentId
                     )
                 }
                 else -> TaskSummaryWithTopic(

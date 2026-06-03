@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.ureka.play4change.domain.struggle.*
 import com.ureka.play4change.infrastructure.persistence.entity.AdaptiveTaskEntity
 import com.ureka.play4change.infrastructure.persistence.entity.StruggleSessionEntity
+import com.ureka.play4change.infrastructure.persistence.repository.AdaptiveTaskJpaRepository
 import com.ureka.play4change.infrastructure.persistence.repository.EnrollmentJpaRepository
 import com.ureka.play4change.infrastructure.persistence.repository.StruggleSessionJpaRepository
 import com.ureka.play4change.infrastructure.persistence.repository.TaskAssignmentJpaRepository
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component
 @Component
 class StruggleRepositoryAdapter(
     private val jpa: StruggleSessionJpaRepository,
+    private val adaptiveTaskJpa: AdaptiveTaskJpaRepository,
     private val enrollmentJpa: EnrollmentJpaRepository,
     private val assignmentJpa: TaskAssignmentJpaRepository
 ) : StruggleRepository {
@@ -23,7 +25,7 @@ class StruggleRepositoryAdapter(
         jpa.findById(id).orElse(null)?.toDomain()
 
     override fun findOpenByEnrollmentId(enrollmentId: String): StruggleSession? =
-        jpa.findByEnrollmentIdAndStatus(enrollmentId, "OPEN")?.toDomain()
+        jpa.findFirstByEnrollmentIdAndStatusOrderByDetectedAtDesc(enrollmentId, "OPEN")?.toDomain()
 
     override fun save(session: StruggleSession): StruggleSession {
         val enrollmentEntity = enrollmentJpa.getReferenceById(session.enrollmentId)
@@ -45,6 +47,7 @@ class StruggleRepositoryAdapter(
                 AdaptiveTaskEntity(
                     id = task.id,
                     struggleSession = entity,
+                    branchId = task.branchId,
                     title = task.title,
                     description = task.description,
                     hint = task.hint,
@@ -67,13 +70,51 @@ class StruggleRepositoryAdapter(
     override fun findAdaptiveTasksByTopicId(topicId: String): List<AdaptiveTaskAdminView> =
         jpa.findAdaptiveTasksByTopicId(topicId).map { it.toAdminView() }
 
+    override fun findPathStatsByTopicId(topicId: String): List<StrugglePathStats> =
+        jpa.findPathStatsByTopicId(topicId).map { row ->
+            StrugglePathStats(
+                originalTaskTemplateId = row.getTaskTemplateId(),
+                errorPattern = ErrorPattern.valueOf(row.getErrorPattern()),
+                totalSessions = row.getTotalSessions()
+            )
+        }
+
+    override fun findAdaptiveTaskById(taskId: String): AdaptiveTask? =
+        adaptiveTaskJpa.findById(taskId).orElse(null)?.toDomain()
+
+    override fun findAdaptiveTaskViewById(taskId: String): AdaptiveTaskAdminView? =
+        adaptiveTaskJpa.findById(taskId).orElse(null)?.toAdminView()
+
+    override fun saveAdaptiveTask(task: AdaptiveTask): AdaptiveTask {
+        val existing = adaptiveTaskJpa.findById(task.id).orElseThrow()
+        val updated = AdaptiveTaskEntity(
+            id = existing.id,
+            struggleSession = existing.struggleSession,
+            branchId = existing.branchId,
+            title = task.title,
+            description = task.description,
+            hint = task.hint,
+            pointsReward = existing.pointsReward,
+            orderIndex = existing.orderIndex,
+            completedAt = existing.completedAt,
+            isCorrect = existing.isCorrect,
+            options = task.options?.let { runCatching { mapper.writeValueAsString(it) }.getOrNull() },
+            correctAnswer = task.correctAnswer,
+            selectedOption = existing.selectedOption,
+            optionOrder = existing.optionOrder
+        )
+        return adaptiveTaskJpa.save(updated).toDomain()
+    }
+
     private fun AdaptiveTaskEntity.toAdminView(): AdaptiveTaskAdminView = AdaptiveTaskAdminView(
         task = toDomain(),
         sessionId = struggleSession.id,
         sessionStatus = StruggleStatus.valueOf(struggleSession.status),
         errorPattern = ErrorPattern.valueOf(struggleSession.errorPattern),
         sessionDetectedAt = struggleSession.detectedAt,
-        enrollmentId = struggleSession.enrollment.id
+        enrollmentId = struggleSession.enrollment.id,
+        originalTaskTemplateId = struggleSession.originalTaskAssignment.taskTemplate.id,
+        originalTaskTitle = struggleSession.originalTaskAssignment.taskTemplate.title
     )
 
     private fun StruggleSessionEntity.toDomain(): StruggleSession = StruggleSession(
@@ -91,6 +132,7 @@ class StruggleRepositoryAdapter(
     private fun AdaptiveTaskEntity.toDomain(): AdaptiveTask = AdaptiveTask(
         id = id,
         struggleSessionId = struggleSession.id,
+        branchId = branchId,
         title = title,
         description = description,
         hint = hint,

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -61,6 +62,7 @@ import play4change.composeapp.generated.resources.badge_first_task
 import play4change.composeapp.generated.resources.badge_perfect_quiz
 import play4change.composeapp.generated.resources.badge_streak_3
 import play4change.composeapp.generated.resources.badge_streak_7
+import play4change.composeapp.generated.resources.badges_empty
 import play4change.composeapp.generated.resources.badges_title
 import play4change.composeapp.generated.resources.cancel
 import play4change.composeapp.generated.resources.profile_accuracy_label
@@ -105,6 +107,25 @@ fun ProfileScreen(component: DefaultProfileComponent) {
             )
         }
 
+        Box(Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .size(460.dp)
+                    .offset(y = (-160).dp)
+                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
+                    .align(Alignment.TopCenter)
+            )
+            Box(
+                modifier = Modifier
+                    .size(340.dp)
+                    .offset(x = (-100).dp, y = 100.dp)
+                    .background(
+                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.65f),
+                        CircleShape
+                    )
+                    .align(Alignment.BottomStart)
+            )
+        }
         if (state.isLoading) {
             Column(
                 modifier = Modifier
@@ -297,25 +318,37 @@ fun ProfileScreen(component: DefaultProfileComponent) {
                     }
 
                     // ── Badges section ─────────────────────────────────────────
-                    if (profile.badges.isNotEmpty()) {
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = Spacing.xs),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.badges_title).uppercase(),
+                                style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.2.sp),
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            HorizontalDivider(modifier = Modifier.weight(1f))
+                        }
+                    }
+
+                    if (profile.badges.isEmpty()) {
                         item {
-                            Row(
+                            Text(
+                                text = stringResource(Res.string.badges_empty),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = Spacing.xs),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(Spacing.s)
-                            ) {
-                                Text(
-                                    text = stringResource(Res.string.badges_title).uppercase(),
-                                    style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.2.sp),
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                HorizontalDivider(modifier = Modifier.weight(1f))
-                            }
+                                    .padding(vertical = Spacing.l)
+                            )
                         }
-
+                    } else {
                         val badgeRows = profile.badges.chunked(3)
                         items(badgeRows) { row ->
                             Row(

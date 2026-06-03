@@ -8,6 +8,7 @@ import com.ureka.play4change.application.port.AdminTaskUseCase
 import com.ureka.play4change.application.port.TaskTemplateWithStats
 import com.ureka.play4change.application.port.UpdateTaskCommand
 import com.ureka.play4change.domain.struggle.AdaptiveTaskAdminView
+import com.ureka.play4change.domain.struggle.StrugglePathStats
 import com.ureka.play4change.domain.struggle.StruggleRepository
 import com.ureka.play4change.domain.topic.AdminTaskStatsRepository
 import com.ureka.play4change.domain.topic.TaskInstanceRepository
@@ -52,6 +53,42 @@ class AdminTaskService(
             NotFound.ResourceNotFound("Topic", topicId)
         }
         struggleRepository.findAdaptiveTasksByTopicId(topicId)
+    }
+
+    override fun getStrugglePathStats(topicId: String): Either<AppError, List<StrugglePathStats>> = either {
+        ensureNotNull(topicRepository.findById(topicId)) {
+            NotFound.ResourceNotFound("Topic", topicId)
+        }
+        struggleRepository.findPathStatsByTopicId(topicId)
+    }
+
+    override fun updateAdaptiveTask(taskId: String, command: UpdateTaskCommand): Either<AppError, AdaptiveTaskAdminView> = either {
+        val existing = ensureNotNull(struggleRepository.findAdaptiveTaskById(taskId)) {
+            NotFound.ResourceNotFound("AdaptiveTask", taskId)
+        }
+        if (command.options != null) {
+            ensure(command.options.size >= 2) {
+                BadRequest.InvalidField("options", "must have at least 2 options")
+            }
+            if (command.correctAnswer != null) {
+                ensure(command.correctAnswer in command.options.indices) {
+                    BadRequest.InvalidField("correctAnswer", "index out of bounds for provided options")
+                }
+            }
+        }
+        struggleRepository.saveAdaptiveTask(
+            existing.copy(
+                title = command.title,
+                description = command.description,
+                hint = command.hint,
+                options = command.options,
+                correctAnswer = command.correctAnswer
+            )
+        )
+        log.info("Admin updated adaptive task {}", taskId)
+        ensureNotNull(struggleRepository.findAdaptiveTaskViewById(taskId)) {
+            NotFound.ResourceNotFound("AdaptiveTask", taskId)
+        }
     }
 
     override fun updateTask(templateId: String, command: UpdateTaskCommand): Either<AppError, TaskTemplate> = either {

@@ -43,6 +43,10 @@ class TaskController(
                         ResponseEntity.status(HttpStatus.NOT_FOUND)
                             .header("X-Task-Available-At", result.availableAt.toString())
                             .build()
+                    is TodayTaskResult.StruggleOpen ->
+                        ResponseEntity.status(HttpStatus.CONFLICT)
+                            .header("X-Open-Struggle-Enrollment", result.enrollmentId)
+                            .build()
                 }
             }
         )
