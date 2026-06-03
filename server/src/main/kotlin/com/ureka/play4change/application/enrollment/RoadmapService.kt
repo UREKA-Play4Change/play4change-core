@@ -10,7 +10,6 @@ import com.ureka.play4change.domain.enrollment.AssignmentStatus
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
 import com.ureka.play4change.domain.peerreview.PeerReviewRepository
 import com.ureka.play4change.domain.struggle.StruggleRepository
-import com.ureka.play4change.domain.struggle.StruggleStatus
 import com.ureka.play4change.domain.topic.TaskTemplateRepository
 import com.ureka.play4change.domain.topic.TopicModuleRepository
 import com.ureka.play4change.domain.topic.TopicRepository
@@ -47,7 +46,8 @@ class RoadmapService(
             val assignments = enrollmentRepository.findAssignmentsByEnrollmentId(enrollment.id)
             val assignmentsByTemplateId = assignments.associateBy { it.taskTemplateId }
 
-            val openSession = struggleRepository.findOpenByEnrollmentId(enrollment.id)
+            val allSessions = struggleRepository.findAllByEnrollmentId(enrollment.id)
+            val sessionsByAssignmentId = allSessions.groupBy { it.originalTaskAssignmentId }
 
             val nodes = mutableListOf<RoadmapNode>()
 
@@ -79,9 +79,11 @@ class RoadmapService(
                     )
                 )
 
-                // Insert adaptive tasks after today's node if there's an open struggle session
-                if (template.dayIndex == dayIndex && openSession != null && openSession.status == StruggleStatus.OPEN) {
-                    for (adaptiveTask in openSession.adaptiveTasks.sortedBy { it.orderIndex }) {
+                // Insert adaptive tasks for any struggle session linked to this template's assignment,
+                // regardless of session status — resolved sessions must still appear as history
+                val sessions = assignment?.let { sessionsByAssignmentId[it.id] } ?: emptyList()
+                for (session in sessions) {
+                    for (adaptiveTask in session.adaptiveTasks.sortedBy { it.orderIndex }) {
                         val adaptiveStatus = when {
                             adaptiveTask.completedAt != null -> RoadmapNodeStatus.ADAPTIVE_COMPLETED
                             else -> RoadmapNodeStatus.ADAPTIVE_PENDING
