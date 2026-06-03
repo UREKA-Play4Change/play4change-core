@@ -106,11 +106,12 @@ class AdaptiveTaskService(
                         enrollmentRepository.saveAssignment(
                             originalAssignment.copy(
                                 status = AssignmentStatus.PENDING,
-                                wrongAttemptCount = 0,
                                 submittedAt = null,
                                 selectedOption = null,
                                 isCorrect = null,
                                 pointsAwarded = 0
+                                // wrongAttemptCount intentionally preserved — failure history must survive
+                                // the reset so stats can account for it when the user retries
                             )
                         )
                     }
