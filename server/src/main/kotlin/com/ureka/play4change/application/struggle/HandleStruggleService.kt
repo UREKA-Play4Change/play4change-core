@@ -169,6 +169,7 @@ class HandleStruggleService(
                             AdaptiveTask(
                                 id = taskId,
                                 struggleSessionId = session.id,
+                                branchId = branch.branchId,
                                 title = task.title,
                                 description = task.description,
                                 hint = task.hint,
