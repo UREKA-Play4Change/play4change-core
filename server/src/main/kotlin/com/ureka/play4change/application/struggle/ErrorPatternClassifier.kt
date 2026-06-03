@@ -24,11 +24,14 @@ object ErrorPatternClassifier {
         if (OffsetDateTime.now().isAfter(assignment.dueAt))
             return ErrorPattern.TIME_PRESSURE
 
-        // 2. READING_ERROR — selected option is adjacent to correct in the original (unshuffled) array
+        // 2. READING_ERROR — either wrong answer is adjacent to correct in the original (unshuffled) array
         val correctOriginalIndex = template.correctAnswer
         if (correctOriginalIndex != null) {
-            val selectedOriginalIndex = assignment.optionOrder[newSelectedOption]
-            if (abs(selectedOriginalIndex - correctOriginalIndex) <= 1)
+            val firstWrongOriginalIndex = assignment.selectedOption?.let { assignment.optionOrder.getOrNull(it) }
+            val secondWrongOriginalIndex = assignment.optionOrder.getOrNull(newSelectedOption)
+            val firstAdjacent = firstWrongOriginalIndex != null && abs(firstWrongOriginalIndex - correctOriginalIndex) <= 1
+            val secondAdjacent = secondWrongOriginalIndex != null && abs(secondWrongOriginalIndex - correctOriginalIndex) <= 1
+            if (firstAdjacent || secondAdjacent)
                 return ErrorPattern.READING_ERROR
         }
 
