@@ -29,8 +29,10 @@ class JdbcAdminTaskStatsRepository(private val jdbc: JdbcTemplate) : AdminTaskSt
                             ELSE ta.wrong_attempt_count
                         END
                     ), 0), 0)                                                     AS success_rate,
-                COALESCE(AVG(ta.points_awarded) FILTER (WHERE ta.status != 'PENDING'), 0) AS avg_points
+                COALESCE(AVG(ta.points_awarded) FILTER (WHERE ta.status != 'PENDING'), 0) AS avg_points,
+                COUNT(DISTINCT ss.id)                                             AS struggle_trigger_count
             FROM task_assignments ta
+            LEFT JOIN struggle_sessions ss ON ss.original_task_assignment_id = ta.id
             WHERE ta.task_template_id IN ($placeholders)
               AND (ta.status != 'PENDING' OR ta.wrong_attempt_count > 0)
             GROUP BY ta.task_template_id
@@ -43,7 +45,8 @@ class JdbcAdminTaskStatsRepository(private val jdbc: JdbcTemplate) : AdminTaskSt
                     totalAttempts = rs.getInt("total_attempts"),
                     successCount = rs.getInt("success_count"),
                     successRate = rs.getDouble("success_rate"),
-                    avgPointsAwarded = rs.getDouble("avg_points")
+                    avgPointsAwarded = rs.getDouble("avg_points"),
+                    struggleTriggerCount = rs.getInt("struggle_trigger_count")
                 )
             }
         ).toMap()
