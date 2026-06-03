@@ -8,6 +8,7 @@ import com.ureka.play4change.application.port.AdminTaskUseCase
 import com.ureka.play4change.application.port.TaskTemplateWithStats
 import com.ureka.play4change.application.port.UpdateTaskCommand
 import com.ureka.play4change.domain.struggle.AdaptiveTaskAdminView
+import com.ureka.play4change.domain.struggle.StrugglePathStats
 import com.ureka.play4change.domain.struggle.StruggleRepository
 import com.ureka.play4change.domain.topic.AdminTaskStatsRepository
 import com.ureka.play4change.domain.topic.TaskInstanceRepository
@@ -52,6 +53,13 @@ class AdminTaskService(
             NotFound.ResourceNotFound("Topic", topicId)
         }
         struggleRepository.findAdaptiveTasksByTopicId(topicId)
+    }
+
+    override fun getStrugglePathStats(topicId: String): Either<AppError, List<StrugglePathStats>> = either {
+        ensureNotNull(topicRepository.findById(topicId)) {
+            NotFound.ResourceNotFound("Topic", topicId)
+        }
+        struggleRepository.findPathStatsByTopicId(topicId)
     }
 
     override fun updateAdaptiveTask(taskId: String, command: UpdateTaskCommand): Either<AppError, AdaptiveTaskAdminView> = either {
