@@ -177,7 +177,7 @@ class TopicManagementService(
         val activeIds = pageResult.content.filter { it.status == TopicStatus.ACTIVE }.map { it.id }
         val statsMap: Map<String, TopicStats> = if (activeIds.isNotEmpty()) {
             val fetched = statsRepository.getForTopics(activeIds)
-            activeIds.associateWith { id -> fetched[id] ?: TopicStats(0, 0.0, 0.0, 0) }
+            activeIds.associateWith { id -> fetched[id] ?: TopicStats(0, 0.0, 0, 0) }
         } else emptyMap()
         return PageResult(
             content = pageResult.content.map { topic ->
