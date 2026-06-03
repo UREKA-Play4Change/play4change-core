@@ -45,6 +45,7 @@ class StruggleRepositoryAdapter(
                 AdaptiveTaskEntity(
                     id = task.id,
                     struggleSession = entity,
+                    branchId = task.branchId,
                     title = task.title,
                     description = task.description,
                     hint = task.hint,
@@ -91,6 +92,7 @@ class StruggleRepositoryAdapter(
     private fun AdaptiveTaskEntity.toDomain(): AdaptiveTask = AdaptiveTask(
         id = id,
         struggleSessionId = struggleSession.id,
+        branchId = branchId,
         title = title,
         description = description,
         hint = hint,
