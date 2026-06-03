@@ -239,7 +239,7 @@ class TaskService(
                 "Struggle triggered for user {} on assignment {}, pattern={}",
                 command.userId, assignment.id, pattern
             )
-            assignment.markSubmitted(
+            assignment.incrementWrongAttempts().markSubmitted(
                 isCorrect = false,
                 pointsAwarded = 0,
                 selectedOption = command.selectedOption
