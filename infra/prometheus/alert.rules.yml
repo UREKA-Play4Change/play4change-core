@@ -1,0 +1,93 @@
+groups:
+  - name: play4change.server
+    rules:
+      - alert: ServerDown
+        expr: up{job="spring-boot"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "play4change-server is down"
+          description: "Prometheus cannot scrape the Spring Boot server. The service has been unreachable for more than 1 minute."
+
+      - alert: HighHttpErrorRate
+        expr: |
+          sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m]))
+          /
+          sum(rate(http_server_requests_seconds_count[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "HTTP 5xx error rate above 5%"
+          description: "More than 5% of HTTP requests are returning 5xx errors over the last 5 minutes."
+
+  - name: play4change.ai
+    rules:
+      - alert: HighAiGenerationFailureRate
+        expr: |
+          sum(rate(ai_generation_failures_total[10m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "AI generation failures above threshold"
+          description: "More than 0.1 failures/second averaged over 10 minutes. Check Mistral API availability."
+
+      - alert: AiCircuitBreakerOpen
+        expr: |
+          resilience4j_circuitbreaker_state{name="aiAgent", state="open"} == 1
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "AI circuit breaker is OPEN"
+          description: "The aiAgent circuit breaker has opened. All AI generation calls are being short-circuited."
+
+      - alert: AiGenerationP95High
+        expr: |
+          histogram_quantile(0.95, rate(task_generation_duration_seconds_bucket[10m])) > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "AI task generation P95 latency above 90s"
+          description: "The 95th percentile of task generation duration has exceeded 90 seconds."
+
+  - name: play4change.jvm
+    rules:
+      - alert: JvmHeapUsageHigh
+        expr: |
+          jvm_memory_used_bytes{area="heap"}
+          /
+          jvm_memory_max_bytes{area="heap"} > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "JVM heap usage above 85%"
+          description: "JVM heap is at {{ $value | humanizePercentage }} of max. Risk of OutOfMemoryError."
+
+      - alert: JvmHeapUsageCritical
+        expr: |
+          jvm_memory_used_bytes{area="heap"}
+          /
+          jvm_memory_max_bytes{area="heap"} > 0.95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "JVM heap usage above 95% — OOM imminent"
+          description: "JVM heap is at {{ $value | humanizePercentage }} of max. Service will likely crash soon."
+
+  - name: play4change.generation_pool
+    rules:
+      - alert: GenerationThreadPoolQueueSaturated
+        expr: |
+          executor_queued_tasks{name="generationExecutor"} >= 20
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "AI generation thread pool queue nearly full"
+          description: "The generationExecutor queue has {{ $value }} tasks queued (capacity: 25). New topics may be rejected."

@@ -84,6 +84,9 @@
   <string name="about_student_number">51620</string>
   <string name="about_institution">ISEL — Instituto Superior de Engenharia de Lisboa</string>
   <string name="about_supervisors">Prof. Nuno Datia · Prof. António Serrador · Prof. Michel Vorenhout</string>
+  <string name="about_questionnaire_title">Partagez votre avis</string>
+  <string name="about_questionnaire_body">Contribuez à l'avenir de Play4Change. Votre expérience compte — répondez à notre questionnaire.</string>
+  <string name="about_questionnaire_cta">Ouvrir le questionnaire</string>
   <string name="about_footer">Mars 2026 · U!REKA European University</string>
 
   <!-- Branding -->

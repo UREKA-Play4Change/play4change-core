@@ -60,8 +60,10 @@ management:
     distribution:
       percentiles-histogram:
         ai.generation.duration: true
+        task.generation.duration: true
       percentiles:
         ai.generation.duration: 0.5, 0.95, 0.99
+        task.generation.duration: 0.5, 0.95, 0.99
 # ── Resilience4j ──────────────────────────────────────────────────────────────
 resilience4j:
   circuit-breaker:

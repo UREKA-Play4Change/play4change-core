@@ -11,6 +11,7 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.ureka.play4change.core.network.SessionEvent
 import com.ureka.play4change.core.network.SessionEventBus
+import com.ureka.play4change.core.network.TokenStorage
 import com.ureka.play4change.features.auth.domain.repository.AuthRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,6 +30,7 @@ class DefaultRootComponent(
     private val navigation = StackNavigation<Config>()
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val authRepository: AuthRepository = get()
+    private val tokenStorage: TokenStorage = get()
 
     init {
         lifecycle.doOnDestroy { scope.cancel() }
@@ -95,7 +97,12 @@ class DefaultRootComponent(
                 authRepository.verifyMagicLink(token)
                 navigation.replaceAll(Config.Home)
             } catch (_: Exception) {
-                navigation.replaceAll(Config.Login)
+                // Only redirect to Login when no valid session exists.
+                // If the user is already authenticated (e.g. token already consumed by
+                // manual entry racing with this deep link), do not disrupt their session.
+                if (tokenStorage.getAccessToken() == null) {
+                    navigation.replaceAll(Config.Login)
+                }
             }
         }
     }

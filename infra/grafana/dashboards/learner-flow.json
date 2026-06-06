@@ -5,7 +5,7 @@
   "tags": ["learner", "play4change"],
   "timezone": "browser",
   "schemaVersion": 38,
-  "version": 1,
+  "version": 2,
   "refresh": "30s",
   "time": { "from": "now-24h", "to": "now" },
   "panels": [
@@ -100,7 +100,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(rate(struggle_sessions_created_total[5m])) / sum(rate(tasks_submitted_total[5m]))",
+          "expr": "sum(rate(struggle_sessions_created_total[5m])) / (sum(rate(tasks_submitted_total[5m])) > 0)",
           "legendFormat": "Struggle Rate",
           "refId": "A"
         }

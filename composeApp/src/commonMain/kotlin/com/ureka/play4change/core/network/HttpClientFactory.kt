@@ -81,8 +81,12 @@ object HttpClientFactory {
                 refreshTokens {
                     val refreshToken = oldTokens?.refreshToken ?: tokenStorage.getRefreshToken()
                     if (refreshToken == null) {
+                        // Only expire the session if the user was previously authenticated.
+                        // If no tokens were ever stored this is a pre-login 401 (e.g. a public
+                        // endpoint behind a proxy), not a real session expiry.
+                        val wasAuthenticated = tokenStorage.getAccessToken() != null
                         tokenStorage.clear()
-                        onSessionExpired()
+                        if (wasAuthenticated) onSessionExpired()
                         return@refreshTokens null
                     }
 
@@ -103,8 +107,8 @@ object HttpClientFactory {
                             null
                         }
                     } catch (_: Exception) {
-                        tokenStorage.clear()
-                        onSessionExpired()
+                        // Transient network error — do not clear tokens or log the user out.
+                        // The original request will surface a failure to the caller.
                         null
                     }
                 }
