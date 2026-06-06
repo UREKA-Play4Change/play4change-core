@@ -131,7 +131,7 @@ class EnrollmentService(
             )
         )
 
-        registry.counter("topic_enrollments_total").increment()
+        registry.counter("topic_enrollments_total", "topic_id", command.topicId).increment()
         log.info("User {} enrolled in topic {}", command.userId, command.topicId)
         enrollment
     }
