@@ -122,7 +122,7 @@ class TaskGenerationOrchestrator(
                 phaseTransitionService.transitionTo(topicId, GenerationPhase.FAILED)
                 topicRepository.updateStatus(topicId, TopicStatus.FAILED)
                 eventPublisher.failed(topicId, "AI generation timed out after ${timeoutSeconds}s")
-                sample.stop(registry.timer("task_generation_duration_seconds", "status", "timeout"))
+                sample.stop(registry.timer("task.generation.duration", "status", "timeout"))
                 return
             }
 
@@ -132,7 +132,7 @@ class TaskGenerationOrchestrator(
                     phaseTransitionService.transitionTo(topicId, GenerationPhase.FAILED)
                     topicRepository.updateStatus(topicId, TopicStatus.FAILED)
                     eventPublisher.failed(topicId, "AI generation failed: ${error.javaClass.simpleName}")
-                    sample.stop(registry.timer("task_generation_duration_seconds", "status", "failed"))
+                    sample.stop(registry.timer("task.generation.duration", "status", "failed"))
                 },
                 ifRight = { generationResult ->
                     // GENERATION → INDEXING
@@ -195,7 +195,7 @@ class TaskGenerationOrchestrator(
                         topicId, templates.size, totalMs
                     )
                     eventPublisher.completed(topicId, totalMs)
-                    sample.stop(registry.timer("task_generation_duration_seconds", "status", "success"))
+                    sample.stop(registry.timer("task.generation.duration", "status", "success"))
                 }
             )
         } catch (ex: Exception) {
@@ -203,7 +203,7 @@ class TaskGenerationOrchestrator(
             phaseTransitionService.transitionTo(topicId, GenerationPhase.FAILED)
             topicRepository.updateStatus(topicId, TopicStatus.FAILED)
             eventPublisher.failed(topicId, "Unexpected error: ${ex.message ?: ex.javaClass.simpleName}")
-            sample.stop(registry.timer("task_generation_duration_seconds", "status", "failed"))
+            sample.stop(registry.timer("task.generation.duration", "status", "failed"))
         }
     }
 
