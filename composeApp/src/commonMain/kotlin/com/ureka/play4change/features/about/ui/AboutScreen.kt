@@ -17,7 +17,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Assignment
 import androidx.compose.material.icons.rounded.EmojiObjects
+import androidx.compose.material.icons.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ElevatedCard
@@ -28,6 +30,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,6 +55,9 @@ import play4change.composeapp.generated.resources.about_footer
 import play4change.composeapp.generated.resources.about_institution
 import play4change.composeapp.generated.resources.about_project_body
 import play4change.composeapp.generated.resources.about_project_title
+import play4change.composeapp.generated.resources.about_questionnaire_body
+import play4change.composeapp.generated.resources.about_questionnaire_cta
+import play4change.composeapp.generated.resources.about_questionnaire_title
 import play4change.composeapp.generated.resources.about_student_number
 import play4change.composeapp.generated.resources.about_supervisors
 import play4change.composeapp.generated.resources.about_title
@@ -73,6 +79,7 @@ fun AboutScreen(component: DefaultAboutComponent) {
             )
         }
     ) { _, _, innerPadding ->
+        val uriHandler = LocalUriHandler.current
         Box(Modifier.fillMaxSize()) {
             Box(
                 modifier = Modifier
@@ -192,6 +199,49 @@ fun AboutScreen(component: DefaultAboutComponent) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 20.sp
                     )
+                }
+
+                // Questionnaire
+                val questionnaireUrl = "https://docs.google.com/forms/d/e/1FAIpQLSc5NJKJRL8_7TKLTz1dgkpgB2xewTEbgh7dJb1fgRhP9bp8DA/viewform?usp=sharing&ouid=107778068121226062653"
+                AboutCard(
+                    title = stringResource(Res.string.about_questionnaire_title),
+                    icon = Icons.Rounded.Assignment
+                ) {
+                    Text(
+                        text = stringResource(Res.string.about_questionnaire_body),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 22.sp
+                    )
+                    Spacer(Modifier.height(Spacing.s))
+                    Surface(
+                        onClick = { uriHandler.openUri(questionnaireUrl) },
+                        shape = MaterialTheme.shapes.medium,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(
+                                vertical = Spacing.m,
+                                horizontal = Spacing.l
+                            ),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.about_questionnaire_cta),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Icon(
+                                imageVector = Icons.Rounded.OpenInNew,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
                 }
 
                 // Footer
