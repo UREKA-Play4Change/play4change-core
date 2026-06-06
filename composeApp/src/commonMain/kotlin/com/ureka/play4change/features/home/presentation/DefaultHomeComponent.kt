@@ -1,7 +1,6 @@
 package com.ureka.play4change.features.home.presentation
 
 import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.essenty.lifecycle.doOnResume
 import com.ureka.play4change.core.component.base.BaseComponent
 import com.ureka.play4change.core.error.AppError
 import com.ureka.play4change.core.component.stateful.safeLaunch
@@ -22,10 +21,6 @@ class DefaultHomeComponent(
 ) : BaseComponent<HomeState, HomeEvents>(componentContext, HomeState()), HomeComponent {
 
     private var loadJob: Job? = null
-
-    init {
-        lifecycle.doOnResume { loadHome() }
-    }
 
     private fun loadHome() {
         loadJob?.cancel()
