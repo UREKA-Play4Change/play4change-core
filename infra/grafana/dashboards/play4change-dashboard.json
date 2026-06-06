@@ -7,7 +7,7 @@
   "liveNow": false,
   "schemaVersion": 39,
   "title": "Play4Change - Observability",
-  "version": 1,
+  "version": 2,
   "panels": [
     {
       "id": 1,
@@ -43,7 +43,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "rate(task_generation_duration_seconds_count{status=\"success\"}[5m]) / rate(task_generation_duration_seconds_count[5m])",
+          "expr": "rate(task_generation_duration_seconds_count{status=\"success\"}[5m]) / (rate(task_generation_duration_seconds_count[5m]) > 0)",
           "legendFormat": "success rate",
           "refId": "A"
         }
@@ -111,7 +111,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "rate(cache_hits_total[5m]) / rate(cache_requests_total[5m])",
+          "expr": "rate(cache_hits_total[5m]) / (rate(cache_requests_total[5m]) > 0)",
           "legendFormat": "hit ratio",
           "refId": "A"
         }
@@ -150,7 +150,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "expr": "increase(topic_enrollments_total[1h])",
-          "legendFormat": "enrollments",
+          "legendFormat": "{{topic_id}}",
           "refId": "A"
         }
       ],
@@ -231,6 +231,12 @@
           "expr": "jvm_memory_used_bytes{area=\"heap\"}",
           "legendFormat": "heap used",
           "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "jvm_memory_max_bytes{area=\"heap\"}",
+          "legendFormat": "heap max",
+          "refId": "B"
         }
       ],
       "fieldConfig": {
@@ -271,6 +277,104 @@
         "legend": { "displayMode": "list", "placement": "bottom" }
       },
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 32 }
+    },
+    {
+      "id": 10,
+      "title": "AI Generation Failures",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(ai_generation_failures_total[5m])",
+          "legendFormat": "{{type}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "color": { "mode": "palette-classic" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 0.01 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 40 }
+    },
+    {
+      "id": 11,
+      "title": "Adaptive Reuse Strategy Distribution",
+      "type": "piechart",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "increase(ai_adaptive_reuse_total[1h])",
+          "legendFormat": "{{strategy}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "palette-classic" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "pieType": "donut",
+        "tooltip": { "mode": "single" },
+        "legend": { "displayMode": "list", "placement": "right" }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 40 }
+    },
+    {
+      "id": 12,
+      "title": "AI Circuit Breaker State",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "resilience4j_circuitbreaker_state{name=\"aiAgent\"}",
+          "legendFormat": "{{state}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          },
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "inactive" }, "1": { "text": "ACTIVE" } } }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "orientation": "horizontal",
+        "textMode": "value_and_name",
+        "colorMode": "background"
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 48 }
     }
   ]
 }
