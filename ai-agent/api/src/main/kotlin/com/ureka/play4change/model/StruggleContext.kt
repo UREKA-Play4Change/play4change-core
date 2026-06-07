@@ -13,7 +13,10 @@ data class StruggleContext(
     val attemptCount: Int,
     val errorPattern: ErrorPattern,
     val moduleObjective: String,     // keeps AI generation course-aware
-    val taskDescription: String      // the task the user is struggling with
+    val taskDescription: String,     // the task the user is struggling with
+    // Branch IDs this user has already seen for this assignment — excluded from similarity reuse
+    // so follow-up struggle sessions never repeat questions the learner already failed.
+    val excludedBranchIds: List<String> = emptyList()
 )
 
 enum class ErrorPattern {
