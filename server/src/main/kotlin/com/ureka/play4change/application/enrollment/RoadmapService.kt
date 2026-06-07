@@ -78,6 +78,16 @@ class RoadmapService(
                     }
                     else -> RoadmapNodeStatus.LOCKED
                 }
+                val displayedOptions: List<String>? = if (assignment != null && template.options != null) {
+                    assignment.optionOrder.map { idx -> template.options[idx] }
+                } else {
+                    template.options
+                }
+                val displayedCorrectAnswer: Int? = if (assignment != null && template.correctAnswer != null) {
+                    assignment.optionOrder.indexOf(template.correctAnswer).takeIf { it >= 0 }
+                } else {
+                    template.correctAnswer
+                }
                 nodes.add(
                     RoadmapNode(
                         dayIndex = template.dayIndex,
@@ -85,7 +95,13 @@ class RoadmapService(
                         status = nodeStatus,
                         isAdaptive = false,
                         assignmentId = assignment?.id,
-                        pointsAwarded = assignment?.pointsAwarded
+                        pointsAwarded = assignment?.pointsAwarded,
+                        description = template.description,
+                        hint = template.hint,
+                        options = displayedOptions,
+                        selectedOption = assignment?.selectedOption,
+                        correctAnswer = displayedCorrectAnswer,
+                        isCorrect = assignment?.isCorrect
                     )
                 )
 
@@ -98,6 +114,13 @@ class RoadmapService(
                             adaptiveTask.completedAt != null -> RoadmapNodeStatus.ADAPTIVE_COMPLETED
                             else -> RoadmapNodeStatus.ADAPTIVE_PENDING
                         }
+                        val adaptiveDisplayedOptions: List<String>? = adaptiveTask.options?.let { opts ->
+                            adaptiveTask.optionOrder.map { idx -> opts[idx] }
+                        }
+                        val adaptiveDisplayedCorrect: Int? = if (adaptiveTask.correctAnswer != null) {
+                            adaptiveTask.optionOrder.indexOf(adaptiveTask.correctAnswer).takeIf { it >= 0 }
+                                ?: adaptiveTask.correctAnswer
+                        } else null
                         nodes.add(
                             RoadmapNode(
                                 dayIndex = template.dayIndex,
@@ -106,7 +129,13 @@ class RoadmapService(
                                 isAdaptive = true,
                                 assignmentId = adaptiveTask.id,
                                 pointsAwarded = if (adaptiveTask.completedAt != null && adaptiveTask.isCorrect == true)
-                                    adaptiveTask.pointsReward else null
+                                    adaptiveTask.pointsReward else null,
+                                description = adaptiveTask.description,
+                                hint = adaptiveTask.hint,
+                                options = adaptiveDisplayedOptions,
+                                selectedOption = adaptiveTask.selectedOption,
+                                correctAnswer = adaptiveDisplayedCorrect,
+                                isCorrect = adaptiveTask.isCorrect
                             )
                         )
                     }
