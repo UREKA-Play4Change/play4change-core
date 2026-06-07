@@ -88,6 +88,9 @@ class StruggleRepositoryAdapter(
     override fun findAdaptiveTaskViewById(taskId: String): AdaptiveTaskAdminView? =
         adaptiveTaskJpa.findById(taskId).orElse(null)?.toAdminView()
 
+    override fun countByEnrollmentIdAndOriginalAssignmentId(enrollmentId: String, originalAssignmentId: String): Int =
+        jpa.countByEnrollmentIdAndOriginalTaskAssignmentId(enrollmentId, originalAssignmentId)
+
     override fun findUsedBranchIdsByAssignment(enrollmentId: String, assignmentId: String): List<String> =
         jpa.findUsedBranchIds(enrollmentId, assignmentId)
 
