@@ -128,8 +128,7 @@ class AdaptiveTaskService(
                     // repeated AI failures cannot trap the learner in an infinite retry loop; they will
                     // eventually escalate to the explanation path.
                     val depthForAssignment = struggleRepository
-                        .findAllByEnrollmentId(session.enrollmentId)
-                        .count { it.originalTaskAssignmentId == session.originalTaskAssignmentId }
+                        .countByEnrollmentIdAndOriginalAssignmentId(session.enrollmentId, session.originalTaskAssignmentId)
                     if (depthForAssignment < MAX_STRUGGLE_DEPTH) {
                         handleStruggleService.triggerFromPreviousSession(resolvedSession, command.userId)
                         log.info(
