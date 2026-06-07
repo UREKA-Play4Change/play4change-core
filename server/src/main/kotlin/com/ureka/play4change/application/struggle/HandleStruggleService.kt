@@ -170,9 +170,8 @@ class HandleStruggleService(
                             AdaptiveTask(
                                 id = taskId,
                                 struggleSessionId = session.id,
-                                // FULL_REUSE copies are user-tracking rows — not canonical.
-                                // Set branchId = null so the admin view shows only the original.
-                                branchId = if (branch.reuseStrategy == ReuseStrategy.FULL_REUSE) null else branch.branchId,
+                                // FULL_REUSE: link to the canonical branch so admin view shows all sessions.
+                                branchId = if (branch.reuseStrategy == ReuseStrategy.FULL_REUSE) branch.reusedFromBranchId else branch.branchId,
                                 title = task.title,
                                 description = task.description,
                                 hint = task.hint,
