@@ -7,6 +7,7 @@ import arrow.core.raise.ensureNotNull
 import com.ureka.play4change.application.port.AdaptiveSubmitResult
 import com.ureka.play4change.application.port.StruggleUseCase
 import com.ureka.play4change.application.port.SubmitAdaptiveTaskCommand
+import com.ureka.play4change.application.explanation.ExplanationService
 import com.ureka.play4change.domain.enrollment.AssignmentStatus
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
 import com.ureka.play4change.domain.struggle.StruggleRepository
@@ -27,7 +28,8 @@ private const val MAX_STRUGGLE_DEPTH = 3
 class AdaptiveTaskService(
     private val struggleRepository: StruggleRepository,
     private val enrollmentRepository: EnrollmentRepository,
-    private val handleStruggleService: HandleStruggleService
+    private val handleStruggleService: HandleStruggleService,
+    private val explanationService: ExplanationService
 ) : StruggleUseCase {
 
     private val log = LoggerFactory.getLogger(AdaptiveTaskService::class.java)
@@ -138,21 +140,17 @@ class AdaptiveTaskService(
                             session.id, depthForAssignment, MAX_STRUGGLE_DEPTH
                         )
                     } else {
-                        // Max depth reached — reset original assignment so learner can proceed
-                        val originalAssignment = enrollmentRepository.findAssignmentById(session.originalTaskAssignmentId)
-                        if (originalAssignment != null) {
-                            enrollmentRepository.saveAssignment(
-                                originalAssignment.copy(
-                                    status = AssignmentStatus.PENDING,
-                                    submittedAt = null,
-                                    selectedOption = null,
-                                    isCorrect = null,
-                                    pointsAwarded = 0
-                                )
-                            )
-                        }
+                        // Max depth reached — trigger AI explanation mode instead of immediately resetting.
+                        // The original assignment stays SUBMITTED; ExplanationService resets it when
+                        // the learner clicks "I Understood" (or if AI generation fails as a fallback).
+                        explanationService.triggerAsync(
+                            enrollmentId = session.enrollmentId,
+                            originalTaskAssignmentId = session.originalTaskAssignmentId,
+                            errorPattern = session.errorPattern.name,
+                            userId = command.userId
+                        )
                         log.info(
-                            "Struggle session {} reached max depth ({}) — original assignment {} reset to PENDING",
+                            "Struggle session {} reached max depth ({}) — explanation triggered for assignment {}",
                             session.id, MAX_STRUGGLE_DEPTH, session.originalTaskAssignmentId
                         )
                     }
