@@ -5,6 +5,7 @@ import com.ureka.play4change.infrastructure.persistence.entity.PeerReviewEntity
 import com.ureka.play4change.infrastructure.persistence.repository.PeerReviewJpaRepository
 import com.ureka.play4change.infrastructure.persistence.repository.TaskAssignmentJpaRepository
 import org.springframework.stereotype.Component
+import java.time.OffsetDateTime
 
 @Component
 class PeerReviewRepositoryAdapter(
@@ -21,6 +22,9 @@ class PeerReviewRepositoryAdapter(
     override fun findPendingByReviewerUserId(reviewerUserId: String): List<PeerReview> =
         jpa.findByReviewerUserIdAndReviewedAtIsNull(reviewerUserId).map { it.toDomain() }
 
+    override fun findExpiredPending(now: OffsetDateTime): List<PeerReview> =
+        jpa.findByVerdictIsNullAndExpiresAtBefore(now).map { it.toDomain() }
+
     override fun countBySubmissionAssignmentId(submissionAssignmentId: String): Int =
         jpa.countBySubmissionAssignmentId(submissionAssignmentId)
 
@@ -33,6 +37,7 @@ class PeerReviewRepositoryAdapter(
             verdict = peerReview.verdict?.name,
             comment = peerReview.comment,
             assignedAt = peerReview.assignedAt,
+            expiresAt = peerReview.expiresAt,
             reviewedAt = peerReview.reviewedAt
         )
         return jpa.save(entity).toDomain()
@@ -48,6 +53,7 @@ class PeerReviewRepositoryAdapter(
         verdict = verdict?.let { ReviewVerdict.valueOf(it) },
         comment = comment,
         assignedAt = assignedAt,
+        expiresAt = expiresAt,
         reviewedAt = reviewedAt
     )
 }
