@@ -157,10 +157,13 @@ class PeerReviewService(
         enrollmentRepository.save(submitterEnrollment.addPoints(pointsAwarded))
 
         val topicId = submitterEnrollment.topicId
+        val majorityVerdict = if (isCorrect) ReviewVerdict.CORRECT else ReviewVerdict.INCORRECT
         completed.forEach { r ->
-            val reviewerEnrollment = enrollmentRepository.findByUserIdAndTopicId(r.reviewerUserId, topicId)
-            if (reviewerEnrollment != null) {
-                enrollmentRepository.save(reviewerEnrollment.addPoints(REVIEW_POINTS_REWARD))
+            if (r.verdict == majorityVerdict) {
+                val reviewerEnrollment = enrollmentRepository.findByUserIdAndTopicId(r.reviewerUserId, topicId)
+                if (reviewerEnrollment != null) {
+                    enrollmentRepository.save(reviewerEnrollment.addPoints(REVIEW_POINTS_REWARD))
+                }
             }
         }
 
