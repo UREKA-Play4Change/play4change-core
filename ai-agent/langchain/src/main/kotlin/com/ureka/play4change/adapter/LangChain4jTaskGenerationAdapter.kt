@@ -143,8 +143,8 @@ class LangChain4jTaskGenerationAdapter(
                 "Expected 1024-dimensional embedding from Mistral, got ${struggleEmbedding.size}"
             }
 
-            // 2. Find similar past struggles
-            val match = deduplicationService.findSimilarStruggle(struggleEmbedding)
+            // 2. Find similar past struggles, excluding branches this learner has already seen
+            val match = deduplicationService.findSimilarStruggle(struggleEmbedding, context.excludedBranchIds)
 
             // 3. Apply similarity-based reuse strategy
             val result = when (match.strategy) {
