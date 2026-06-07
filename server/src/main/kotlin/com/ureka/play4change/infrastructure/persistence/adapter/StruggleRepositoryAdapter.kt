@@ -88,6 +88,9 @@ class StruggleRepositoryAdapter(
     override fun findAdaptiveTaskViewById(taskId: String): AdaptiveTaskAdminView? =
         adaptiveTaskJpa.findById(taskId).orElse(null)?.toAdminView()
 
+    override fun findUsedBranchIdsByAssignment(enrollmentId: String, assignmentId: String): List<String> =
+        jpa.findUsedBranchIds(enrollmentId, assignmentId)
+
     override fun saveAdaptiveTask(task: AdaptiveTask): AdaptiveTask {
         val existing = adaptiveTaskJpa.findById(task.id).orElseThrow()
         val updated = AdaptiveTaskEntity(

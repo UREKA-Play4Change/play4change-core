@@ -2,11 +2,12 @@ package com.ureka.play4change.adapter
 
 import arrow.core.left
 import com.ureka.play4change.error.server.ServiceUnavailable
+import com.ureka.play4change.model.ConversationMessage
+import com.ureka.play4change.model.ExplanationContext
 import com.ureka.play4change.model.GenerationRequest
 import com.ureka.play4change.model.StruggleContext
 import com.ureka.play4change.port.TaskGenerationPort
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 
 @Component
@@ -17,6 +18,15 @@ class NoOpTaskGenerationAdapter : TaskGenerationPort {
 
     override suspend fun generateAdaptiveBranch(context: StruggleContext) =
         ServiceUnavailable.DependencyUnavailable("AI features are disabled").left()
+
+    override suspend fun generateExplanation(context: ExplanationContext) =
+        ServiceUnavailable.DependencyUnavailable("AI features are disabled").left()
+
+    override suspend fun generateExplanationReply(
+        context: ExplanationContext,
+        history: List<ConversationMessage>,
+        userMessage: String
+    ) = ServiceUnavailable.DependencyUnavailable("AI features are disabled").left()
 
     override suspend fun healthCheck() = false
 }

@@ -380,6 +380,11 @@ fun HomeScreen(component: DefaultHomeComponent) {
 
                     items(data.todayTasks, key = { it.topicId }) { entry ->
                         when {
+                            entry.explanationActive -> ExplanationTaskCard(
+                                topicTitle = entry.topicTitle,
+                                onContinue = { onEvent(HomeEvents.ContinueExplanation(entry.explanationSessionId)) },
+                                modifier = Modifier.padding(horizontal = Spacing.l)
+                            )
                             entry.struggleOpen -> StruggleTaskCard(
                                 topicTitle = entry.topicTitle,
                                 onContinue = { onEvent(HomeEvents.ContinueStruggle(entry.struggleEnrollmentId)) },
@@ -648,6 +653,55 @@ private fun StruggleTaskCard(
                 ) {
                     Text(
                         text = stringResource(Res.string.home_struggle_cta),
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExplanationTaskCard(
+    topicTitle: String,
+    onContinue: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    ElevatedCard(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        onClick = onContinue
+    ) {
+        Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.tertiary)
+            )
+            Column(modifier = Modifier.padding(Spacing.l)) {
+                if (topicTitle.isNotEmpty()) {
+                    Text(
+                        text = topicTitle,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
+                    Spacer(Modifier.height(Spacing.s))
+                }
+                Button(
+                    onClick = onContinue,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary
+                    )
+                ) {
+                    Text(
+                        text = "Continue Learning",
                         style = MaterialTheme.typography.labelLarge
                     )
                 }

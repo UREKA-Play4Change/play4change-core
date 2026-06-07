@@ -47,6 +47,11 @@ class TaskController(
                         ResponseEntity.status(HttpStatus.CONFLICT)
                             .header("X-Open-Struggle-Enrollment", result.enrollmentId)
                             .build()
+                    is TodayTaskResult.ExplanationActive ->
+                        ResponseEntity.status(HttpStatus.CONFLICT)
+                            .header("X-Open-Explanation-Session", result.sessionId)
+                            .header("X-Open-Explanation-Enrollment", result.enrollmentId)
+                            .build()
                 }
             }
         )

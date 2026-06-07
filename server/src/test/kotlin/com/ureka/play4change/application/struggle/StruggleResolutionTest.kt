@@ -11,6 +11,7 @@ import com.ureka.play4change.domain.struggle.ErrorPattern
 import com.ureka.play4change.domain.struggle.StruggleRepository
 import com.ureka.play4change.domain.struggle.StruggleSession
 import com.ureka.play4change.domain.struggle.StruggleStatus
+import com.ureka.play4change.application.port.ExplanationUseCase
 import com.ureka.play4change.domain.topic.TaskType
 import io.mockk.every
 import io.mockk.mockk
@@ -27,8 +28,10 @@ class StruggleResolutionTest {
 
     private val struggleRepository = mockk<StruggleRepository>()
     private val enrollmentRepository = mockk<EnrollmentRepository>()
+    private val handleStruggleService = mockk<HandleStruggleService>(relaxed = true)
+    private val explanationService = mockk<ExplanationUseCase>(relaxed = true)
 
-    private val service = AdaptiveTaskService(struggleRepository, enrollmentRepository)
+    private val service = AdaptiveTaskService(struggleRepository, enrollmentRepository, handleStruggleService, explanationService)
 
     private val userId = "user-1"
     private val enrollmentId = "enrollment-1"
@@ -62,6 +65,7 @@ class StruggleResolutionTest {
     ) = AdaptiveTask(
         id = id,
         struggleSessionId = sessionId,
+        branchId = null,
         title = "Adaptive task $orderIndex",
         description = "Description",
         hint = null,
@@ -165,7 +169,9 @@ class StruggleResolutionTest {
         with(resetSlot.captured) {
             assertEquals(originalAssignmentId, id)
             assertEquals(AssignmentStatus.PENDING, status)
-            assertEquals(0, wrongAttemptCount)
+            // wrongAttemptCount is intentionally preserved on reset — failure history
+            // must survive so stats remain accurate when the learner retries.
+            assertEquals(1, wrongAttemptCount)
             assertEquals(null, submittedAt)
             assertEquals(null, isCorrect)
             assertEquals(0, pointsAwarded)

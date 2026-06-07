@@ -13,5 +13,6 @@ data class AdaptiveTask(
     val description: String,
     val hint: String,
     val options: List<String>,
-    val pointsReward: Int
+    val pointsReward: Int,
+    val isCompleted: Boolean
 )

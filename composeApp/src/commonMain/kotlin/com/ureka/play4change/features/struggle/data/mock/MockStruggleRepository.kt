@@ -21,7 +21,8 @@ class MockStruggleRepository : StruggleRepository {
                     description = "Which item belongs in the recycling bin?",
                     hint = "Think about materials that can be reprocessed.",
                     options = listOf("Glass bottle", "Plastic bag", "Cardboard box", "Food scrap"),
-                    pointsReward = 50
+                    pointsReward = 50,
+                    isCompleted = false
                 )
             )
         )

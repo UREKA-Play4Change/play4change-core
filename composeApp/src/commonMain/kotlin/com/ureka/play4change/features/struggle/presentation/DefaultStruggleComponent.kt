@@ -33,12 +33,17 @@ class DefaultStruggleComponent(
                     emitEffect(StruggleEffect.NavigateToHome)
                     return@launch
                 }
+                // Restore position after a cold restart: skip already-completed tasks so
+                // the user continues from where they left off instead of task 0.
+                val resumeIndex = session.tasks.indexOfFirst { !it.isCompleted }
+                    .takeIf { it >= 0 } ?: 0
                 updateState {
                     copy(
                         isLoading = false,
                         sessionId = session.sessionId,
                         errorPattern = session.errorPattern,
-                        tasks = session.tasks
+                        tasks = session.tasks,
+                        currentIndex = resumeIndex
                     )
                 }
             } catch (e: CancellationException) {

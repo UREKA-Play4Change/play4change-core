@@ -29,7 +29,8 @@ private data class AdaptiveTaskDto(
     val description: String,
     val hint: String? = null,
     val options: List<String> = emptyList(),
-    val pointsReward: Int
+    val pointsReward: Int,
+    val isCompleted: Boolean = false
 )
 
 @Serializable
@@ -107,6 +108,7 @@ class HttpStruggleRepository(
         description = description,
         hint = hint ?: "",
         options = options,
-        pointsReward = pointsReward
+        pointsReward = pointsReward,
+        isCompleted = isCompleted
     )
 }

@@ -12,6 +12,7 @@ sealed class TodayTaskResult {
     data class GenerationPending(val language: String) : TodayTaskResult()
     data class NotAvailableYet(val availableAt: OffsetDateTime) : TodayTaskResult()
     data class StruggleOpen(val enrollmentId: String) : TodayTaskResult()
+    data class ExplanationActive(val enrollmentId: String, val sessionId: String) : TodayTaskResult()
 }
 
 data class SubmitPhotoCommand(

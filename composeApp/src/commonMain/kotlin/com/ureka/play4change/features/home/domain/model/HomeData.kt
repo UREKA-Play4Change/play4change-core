@@ -38,7 +38,11 @@ data class TaskSummaryWithTopic(
     /** The enrollment ID associated with the open struggle session. */
     val struggleEnrollmentId: String = "",
     /** True when the server returned 404 with X-Task-Available-At — next task is coming soon. */
-    val isWaitingForNext: Boolean = false
+    val isWaitingForNext: Boolean = false,
+    /** True when the server returned 409 with X-Open-Explanation-Session — explanation mode is active. */
+    val explanationActive: Boolean = false,
+    /** The explanation session ID when explanationActive is true. */
+    val explanationSessionId: String = ""
 )
 
 data class TaskSummary(

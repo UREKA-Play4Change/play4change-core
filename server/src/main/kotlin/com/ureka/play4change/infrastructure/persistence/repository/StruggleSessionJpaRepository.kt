@@ -36,4 +36,15 @@ interface StruggleSessionJpaRepository : JpaRepository<StruggleSessionEntity, St
         fun getErrorPattern(): String
         fun getTotalSessions(): Int
     }
+
+    @Query("""
+        SELECT DISTINCT at.branchId FROM AdaptiveTaskEntity at
+        WHERE at.struggleSession.enrollment.id = :enrollmentId
+        AND at.struggleSession.originalTaskAssignment.id = :assignmentId
+        AND at.branchId IS NOT NULL
+    """)
+    fun findUsedBranchIds(
+        @Param("enrollmentId") enrollmentId: String,
+        @Param("assignmentId") assignmentId: String
+    ): List<String>
 }

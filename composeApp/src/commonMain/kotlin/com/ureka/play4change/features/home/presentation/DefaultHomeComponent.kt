@@ -84,8 +84,9 @@ class DefaultHomeComponent(
 
     override fun onEvent(event: HomeEvents) {
         when (event) {
-            is HomeEvents.StartTask       -> emitEffect(HomeEffect.NavigateToTask(event.userTaskId))
-            is HomeEvents.ContinueStruggle -> emitEffect(HomeEffect.NavigateToStruggle(event.enrollmentId))
+            is HomeEvents.StartTask          -> emitEffect(HomeEffect.NavigateToTask(event.userTaskId))
+            is HomeEvents.ContinueStruggle   -> emitEffect(HomeEffect.NavigateToStruggle(event.enrollmentId))
+            is HomeEvents.ContinueExplanation -> emitEffect(HomeEffect.NavigateToExplanation(event.sessionId))
             HomeEvents.OpenProfile   -> emitEffect(HomeEffect.NavigateToProfile)
             HomeEvents.OpenAbout     -> emitEffect(HomeEffect.NavigateToAbout)
             HomeEvents.OpenExplore   -> emitEffect(HomeEffect.NavigateToExplore)

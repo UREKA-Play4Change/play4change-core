@@ -16,6 +16,7 @@ import com.ureka.play4change.config.TaskDeliveryProperties
 import com.ureka.play4change.domain.identity.UserRepository
 import com.ureka.play4change.application.struggle.ErrorPatternClassifier
 import com.ureka.play4change.application.struggle.HandleStruggleService
+import com.ureka.play4change.domain.explanation.ExplanationRepository
 import com.ureka.play4change.domain.struggle.StruggleRepository
 import com.ureka.play4change.domain.enrollment.AssignmentStatus
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
@@ -50,6 +51,7 @@ class TaskService(
     private val languageGatingService: LanguageGatingService,
     private val handleStruggleService: HandleStruggleService,
     private val struggleRepository: StruggleRepository,
+    private val explanationRepository: ExplanationRepository,
     private val peerReviewUseCase: PeerReviewUseCase,
     private val badgeIssuancePort: BadgeIssuancePort,
     private val registry: MeterRegistry,
@@ -66,6 +68,12 @@ class TaskService(
             }
 
             val assignments = enrollmentRepository.findAssignmentsByEnrollmentId(enrollment.id)
+
+            // Re-route to active explanation session (explanation mode takes precedence over struggle)
+            val activeExplanation = explanationRepository.findActiveByEnrollmentId(enrollment.id)
+            if (activeExplanation != null) {
+                return@either TodayTaskResult.ExplanationActive(enrollment.id, activeExplanation.id)
+            }
 
             // Re-route to open struggle session if one exists (user navigated away mid-struggle)
             if (struggleRepository.findOpenByEnrollmentId(enrollment.id) != null) {
