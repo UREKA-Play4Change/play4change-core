@@ -20,4 +20,5 @@ interface ExplanationUseCase {
     fun getSession(userId: String, sessionId: String): Either<AppError, ExplanationSession>
     fun sendMessage(command: SendExplanationMessageCommand): Either<AppError, ExplanationMessage>
     fun resolve(command: ResolveExplanationCommand): Either<AppError, Unit>
+    fun triggerAsync(enrollmentId: String, originalTaskAssignmentId: String, errorPattern: String, userId: String)
 }
