@@ -34,18 +34,26 @@ class PgVectorDeduplicationService(
         return isDuplicate
     }
 
-    fun findSimilarStruggle(struggleEmbedding: FloatArray): SimilarityMatch {
+    fun findSimilarStruggle(struggleEmbedding: FloatArray, excludedBranchIds: List<String> = emptyList()): SimilarityMatch {
         val vectorStr = struggleEmbedding.toVectorString()
+
+        // Build an exclusion clause so follow-up sessions never reuse questions the
+        // learner already failed. When the exclusion list is empty the clause is a no-op.
+        val exclusionClause = if (excludedBranchIds.isEmpty()) ""
+            else "AND ab.id NOT IN (${excludedBranchIds.joinToString(",") { "?" }})"
+        val args: Array<Any> = (listOf(vectorStr) + excludedBranchIds + listOf(vectorStr)).toTypedArray()
+
         val results = jdbc.queryForList(
             """
             SELECT ab.id as branch_id, 1 - (se.embedding <=> ?::vector) as similarity
             FROM struggle_events se
             JOIN adaptive_branches ab ON ab.struggle_event_id = se.id
             WHERE ab.status = 'COMPLETED'
+            $exclusionClause
             ORDER BY se.embedding <=> ?::vector
             LIMIT 1
             """.trimIndent(),
-            vectorStr, vectorStr
+            *args
         )
 
         if (results.isEmpty()) {
