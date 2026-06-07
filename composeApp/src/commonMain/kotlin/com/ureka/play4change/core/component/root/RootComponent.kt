@@ -8,6 +8,7 @@ import com.ureka.play4change.features.explore.presentation.DefaultExploreCompone
 import com.ureka.play4change.features.home.presentation.DefaultHomeComponent
 import com.ureka.play4change.features.profile.presentation.DefaultProfileComponent
 import com.ureka.play4change.features.splash.presentation.DefaultSplashComponent
+import com.ureka.play4change.features.explanation.presentation.DefaultExplanationComponent
 import com.ureka.play4change.features.struggle.presentation.DefaultStruggleComponent
 import com.ureka.play4change.features.task.presentation.DefaultTaskComponent
 
@@ -21,6 +22,7 @@ interface RootComponent {
     fun navigateToAbout()
     fun navigateToExplore()
     fun navigateToStruggle(enrollmentId: String)
+    fun navigateToExplanation(sessionId: String)
     fun navigateBack()
     fun handleDeepLink(token: String)
 
@@ -33,5 +35,6 @@ interface RootComponent {
         data class About(val component: DefaultAboutComponent) : Child()
         data class Explore(val component: DefaultExploreComponent) : Child()
         data class Struggle(val component: DefaultStruggleComponent) : Child()
+        data class Explanation(val component: DefaultExplanationComponent) : Child()
     }
 }
