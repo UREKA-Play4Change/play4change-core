@@ -19,6 +19,9 @@ class PeerReviewRepositoryAdapter(
     override fun findBySubmissionAssignmentId(submissionAssignmentId: String): List<PeerReview> =
         jpa.findBySubmissionAssignmentId(submissionAssignmentId).map { it.toDomain() }
 
+    override fun findBySubmissionAssignmentIdIn(submissionAssignmentIds: List<String>): List<PeerReview> =
+        jpa.findBySubmissionAssignmentIdIn(submissionAssignmentIds).map { it.toDomain() }
+
     override fun findPendingByReviewerUserId(reviewerUserId: String): List<PeerReview> =
         jpa.findByReviewerUserIdAndReviewedAtIsNull(reviewerUserId).map { it.toDomain() }
 
