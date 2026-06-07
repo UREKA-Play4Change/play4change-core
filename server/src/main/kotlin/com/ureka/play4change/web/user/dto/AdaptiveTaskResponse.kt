@@ -16,8 +16,11 @@ data class AdaptiveTaskResponse(
 ) {
     companion object {
         fun from(task: AdaptiveTask): AdaptiveTaskResponse {
-            val shuffledOptions = task.optionOrder
-                .mapNotNull { originalIdx -> task.options?.getOrNull(originalIdx) }
+            val rawOptions = task.options ?: emptyList()
+            val shuffledOptions = if (task.optionOrder.isNotEmpty())
+                task.optionOrder.mapNotNull { rawOptions.getOrNull(it) }
+            else
+                rawOptions
             return AdaptiveTaskResponse(
                 taskId = task.id,
                 title = task.title,
