@@ -66,11 +66,17 @@ class ExplanationService(
         errorPattern: String,
         userId: String
     ) {
+        val dayIndex = enrollmentRepository.findAssignmentById(originalTaskAssignmentId)
+            ?.taskTemplateId
+            ?.let { taskTemplateRepository.findById(it)?.dayIndex }
+            ?: 0
+
         val session = explanationRepository.save(
             ExplanationSession(
                 id = UUID.randomUUID().toString(),
                 enrollmentId = enrollmentId,
                 originalTaskAssignmentId = originalTaskAssignmentId,
+                dayIndex = dayIndex,
                 errorPattern = errorPattern,
                 explanationText = null,
                 status = ExplanationStatus.GENERATING,
