@@ -65,6 +65,7 @@ class ExplanationRepositoryAdapter(
         id = id,
         enrollmentId = enrollment.id,
         originalTaskAssignmentId = originalTaskAssignment.id,
+        dayIndex = originalTaskAssignment.taskTemplate.dayIndex,
         errorPattern = errorPattern,
         explanationText = explanationText,
         status = ExplanationStatus.valueOf(status),
