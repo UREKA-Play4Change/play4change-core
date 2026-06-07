@@ -14,8 +14,11 @@ import com.ureka.play4change.model.GenerationRequest
 import com.ureka.play4change.model.GenerationResult
 import com.ureka.play4change.model.GenerationStatus
 import com.ureka.play4change.model.ReuseStrategy
+import com.ureka.play4change.model.ConversationMessage
+import com.ureka.play4change.model.ExplanationContext
 import com.ureka.play4change.model.StruggleContext
 import com.ureka.play4change.port.TaskGenerationPort
+import com.ureka.play4change.prompt.ExplanationPrompt
 import com.ureka.play4change.prompt.StruggleAnalysisPrompt
 import com.ureka.play4change.prompt.TaskGenerationPrompt
 import dev.langchain4j.data.message.SystemMessage
@@ -182,6 +185,38 @@ class LangChain4jTaskGenerationAdapter(
             }
         )
     }
+
+    override suspend fun generateExplanation(context: ExplanationContext): Either<AppError, String> =
+        runCatching {
+            val systemMsg = SystemMessage.from(ExplanationPrompt.systemExplanation())
+            val userMsg = UserMessage.from(ExplanationPrompt.userExplanation(context))
+            chatModel.generate(systemMsg, userMsg).content().text().trim()
+        }.fold(
+            onSuccess = { it.right() },
+            onFailure = { e ->
+                log.error("Explanation generation failed: ${e.message}", e)
+                meterRegistry.counter("ai.generation.failures", "type", "explanation").increment()
+                ServiceUnavailable.DependencyUnavailable("mistral-ai-explanation").left()
+            }
+        )
+
+    override suspend fun generateExplanationReply(
+        context: ExplanationContext,
+        history: List<ConversationMessage>,
+        userMessage: String
+    ): Either<AppError, String> =
+        runCatching {
+            val systemMsg = SystemMessage.from(ExplanationPrompt.systemReply())
+            val userMsg = UserMessage.from(ExplanationPrompt.userReply(context, history, userMessage))
+            chatModel.generate(systemMsg, userMsg).content().text().trim()
+        }.fold(
+            onSuccess = { it.right() },
+            onFailure = { e ->
+                log.error("Explanation reply generation failed: ${e.message}", e)
+                meterRegistry.counter("ai.generation.failures", "type", "explanation_reply").increment()
+                ServiceUnavailable.DependencyUnavailable("mistral-ai-explanation").left()
+            }
+        )
 
     override suspend fun healthCheck(): Boolean {
         return runCatching {
