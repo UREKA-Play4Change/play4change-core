@@ -10,4 +10,11 @@ interface StruggleRepository {
     fun findAdaptiveTaskById(taskId: String): AdaptiveTask?
     fun findAdaptiveTaskViewById(taskId: String): AdaptiveTaskAdminView?
     fun saveAdaptiveTask(task: AdaptiveTask): AdaptiveTask
+    /**
+     * Returns all distinct branchIds that this enrollment has already used for the given
+     * original task assignment. Used to exclude already-seen branches from similarity reuse
+     * when spawning follow-up struggle sessions so the learner is never asked the same
+     * adaptive questions twice.
+     */
+    fun findUsedBranchIdsByAssignment(enrollmentId: String, assignmentId: String): List<String>
 }
