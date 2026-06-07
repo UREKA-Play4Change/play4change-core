@@ -7,6 +7,7 @@ import com.ureka.play4change.auth.port.outbound.RefreshTokenRepository
 import com.ureka.play4change.auth.port.outbound.UserRepository
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
+import org.slf4j.LoggerFactory
 import org.springframework.security.crypto.codec.Hex
 import org.springframework.stereotype.Service
 import java.security.MessageDigest
@@ -17,6 +18,8 @@ import java.util.UUID
 
 data class AccessTokenClaims(val userId: String, val role: String)
 
+private val VALID_ROLES = setOf("USER", "ADMIN")
+
 @Service
 class TokenService(
     private val refreshTokenRepository: RefreshTokenRepository,
@@ -24,6 +27,8 @@ class TokenService(
     private val userRepository: UserRepository,
     private val jwtProperties: JwtProperties
 ) : TokenUseCase {
+
+    private val log = LoggerFactory.getLogger(TokenService::class.java)
 
     private val signingKey by lazy {
         Keys.hmacShaKeyFor(jwtProperties.secret.toByteArray())
@@ -70,6 +75,7 @@ class TokenService(
         if (stored.used) {
             // Token reuse = theft. Revoke entire family. Force re-auth.
             refreshTokenRepository.revokeAllByFamilyId(stored.familyId)
+            log.warn("SECURITY: refresh token reuse detected for userId={}, familyId={} — all sessions revoked", stored.userId, stored.familyId)
             throw SecurityException("Refresh token reuse detected. All sessions revoked.")
         }
 
@@ -125,9 +131,10 @@ class TokenService(
             .build()
             .parseSignedClaims(token)
             .payload
+        val role = payload.get("role", String::class.java)?.takeIf { it in VALID_ROLES } ?: "USER"
         return AccessTokenClaims(
             userId = payload.subject,
-            role = payload.get("role", String::class.java) ?: "USER"
+            role = role
         )
     }
 
