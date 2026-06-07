@@ -27,6 +27,9 @@ class ExplanationRepositoryAdapter(
     override fun findActiveByEnrollmentId(enrollmentId: String): ExplanationSession? =
         jpa.findActiveByEnrollmentId(enrollmentId)?.toDomain()
 
+    override fun findAllByEnrollmentId(enrollmentId: String): List<ExplanationSession> =
+        jpa.findByEnrollmentIdOrderByGeneratedAtAsc(enrollmentId).map { it.toDomain() }
+
     override fun save(session: ExplanationSession): ExplanationSession {
         val enrollmentEntity = enrollmentJpa.getReferenceById(session.enrollmentId)
         val assignmentEntity = assignmentJpa.getReferenceById(session.originalTaskAssignmentId)
