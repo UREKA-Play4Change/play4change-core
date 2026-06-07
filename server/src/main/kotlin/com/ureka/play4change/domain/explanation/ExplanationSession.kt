@@ -6,6 +6,7 @@ data class ExplanationSession(
     val id: String,
     val enrollmentId: String,
     val originalTaskAssignmentId: String,
+    val dayIndex: Int,
     val errorPattern: String,
     val explanationText: String?,
     val status: ExplanationStatus,
