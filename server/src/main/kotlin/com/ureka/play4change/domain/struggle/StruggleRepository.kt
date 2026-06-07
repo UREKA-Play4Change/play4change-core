@@ -4,6 +4,7 @@ interface StruggleRepository {
     fun findById(id: String): StruggleSession?
     fun findOpenByEnrollmentId(enrollmentId: String): StruggleSession?
     fun findAllByEnrollmentId(enrollmentId: String): List<StruggleSession>
+    fun countByEnrollmentIdAndOriginalAssignmentId(enrollmentId: String, originalAssignmentId: String): Int
     fun save(session: StruggleSession): StruggleSession
     fun findAdaptiveTasksByTopicId(topicId: String): List<AdaptiveTaskAdminView>
     fun findPathStatsByTopicId(topicId: String): List<StrugglePathStats>
