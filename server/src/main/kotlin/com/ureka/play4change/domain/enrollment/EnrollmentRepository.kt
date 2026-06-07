@@ -10,6 +10,8 @@ interface EnrollmentRepository {
     fun findAssignmentByEnrollmentAndTemplate(enrollmentId: String, taskTemplateId: String): TaskAssignment?
     fun findAssignmentsByEnrollmentId(enrollmentId: String): List<TaskAssignment>
     fun findPendingReviewSubmissionsForTopic(topicId: String, excludeUserId: String): List<TaskAssignment>
+    fun countSubmittedAssignmentsByEnrollmentId(enrollmentId: String): Int
+    fun countCorrectAssignmentsByEnrollmentId(enrollmentId: String): Int
     fun countByTopicId(topicId: String): Long
     fun countByUserId(userId: String): Long
     fun save(enrollment: Enrollment): Enrollment
