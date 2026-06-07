@@ -15,4 +15,6 @@ interface ExplanationSessionJpaRepository : JpaRepository<ExplanationSessionEnti
         """
     )
     fun findActiveByEnrollmentId(enrollmentId: String): ExplanationSessionEntity?
+
+    fun findByEnrollmentIdOrderByGeneratedAtAsc(enrollmentId: String): List<ExplanationSessionEntity>
 }
