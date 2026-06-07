@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository
 interface StruggleSessionJpaRepository : JpaRepository<StruggleSessionEntity, String> {
     fun findFirstByEnrollmentIdAndStatusOrderByDetectedAtDesc(enrollmentId: String, status: String): StruggleSessionEntity?
     fun findByEnrollmentIdOrderByDetectedAtAsc(enrollmentId: String): List<StruggleSessionEntity>
+    fun countByEnrollmentIdAndOriginalTaskAssignmentId(enrollmentId: String, originalTaskAssignmentId: String): Int
 
     @Query("""
         SELECT at FROM AdaptiveTaskEntity at
