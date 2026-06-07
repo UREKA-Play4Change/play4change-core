@@ -220,8 +220,15 @@ class TaskService(
 
         val pointsAwarded = when {
             !isCorrect -> 0
-            isLate -> template.pointsReward / 2
-            else -> template.pointsReward
+            !isLate -> template.pointsReward
+            else -> {
+                val hoursLate = ChronoUnit.HOURS.between(assignment.dueAt, now).toInt()
+                when {
+                    hoursLate <= 24 -> (template.pointsReward * 0.75).toInt()
+                    hoursLate <= 72 -> template.pointsReward / 2
+                    else -> (template.pointsReward * 0.25).toInt().coerceAtLeast(1)
+                }
+            }
         }
 
         var struggleTriggered = false
