@@ -32,6 +32,12 @@ interface TaskAssignmentJpaRepository : JpaRepository<TaskAssignmentEntity, Stri
 
     fun findAllByEnrollmentId(enrollmentId: String): List<TaskAssignmentEntity>
 
+    @Query("SELECT COUNT(a) FROM TaskAssignmentEntity a WHERE a.enrollment.id = :enrollmentId AND a.submittedAt IS NOT NULL")
+    fun countSubmittedByEnrollmentId(@Param("enrollmentId") enrollmentId: String): Int
+
+    @Query("SELECT COUNT(a) FROM TaskAssignmentEntity a WHERE a.enrollment.id = :enrollmentId AND a.isCorrect = true")
+    fun countCorrectByEnrollmentId(@Param("enrollmentId") enrollmentId: String): Int
+
     @Modifying
     @Query("UPDATE TaskAssignmentEntity a SET a.taskInstanceId = null WHERE a.taskTemplate.id = :templateId")
     fun clearTaskInstanceIdByTemplateId(@Param("templateId") templateId: String)
