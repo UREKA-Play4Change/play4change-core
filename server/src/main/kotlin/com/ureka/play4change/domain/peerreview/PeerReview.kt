@@ -9,5 +9,6 @@ data class PeerReview(
     val verdict: ReviewVerdict?,
     val comment: String?,
     val assignedAt: OffsetDateTime,
+    val expiresAt: OffsetDateTime,
     val reviewedAt: OffsetDateTime?
 )
