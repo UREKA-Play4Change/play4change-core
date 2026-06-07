@@ -24,6 +24,8 @@ import com.ureka.play4change.features.profile.presentation.ProfileEffect
 import com.ureka.play4change.features.profile.ui.ProfileScreen
 import com.ureka.play4change.features.splash.presentation.SplashEffect
 import com.ureka.play4change.features.splash.ui.SplashScreen
+import com.ureka.play4change.features.explanation.presentation.ExplanationEffect
+import com.ureka.play4change.features.explanation.ui.ExplanationScreen
 import com.ureka.play4change.features.struggle.presentation.StruggleEffect
 import com.ureka.play4change.features.struggle.ui.StruggleScreen
 import com.ureka.play4change.features.task.presentation.TaskEffect
@@ -96,12 +98,13 @@ fun App(root: RootComponent) {
                         LaunchedEffect(homeComponent) {
                             homeComponent.effects.collect { effect ->
                                 when (val e = effect as HomeEffect) {
-                                    is HomeEffect.NavigateToTask     -> root.navigateToTask(e.userTaskId)
-                                    is HomeEffect.NavigateToStruggle -> root.navigateToStruggle(e.enrollmentId)
-                                    HomeEffect.NavigateToProfile     -> root.navigateToProfile()
-                                    HomeEffect.NavigateToAbout       -> root.navigateToAbout()
-                                    HomeEffect.NavigateToExplore     -> root.navigateToExplore()
-                                    HomeEffect.LoggedOut             -> root.navigateToLogin()
+                                    is HomeEffect.NavigateToTask        -> root.navigateToTask(e.userTaskId)
+                                    is HomeEffect.NavigateToStruggle    -> root.navigateToStruggle(e.enrollmentId)
+                                    is HomeEffect.NavigateToExplanation -> root.navigateToExplanation(e.sessionId)
+                                    HomeEffect.NavigateToProfile        -> root.navigateToProfile()
+                                    HomeEffect.NavigateToAbout          -> root.navigateToAbout()
+                                    HomeEffect.NavigateToExplore        -> root.navigateToExplore()
+                                    HomeEffect.LoggedOut                -> root.navigateToLogin()
                                 }
                             }
                         }
@@ -158,6 +161,16 @@ fun App(root: RootComponent) {
                             }
                         }
                         StruggleScreen(child.component)
+                    }
+                    is RootComponent.Child.Explanation -> {
+                        LaunchedEffect(child.component) {
+                            child.component.effects.collect { effect ->
+                                when (effect as ExplanationEffect) {
+                                    ExplanationEffect.NavigateToHome -> root.navigateToHome()
+                                }
+                            }
+                        }
+                        ExplanationScreen(child.component)
                     }
                 }
             }
