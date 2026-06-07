@@ -191,6 +191,18 @@ class HandleStruggleService(
                             )
                         }
 
+                    // Last-resort guard: if every task was stripped (e.g. all missing options
+                    // even after the retry in generateFreshBranch), abandon rather than saving
+                    // an empty session that the mobile client would display as a blank screen.
+                    if (adaptiveTasks.isEmpty()) {
+                        log.error(
+                            "Struggle session {} has 0 valid adaptive tasks after generation — abandoning",
+                            session.id
+                        )
+                        struggleRepository.save(session.abandon())
+                        return@fold
+                    }
+
                     val sessionWithTasks = session.copy(adaptiveTasks = adaptiveTasks)
                     struggleRepository.save(sessionWithTasks)
                     log.info(
