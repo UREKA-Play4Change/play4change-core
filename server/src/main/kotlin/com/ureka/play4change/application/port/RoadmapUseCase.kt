@@ -14,7 +14,13 @@ data class RoadmapNode(
     val status: RoadmapNodeStatus,
     val isAdaptive: Boolean,
     val assignmentId: String?,
-    val pointsAwarded: Int?
+    val pointsAwarded: Int?,
+    val description: String? = null,
+    val hint: String? = null,
+    val options: List<String>? = null,
+    val selectedOption: Int? = null,
+    val correctAnswer: Int? = null,
+    val isCorrect: Boolean? = null
 )
 
 interface RoadmapUseCase {
