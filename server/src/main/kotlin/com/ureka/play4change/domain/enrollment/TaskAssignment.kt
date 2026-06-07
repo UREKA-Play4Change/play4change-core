@@ -20,7 +20,8 @@ data class TaskAssignment(
     val optionOrder: List<Int>,
     val wrongAttemptCount: Int,
     val photoUrl: String?,
-    val taskInstanceId: String? = null
+    val taskInstanceId: String? = null,
+    val correctAnswerIndex: Int? = null
 ) {
     fun incrementWrongAttempts(): TaskAssignment =
         copy(wrongAttemptCount = wrongAttemptCount + 1)
