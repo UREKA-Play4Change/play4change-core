@@ -61,5 +61,8 @@ class TaskAssignmentEntity(
     var photoUrl: String? = null,
 
     @Column(name = "task_instance_id", length = 36)
-    val taskInstanceId: String? = null
+    val taskInstanceId: String? = null,
+
+    @Column(name = "correct_answer_index")
+    val correctAnswerIndex: Int? = null
 )
