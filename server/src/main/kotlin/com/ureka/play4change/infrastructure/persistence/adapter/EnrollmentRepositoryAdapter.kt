@@ -79,7 +79,8 @@ class EnrollmentRepositoryAdapter(
             currentDayIndex = enrollment.currentDayIndex,
             totalPointsEarned = enrollment.totalPointsEarned,
             streakDays = enrollment.streakDays,
-            lastActivityAt = enrollment.lastActivityAt
+            lastActivityAt = enrollment.lastActivityAt,
+            pausedAt = enrollment.pausedAt
         )
         return enrollmentJpa.save(entity).toDomain()
     }
@@ -105,7 +106,8 @@ class EnrollmentRepositoryAdapter(
             optionOrder = optionOrderJson,
             wrongAttemptCount = assignment.wrongAttemptCount,
             photoUrl = assignment.photoUrl,
-            taskInstanceId = assignment.taskInstanceId
+            taskInstanceId = assignment.taskInstanceId,
+            correctAnswerIndex = assignment.correctAnswerIndex
         )
         return assignmentJpa.save(entity).toDomain()
     }
@@ -120,7 +122,8 @@ class EnrollmentRepositoryAdapter(
         currentDayIndex = currentDayIndex,
         totalPointsEarned = totalPointsEarned,
         streakDays = streakDays,
-        lastActivityAt = lastActivityAt
+        lastActivityAt = lastActivityAt,
+        pausedAt = pausedAt
     )
 
     private fun TaskAssignmentEntity.toDomain(): TaskAssignment {
@@ -144,7 +147,8 @@ class EnrollmentRepositoryAdapter(
             optionOrder = order,
             wrongAttemptCount = wrongAttemptCount,
             photoUrl = photoUrl,
-            taskInstanceId = taskInstanceId
+            taskInstanceId = taskInstanceId,
+            correctAnswerIndex = correctAnswerIndex
         )
     }
 }

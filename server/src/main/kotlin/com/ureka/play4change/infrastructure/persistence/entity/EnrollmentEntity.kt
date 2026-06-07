@@ -37,5 +37,8 @@ class EnrollmentEntity(
     var streakDays: Int = 0,
 
     @Column(name = "last_activity_at")
-    var lastActivityAt: OffsetDateTime? = null
+    var lastActivityAt: OffsetDateTime? = null,
+
+    @Column(name = "paused_at")
+    var pausedAt: OffsetDateTime? = null
 )

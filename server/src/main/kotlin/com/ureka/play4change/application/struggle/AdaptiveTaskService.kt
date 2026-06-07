@@ -123,16 +123,13 @@ class AdaptiveTaskService(
                         session.id, session.originalTaskAssignmentId
                     )
                 } else {
-                    // One or more adaptive tasks failed — spawn a follow-up only if under depth limit
-                    // Only count sessions where the learner actually received adaptive tasks.
-                    // ABANDONED sessions (AI timed out / generation failed) must not consume
-                    // depth slots — the learner never got help from them.
+                    // One or more adaptive tasks failed — spawn a follow-up only if under depth limit.
+                    // ABANDONED sessions (AI timed out / generation failed) count toward depth so that
+                    // repeated AI failures cannot trap the learner in an infinite retry loop; they will
+                    // eventually escalate to the explanation path.
                     val depthForAssignment = struggleRepository
                         .findAllByEnrollmentId(session.enrollmentId)
-                        .count {
-                            it.originalTaskAssignmentId == session.originalTaskAssignmentId &&
-                                it.status != StruggleStatus.ABANDONED
-                        }
+                        .count { it.originalTaskAssignmentId == session.originalTaskAssignmentId }
                     if (depthForAssignment < MAX_STRUGGLE_DEPTH) {
                         handleStruggleService.triggerFromPreviousSession(resolvedSession, command.userId)
                         log.info(
