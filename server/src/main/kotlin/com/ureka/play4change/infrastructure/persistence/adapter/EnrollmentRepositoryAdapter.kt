@@ -60,6 +60,12 @@ class EnrollmentRepositoryAdapter(
             excludeUserId = excludeUserId
         ).map { it.toDomain() }
 
+    override fun countSubmittedAssignmentsByEnrollmentId(enrollmentId: String): Int =
+        assignmentJpa.countSubmittedByEnrollmentId(enrollmentId)
+
+    override fun countCorrectAssignmentsByEnrollmentId(enrollmentId: String): Int =
+        assignmentJpa.countCorrectByEnrollmentId(enrollmentId)
+
     override fun countByTopicId(topicId: String): Long =
         enrollmentJpa.countByTopicId(topicId)
 
