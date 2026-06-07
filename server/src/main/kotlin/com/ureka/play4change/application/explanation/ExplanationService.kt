@@ -28,6 +28,7 @@ import com.ureka.play4change.model.ConversationMessage
 import com.ureka.play4change.model.ExplanationContext
 import com.ureka.play4change.model.StruggleSummary
 import com.ureka.play4change.port.TaskGenerationPort
+import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import org.slf4j.LoggerFactory
@@ -47,6 +48,7 @@ class ExplanationService(
     private val topicModuleRepository: TopicModuleRepository,
     private val taskTemplateRepository: TaskTemplateRepository,
     private val taskGenerationPort: TaskGenerationPort,
+    private val registry: MeterRegistry,
     @Value("\${ai.mistral.timeout-seconds:60}") private val timeoutSeconds: Long
 ) : ExplanationUseCase {
 
@@ -59,7 +61,7 @@ class ExplanationService(
      * is reset to PENDING so the learner is never stuck.
      */
     @Async("generationExecutor")
-    @Transactional
+    @Transactional(timeout = 120)
     override fun triggerAsync(
         enrollmentId: String,
         originalTaskAssignmentId: String,
@@ -85,6 +87,7 @@ class ExplanationService(
                 messages = emptyList()
             )
         )
+        registry.counter("explanation_sessions_created_total").increment()
 
         try {
             val context = buildContext(enrollmentId, originalTaskAssignmentId, errorPattern, userId) ?: run {
@@ -108,15 +111,18 @@ class ExplanationService(
             explanationText.fold(
                 ifLeft = { error ->
                     log.error("Explanation generation failed for session {}: {}", session.id, error)
+                    registry.counter("explanation_sessions_resolved_total", "outcome", "generation_failed").increment()
                     fallbackResetAssignment(session)
                 },
                 ifRight = { text ->
                     explanationRepository.save(session.activate(text))
+                    registry.counter("explanation_sessions_resolved_total", "outcome", "success").increment()
                     log.info("Explanation session {} ready for enrollment {}", session.id, enrollmentId)
                 }
             )
         } catch (ex: Exception) {
             log.error("Unexpected error during explanation generation for enrollment {}: {}", enrollmentId, ex.message, ex)
+            registry.counter("explanation_sessions_resolved_total", "outcome", "unexpected_error").increment()
             runCatching { fallbackResetAssignment(session) }
                 .onFailure { e -> log.error("Failed fallback reset for session {}: {}", session.id, e.message) }
         }
