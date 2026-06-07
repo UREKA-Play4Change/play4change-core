@@ -11,7 +11,7 @@ import com.ureka.play4change.domain.struggle.ErrorPattern
 import com.ureka.play4change.domain.struggle.StruggleRepository
 import com.ureka.play4change.domain.struggle.StruggleSession
 import com.ureka.play4change.domain.struggle.StruggleStatus
-import com.ureka.play4change.application.explanation.ExplanationService
+import com.ureka.play4change.application.port.ExplanationUseCase
 import com.ureka.play4change.domain.topic.TaskType
 import io.mockk.every
 import io.mockk.mockk
@@ -29,7 +29,7 @@ class StruggleResolutionTest {
     private val struggleRepository = mockk<StruggleRepository>()
     private val enrollmentRepository = mockk<EnrollmentRepository>()
     private val handleStruggleService = mockk<HandleStruggleService>(relaxed = true)
-    private val explanationService = mockk<ExplanationService>(relaxed = true)
+    private val explanationService = mockk<ExplanationUseCase>(relaxed = true)
 
     private val service = AdaptiveTaskService(struggleRepository, enrollmentRepository, handleStruggleService, explanationService)
 
