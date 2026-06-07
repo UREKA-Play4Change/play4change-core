@@ -17,8 +17,12 @@ class WebMvcConfig(
 
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
+        val origins = allowedOrigins.split(",").map(String::trim)
+        require(origins.none { it == "*" || it.isBlank() }) {
+            "CORS allowed-origins must not contain wildcards or blank entries: $origins"
+        }
         val config = CorsConfiguration()
-        config.allowedOriginPatterns = allowedOrigins.split(",").map(String::trim)
+        config.allowedOriginPatterns = origins
         config.allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
         config.allowedHeaders = listOf("Authorization", "Content-Type", "X-Request-ID", "Cache-Control", "Accept")
         config.allowCredentials = true
