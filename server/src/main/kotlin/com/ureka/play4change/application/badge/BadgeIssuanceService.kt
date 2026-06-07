@@ -26,9 +26,8 @@ class BadgeIssuanceService(
             log.warn("Badge issuance skipped — topic {} not found", topicId)
             return
         }
-        val assignments = enrollmentRepository.findAssignmentsByEnrollmentId(enrollmentId)
-        val submittedCount = assignments.count { it.submittedAt != null }
-        val correctCount = assignments.count { it.isCorrect == true }
+        val submittedCount = enrollmentRepository.countSubmittedAssignmentsByEnrollmentId(enrollmentId)
+        val correctCount = enrollmentRepository.countCorrectAssignmentsByEnrollmentId(enrollmentId)
         val requiredCorrect = (topic.taskCount * MINIMUM_CORRECT_RATE).toInt()
         if (submittedCount >= topic.taskCount && correctCount >= requiredCorrect) {
             issueIfNotYetEarned(userId, topicId)
