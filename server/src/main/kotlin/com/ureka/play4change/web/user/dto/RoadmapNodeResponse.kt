@@ -8,7 +8,13 @@ data class RoadmapNodeResponse(
     val status: String,
     val isAdaptive: Boolean,
     val assignmentId: String?,
-    val pointsAwarded: Int?
+    val pointsAwarded: Int?,
+    val description: String?,
+    val hint: String?,
+    val options: List<String>?,
+    val selectedOption: Int?,
+    val correctAnswer: Int?,
+    val isCorrect: Boolean?
 ) {
     companion object {
         fun from(node: RoadmapNode) = RoadmapNodeResponse(
@@ -17,7 +23,13 @@ data class RoadmapNodeResponse(
             status = node.status.name,
             isAdaptive = node.isAdaptive,
             assignmentId = node.assignmentId,
-            pointsAwarded = node.pointsAwarded
+            pointsAwarded = node.pointsAwarded,
+            description = node.description,
+            hint = node.hint,
+            options = node.options,
+            selectedOption = node.selectedOption,
+            correctAnswer = node.correctAnswer,
+            isCorrect = node.isCorrect
         )
     }
 }
