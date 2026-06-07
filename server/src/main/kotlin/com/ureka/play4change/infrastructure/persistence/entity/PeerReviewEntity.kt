@@ -26,6 +26,9 @@ class PeerReviewEntity(
     @Column(name = "assigned_at", nullable = false)
     val assignedAt: OffsetDateTime = OffsetDateTime.now(),
 
+    @Column(name = "expires_at", nullable = false)
+    val expiresAt: OffsetDateTime,
+
     @Column(name = "reviewed_at")
     var reviewedAt: OffsetDateTime? = null
 )
