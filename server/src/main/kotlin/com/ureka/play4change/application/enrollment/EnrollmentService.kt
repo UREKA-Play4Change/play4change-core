@@ -127,7 +127,8 @@ class EnrollmentService(
                 pointsAwarded = 0,
                 optionOrder = shuffledOrder,
                 wrongAttemptCount = 0,
-                photoUrl = null
+                photoUrl = null,
+                correctAnswerIndex = firstTemplate.correctAnswer
             )
         )
 
