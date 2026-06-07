@@ -2,6 +2,7 @@ package com.ureka.play4change.auth.adapter.inbound.security
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ureka.play4change.auth.adapter.inbound.web.MessageResponse
+import io.micrometer.core.instrument.MeterRegistry
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -16,6 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 class RateLimitFilter(
     private val rateLimitService: RateLimitService,
     private val objectMapper: ObjectMapper,
+    private val meterRegistry: MeterRegistry,
 ) : OncePerRequestFilter() {
 
     override fun doFilterInternal(
@@ -24,14 +26,10 @@ class RateLimitFilter(
         chain: FilterChain,
     ) {
         val path = request.requestURI
-        if (!path.startsWith("/auth/")) {
-            chain.doFilter(request, response)
-            return
-        }
-
         val clientIp = IpExtractor.extractClientIp(request)
         if (!rateLimitService.tryConsume(clientIp, path)) {
             val retryAfter = rateLimitService.retryAfterSeconds(clientIp, path)
+            meterRegistry.counter("rate_limit_exceeded_total", "path_prefix", pathPrefix(path)).increment()
             response.status = HttpStatus.TOO_MANY_REQUESTS.value()
             response.contentType = "application/json"
             response.setIntHeader("Retry-After", retryAfter.toInt())
@@ -44,5 +42,13 @@ class RateLimitFilter(
         }
 
         chain.doFilter(request, response)
+    }
+
+    private fun pathPrefix(path: String): String = when {
+        path.startsWith("/auth/") -> "auth"
+        path.startsWith("/topics/") -> "topics"
+        path.startsWith("/reviews/") -> "reviews"
+        path.startsWith("/enrollments/") -> "enrollments"
+        else -> "other"
     }
 }
