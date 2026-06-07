@@ -58,6 +58,8 @@ class LangChain4jTaskGenerationAdapter(
     private val jdbc: JdbcTemplate,
     private val meterRegistry: MeterRegistry,
     @Value("\${ai.generation.subtask-count:3}") private val defaultSubtaskCount: Int,
+    @Value("\${ai.dedup.partial-reuse-threshold:0.65}") private val partialReuseThreshold: Double,
+    @Value("\${ai.dedup.full-reuse-threshold:0.90}") private val fullReuseThreshold: Double,
 ) : TaskGenerationPort {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -266,7 +268,8 @@ class LangChain4jTaskGenerationAdapter(
 
     private fun mergeAndGenerate(match: SimilarityMatch, context: StruggleContext, embedding: FloatArray): AdaptiveBranch {
         val existing = loadExistingBranch(match.branchId!!, ReuseStrategy.PARTIAL_REUSE)
-        val reuseCount = (existing.subtasks.size * match.similarity).toInt().coerceAtLeast(1)
+        val normalizedSimilarity = ((match.similarity - partialReuseThreshold) / (fullReuseThreshold - partialReuseThreshold)).coerceIn(0.0, 1.0)
+        val reuseCount = (existing.subtasks.size * normalizedSimilarity).toInt().coerceAtLeast(1)
         val reusedTasks = existing.subtasks.take(reuseCount)
         val generateCount = defaultSubtaskCount - reuseCount
 
