@@ -7,7 +7,7 @@ import arrow.core.raise.ensureNotNull
 import com.ureka.play4change.application.port.AdaptiveSubmitResult
 import com.ureka.play4change.application.port.StruggleUseCase
 import com.ureka.play4change.application.port.SubmitAdaptiveTaskCommand
-import com.ureka.play4change.application.explanation.ExplanationService
+import com.ureka.play4change.application.port.ExplanationUseCase
 import com.ureka.play4change.domain.enrollment.AssignmentStatus
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
 import com.ureka.play4change.domain.struggle.StruggleRepository
@@ -29,7 +29,7 @@ class AdaptiveTaskService(
     private val struggleRepository: StruggleRepository,
     private val enrollmentRepository: EnrollmentRepository,
     private val handleStruggleService: HandleStruggleService,
-    private val explanationService: ExplanationService
+    private val explanationService: ExplanationUseCase
 ) : StruggleUseCase {
 
     private val log = LoggerFactory.getLogger(AdaptiveTaskService::class.java)
