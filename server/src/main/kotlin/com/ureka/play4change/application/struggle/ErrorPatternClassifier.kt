@@ -9,11 +9,16 @@ import kotlin.math.abs
 object ErrorPatternClassifier {
 
     /**
-     * Called at the moment of the 2nd wrong answer submission.
+     * Classifies the error pattern at the moment of a wrong answer submission.
      *
-     * @param assignment  the persisted assignment — selectedOption holds the FIRST wrong answer
-     * @param newSelectedOption  the shuffled index being submitted now (second wrong)
-     * @param template    the task template — needed for correctAnswer (original index)
+     * Note: [assignment.selectedOption] is null here because the assignment has not been
+     * marked submitted yet when this is called. The PARTIAL_UNDERSTANDING pattern (user
+     * picked a different wrong option on a second attempt) therefore requires a two-attempt
+     * state machine that does not exist today; it is intentionally absent from this classifier.
+     *
+     * @param assignment        the persisted assignment (selectedOption is null at classification time)
+     * @param newSelectedOption the shuffled index currently being submitted
+     * @param template          the task template — needed for correctAnswer (original index)
      */
     fun classify(
         assignment: TaskAssignment,
@@ -24,22 +29,15 @@ object ErrorPatternClassifier {
         if (OffsetDateTime.now().isAfter(assignment.dueAt))
             return ErrorPattern.TIME_PRESSURE
 
-        // 2. READING_ERROR — either wrong answer is adjacent to correct in the original (unshuffled) array
+        // 2. READING_ERROR — selected option is adjacent to correct in the original (unshuffled) array
         val correctOriginalIndex = template.correctAnswer
         if (correctOriginalIndex != null) {
-            val firstWrongOriginalIndex = assignment.selectedOption?.let { assignment.optionOrder.getOrNull(it) }
-            val secondWrongOriginalIndex = assignment.optionOrder.getOrNull(newSelectedOption)
-            val firstAdjacent = firstWrongOriginalIndex != null && abs(firstWrongOriginalIndex - correctOriginalIndex) <= 1
-            val secondAdjacent = secondWrongOriginalIndex != null && abs(secondWrongOriginalIndex - correctOriginalIndex) <= 1
-            if (firstAdjacent || secondAdjacent)
+            val selectedOriginalIndex = assignment.optionOrder.getOrNull(newSelectedOption)
+            if (selectedOriginalIndex != null && abs(selectedOriginalIndex - correctOriginalIndex) <= 1)
                 return ErrorPattern.READING_ERROR
         }
 
-        // 3. PARTIAL_UNDERSTANDING — user tried two different wrong options
-        if (assignment.selectedOption != null && assignment.selectedOption != newSelectedOption)
-            return ErrorPattern.PARTIAL_UNDERSTANDING
-
-        // 4. WRONG_CONCEPT — default
+        // 3. WRONG_CONCEPT — default
         return ErrorPattern.WRONG_CONCEPT
     }
 }
