@@ -79,7 +79,8 @@ class EnrollmentRepositoryAdapter(
             currentDayIndex = enrollment.currentDayIndex,
             totalPointsEarned = enrollment.totalPointsEarned,
             streakDays = enrollment.streakDays,
-            lastActivityAt = enrollment.lastActivityAt
+            lastActivityAt = enrollment.lastActivityAt,
+            pausedAt = enrollment.pausedAt
         )
         return enrollmentJpa.save(entity).toDomain()
     }
@@ -121,7 +122,8 @@ class EnrollmentRepositoryAdapter(
         currentDayIndex = currentDayIndex,
         totalPointsEarned = totalPointsEarned,
         streakDays = streakDays,
-        lastActivityAt = lastActivityAt
+        lastActivityAt = lastActivityAt,
+        pausedAt = pausedAt
     )
 
     private fun TaskAssignmentEntity.toDomain(): TaskAssignment {
