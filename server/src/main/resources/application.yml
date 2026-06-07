@@ -7,8 +7,8 @@ spring:
       port: ${REDIS_PORT:6379}
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://play4change-postgres:5432/play4change}
-    username: play4change
-    password: play4change
+    username: ${SPRING_DATASOURCE_USERNAME:play4change}
+    password: ${SPRING_DATASOURCE_PASSWORD:play4change}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
