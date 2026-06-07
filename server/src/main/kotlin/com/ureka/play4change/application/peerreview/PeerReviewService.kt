@@ -45,8 +45,13 @@ class PeerReviewService(
             val candidates = enrollmentRepository.findPendingReviewSubmissionsForTopic(topicId, reviewerUserId)
 
             val now = OffsetDateTime.now()
+            // Batch-load all reviews for all candidates in one query, then group in memory
+            val reviewsByCandidateId = peerReviewRepository
+                .findBySubmissionAssignmentIdIn(candidates.map { it.id })
+                .groupBy { it.submissionAssignmentId }
+
             val eligible = candidates.mapNotNull { submission ->
-                val reviews = peerReviewRepository.findBySubmissionAssignmentId(submission.id)
+                val reviews = reviewsByCandidateId[submission.id] ?: emptyList()
                 // Block if reviewer already has an active (non-expired) slot or already submitted a verdict
                 if (reviews.any { it.reviewerUserId == reviewerUserId && (it.verdict != null || it.expiresAt.isAfter(now)) })
                     return@mapNotNull null
