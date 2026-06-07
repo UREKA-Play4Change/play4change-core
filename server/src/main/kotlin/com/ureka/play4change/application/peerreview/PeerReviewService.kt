@@ -44,11 +44,16 @@ class PeerReviewService(
         either {
             val candidates = enrollmentRepository.findPendingReviewSubmissionsForTopic(topicId, reviewerUserId)
 
+            val now = OffsetDateTime.now()
             val eligible = candidates.mapNotNull { submission ->
                 val reviews = peerReviewRepository.findBySubmissionAssignmentId(submission.id)
-                if (reviews.any { it.reviewerUserId == reviewerUserId }) return@mapNotNull null
-                if (reviews.size >= VERDICTS_REQUIRED) return@mapNotNull null
-                Pair(submission, reviews.size)
+                // Block if reviewer already has an active (non-expired) slot or already submitted a verdict
+                if (reviews.any { it.reviewerUserId == reviewerUserId && (it.verdict != null || it.expiresAt.isAfter(now)) })
+                    return@mapNotNull null
+                // Count only active reviews (submitted verdict OR unexpired pending) toward the cap
+                val activeReviews = reviews.filter { it.verdict != null || it.expiresAt.isAfter(now) }
+                if (activeReviews.size >= VERDICTS_REQUIRED) return@mapNotNull null
+                Pair(submission, activeReviews.size)
             }
 
             if (eligible.isEmpty()) return@either null
@@ -68,6 +73,7 @@ class PeerReviewService(
                     verdict = null,
                     comment = null,
                     assignedAt = OffsetDateTime.now(),
+                    expiresAt = OffsetDateTime.now().plusHours(48),
                     reviewedAt = null
                 )
             )
