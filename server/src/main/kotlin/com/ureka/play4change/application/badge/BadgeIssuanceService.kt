@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
 import java.util.UUID
 
+private const val MINIMUM_CORRECT_RATE = 0.60
+
 @Service
 class BadgeIssuanceService(
     private val badgeRepository: BadgeRepository,
@@ -26,12 +28,14 @@ class BadgeIssuanceService(
         }
         val assignments = enrollmentRepository.findAssignmentsByEnrollmentId(enrollmentId)
         val submittedCount = assignments.count { it.submittedAt != null }
-        if (submittedCount >= topic.taskCount) {
+        val correctCount = assignments.count { it.isCorrect == true }
+        val requiredCorrect = (topic.taskCount * MINIMUM_CORRECT_RATE).toInt()
+        if (submittedCount >= topic.taskCount && correctCount >= requiredCorrect) {
             issueIfNotYetEarned(userId, topicId)
         } else {
             log.debug(
-                "Badge not yet earned for user {} in topic {} — {}/{} tasks submitted",
-                userId, topicId, submittedCount, topic.taskCount
+                "Badge not yet earned for user {} in topic {} — {}/{} submitted, {}/{} correct",
+                userId, topicId, submittedCount, topic.taskCount, correctCount, requiredCorrect
             )
         }
     }
