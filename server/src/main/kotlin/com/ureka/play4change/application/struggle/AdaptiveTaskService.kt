@@ -21,6 +21,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
 
+private const val MAX_STRUGGLE_DEPTH = 3
+
 @Service
 class AdaptiveTaskService(
     private val struggleRepository: StruggleRepository,
@@ -119,12 +121,35 @@ class AdaptiveTaskService(
                         session.id, session.originalTaskAssignmentId
                     )
                 } else {
-                    // One or more adaptive tasks failed — spawn a new struggle session and keep the original locked
-                    handleStruggleService.triggerFromPreviousSession(resolvedSession, command.userId)
-                    log.info(
-                        "Struggle session {} had failures — follow-up session triggered for enrollment {}",
-                        session.id, session.enrollmentId
-                    )
+                    // One or more adaptive tasks failed — spawn a follow-up only if under depth limit
+                    val depthForAssignment = struggleRepository
+                        .findAllByEnrollmentId(session.enrollmentId)
+                        .count { it.originalTaskAssignmentId == session.originalTaskAssignmentId }
+                    if (depthForAssignment < MAX_STRUGGLE_DEPTH) {
+                        handleStruggleService.triggerFromPreviousSession(resolvedSession, command.userId)
+                        log.info(
+                            "Struggle session {} had failures — follow-up session triggered (depth {}/{})",
+                            session.id, depthForAssignment, MAX_STRUGGLE_DEPTH
+                        )
+                    } else {
+                        // Max depth reached — reset original assignment so learner can proceed
+                        val originalAssignment = enrollmentRepository.findAssignmentById(session.originalTaskAssignmentId)
+                        if (originalAssignment != null) {
+                            enrollmentRepository.saveAssignment(
+                                originalAssignment.copy(
+                                    status = AssignmentStatus.PENDING,
+                                    submittedAt = null,
+                                    selectedOption = null,
+                                    isCorrect = null,
+                                    pointsAwarded = 0
+                                )
+                            )
+                        }
+                        log.info(
+                            "Struggle session {} reached max depth ({}) — original assignment {} reset to PENDING",
+                            session.id, MAX_STRUGGLE_DEPTH, session.originalTaskAssignmentId
+                        )
+                    }
                 }
             }
 
