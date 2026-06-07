@@ -3,6 +3,7 @@ package com.ureka.play4change.web.admin
 import com.ureka.play4change.application.port.BadgeQueryUseCase
 import com.ureka.play4change.application.port.RoadmapUseCase
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
+import com.ureka.play4change.domain.explanation.ExplanationMessage
 import com.ureka.play4change.domain.explanation.ExplanationRepository
 import com.ureka.play4change.domain.explanation.ExplanationSession
 import com.ureka.play4change.domain.identity.User
@@ -71,22 +72,40 @@ data class AdminUserBadgeResponse(
     val earnedAt: OffsetDateTime
 )
 
+data class AdminExplanationMessageResponse(
+    val role: String,
+    val content: String,
+    val sentAt: OffsetDateTime
+) {
+    companion object {
+        fun from(msg: ExplanationMessage) = AdminExplanationMessageResponse(
+            role = msg.role.name,
+            content = msg.content,
+            sentAt = msg.sentAt
+        )
+    }
+}
+
 data class AdminExplanationSessionResponse(
     val sessionId: String,
+    val dayIndex: Int,
     val errorPattern: String,
     val status: String,
     val explanationText: String?,
     val generatedAt: OffsetDateTime,
-    val resolvedAt: OffsetDateTime?
+    val resolvedAt: OffsetDateTime?,
+    val messages: List<AdminExplanationMessageResponse>
 ) {
     companion object {
-        fun from(session: ExplanationSession) = AdminExplanationSessionResponse(
+        fun from(session: ExplanationSession, messages: List<ExplanationMessage>) = AdminExplanationSessionResponse(
             sessionId = session.id,
+            dayIndex = session.dayIndex,
             errorPattern = session.errorPattern,
             status = session.status.name,
             explanationText = session.explanationText,
             generatedAt = session.generatedAt,
-            resolvedAt = session.resolvedAt
+            resolvedAt = session.resolvedAt,
+            messages = messages.map { AdminExplanationMessageResponse.from(it) }
         )
     }
 }
@@ -214,8 +233,10 @@ class AdminUserController(
         val enrollment = enrollmentRepository.findById(enrollmentId)
             ?: return ResponseEntity.notFound().build()
         if (enrollment.userId != userId) return ResponseEntity.notFound().build()
-        val sessions = explanationRepository.findAllByEnrollmentId(enrollmentId)
-            .map { AdminExplanationSessionResponse.from(it) }
+        val sessions = explanationRepository.findAllByEnrollmentId(enrollmentId).map { session ->
+            val messages = explanationRepository.findMessagesBySessionId(session.id)
+            AdminExplanationSessionResponse.from(session, messages)
+        }
         return ResponseEntity.ok(sessions)
     }
 
