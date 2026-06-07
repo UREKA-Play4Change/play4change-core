@@ -8,6 +8,7 @@ import java.time.OffsetDateTime
 @Repository
 interface PeerReviewJpaRepository : JpaRepository<PeerReviewEntity, String> {
     fun findBySubmissionAssignmentId(submissionAssignmentId: String): List<PeerReviewEntity>
+    fun findBySubmissionAssignmentIdIn(submissionAssignmentIds: List<String>): List<PeerReviewEntity>
     fun findByReviewerUserIdAndReviewedAtIsNull(reviewerUserId: String): List<PeerReviewEntity>
     fun findByVerdictIsNullAndExpiresAtBefore(cutoff: OffsetDateTime): List<PeerReviewEntity>
     fun countBySubmissionAssignmentId(submissionAssignmentId: String): Int
