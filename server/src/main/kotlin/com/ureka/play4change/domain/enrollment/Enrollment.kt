@@ -12,7 +12,8 @@ data class Enrollment(
     val currentDayIndex: Int,
     val totalPointsEarned: Int,
     val streakDays: Int,
-    val lastActivityAt: OffsetDateTime?
+    val lastActivityAt: OffsetDateTime?,
+    val pausedAt: OffsetDateTime? = null
 ) {
     fun advanceDay(): Enrollment =
         copy(
@@ -36,7 +37,7 @@ data class Enrollment(
         copy(streakDays = 0)
 
     fun deactivate(): Enrollment =
-        copy(status = EnrollmentStatus.PAUSED, lastActivityAt = OffsetDateTime.now())
+        copy(status = EnrollmentStatus.PAUSED, pausedAt = OffsetDateTime.now(), lastActivityAt = OffsetDateTime.now())
 
     fun complete(): Enrollment =
         copy(status = EnrollmentStatus.COMPLETED, lastActivityAt = OffsetDateTime.now())
