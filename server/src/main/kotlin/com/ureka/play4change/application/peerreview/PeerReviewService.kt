@@ -113,8 +113,10 @@ class PeerReviewService(
             "finalized", willFinalize.toString()
         ).increment()
 
-        val verdictTopicId = enrollmentRepository.findAssignmentById(review.submissionAssignmentId)
-            ?.let { enrollmentRepository.findById(it.enrollmentId) }?.topicId ?: "unknown"
+        // Fetch once — reused for both metrics and (if finalizing) finalization logic
+        val submission = enrollmentRepository.findAssignmentById(review.submissionAssignmentId)
+        val submitterEnrollment = submission?.let { enrollmentRepository.findById(it.enrollmentId) }
+        val verdictTopicId = submitterEnrollment?.topicId ?: "unknown"
         registry.counter(
             "reviews_verdicts_submitted_total",
             "verdict", command.verdict.name.lowercase(),
@@ -130,33 +132,33 @@ class PeerReviewService(
             )
         }
 
-        // Finalize: majority vote
-        val submission = ensureNotNull(enrollmentRepository.findAssignmentById(review.submissionAssignmentId)) {
+        // Finalize: majority vote — reuse already-fetched submission and enrollment
+        val confirmedSubmission = ensureNotNull(submission) {
             NotFound.ResourceNotFound("TaskAssignment", review.submissionAssignmentId)
         }
-        val submitterEnrollment = ensureNotNull(enrollmentRepository.findById(submission.enrollmentId)) {
-            NotFound.ResourceNotFound("Enrollment", submission.enrollmentId)
+        val confirmedEnrollment = ensureNotNull(submitterEnrollment) {
+            NotFound.ResourceNotFound("Enrollment", confirmedSubmission.enrollmentId)
         }
-        val template = ensureNotNull(taskTemplateRepository.findById(submission.taskTemplateId)) {
-            NotFound.ResourceNotFound("TaskTemplate", submission.taskTemplateId)
+        val template = ensureNotNull(taskTemplateRepository.findById(confirmedSubmission.taskTemplateId)) {
+            NotFound.ResourceNotFound("TaskTemplate", confirmedSubmission.taskTemplateId)
         }
 
         val isCorrect = summary.correct >= 2
         val pointsAwarded = if (isCorrect) template.pointsReward else 0
-        val finalStatus = if (submission.submittedAt != null && submission.submittedAt.isAfter(submission.dueAt))
+        val finalStatus = if (confirmedSubmission.submittedAt != null && confirmedSubmission.submittedAt.isAfter(confirmedSubmission.dueAt))
             AssignmentStatus.LATE else AssignmentStatus.SUBMITTED
 
         enrollmentRepository.saveAssignment(
-            submission.copy(
+            confirmedSubmission.copy(
                 isCorrect = isCorrect,
                 pointsAwarded = pointsAwarded,
                 status = finalStatus
             )
         )
 
-        enrollmentRepository.save(submitterEnrollment.addPoints(pointsAwarded))
+        enrollmentRepository.save(confirmedEnrollment.addPoints(pointsAwarded))
 
-        val topicId = submitterEnrollment.topicId
+        val topicId = confirmedEnrollment.topicId
         val majorityVerdict = if (isCorrect) ReviewVerdict.CORRECT else ReviewVerdict.INCORRECT
         completed.forEach { r ->
             if (r.verdict == majorityVerdict) {
@@ -169,7 +171,7 @@ class PeerReviewService(
 
         log.info(
             "Submission {} finalized — correct={}, points={} awarded to submitter",
-            submission.id, isCorrect, pointsAwarded
+            confirmedSubmission.id, isCorrect, pointsAwarded
         )
 
         VerdictResult(
