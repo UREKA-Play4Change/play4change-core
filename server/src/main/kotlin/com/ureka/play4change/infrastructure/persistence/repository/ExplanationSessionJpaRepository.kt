@@ -17,4 +17,16 @@ interface ExplanationSessionJpaRepository : JpaRepository<ExplanationSessionEnti
     fun findActiveByEnrollmentId(enrollmentId: String): ExplanationSessionEntity?
 
     fun findByEnrollmentIdOrderByGeneratedAtAsc(enrollmentId: String): List<ExplanationSessionEntity>
+
+    @Query(
+        """
+        SELECT e FROM ExplanationSessionEntity e
+        JOIN FETCH e.enrollment enr
+        JOIN FETCH e.originalTaskAssignment ta
+        JOIN FETCH ta.taskTemplate tt
+        WHERE enr.topic.id = :topicId
+        ORDER BY e.generatedAt DESC
+        """
+    )
+    fun findByTopicIdWithDetails(topicId: String): List<ExplanationSessionEntity>
 }
