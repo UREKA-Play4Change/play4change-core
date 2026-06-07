@@ -27,8 +27,9 @@ class StruggleResolutionTest {
 
     private val struggleRepository = mockk<StruggleRepository>()
     private val enrollmentRepository = mockk<EnrollmentRepository>()
+    private val handleStruggleService = mockk<HandleStruggleService>(relaxed = true)
 
-    private val service = AdaptiveTaskService(struggleRepository, enrollmentRepository)
+    private val service = AdaptiveTaskService(struggleRepository, enrollmentRepository, handleStruggleService)
 
     private val userId = "user-1"
     private val enrollmentId = "enrollment-1"
@@ -165,7 +166,9 @@ class StruggleResolutionTest {
         with(resetSlot.captured) {
             assertEquals(originalAssignmentId, id)
             assertEquals(AssignmentStatus.PENDING, status)
-            assertEquals(0, wrongAttemptCount)
+            // wrongAttemptCount is intentionally preserved on reset — failure history
+            // must survive so stats remain accurate when the learner retries.
+            assertEquals(1, wrongAttemptCount)
             assertEquals(null, submittedAt)
             assertEquals(null, isCorrect)
             assertEquals(0, pointsAwarded)
