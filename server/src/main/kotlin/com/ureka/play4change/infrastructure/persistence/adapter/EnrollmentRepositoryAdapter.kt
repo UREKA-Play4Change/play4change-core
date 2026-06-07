@@ -105,7 +105,8 @@ class EnrollmentRepositoryAdapter(
             optionOrder = optionOrderJson,
             wrongAttemptCount = assignment.wrongAttemptCount,
             photoUrl = assignment.photoUrl,
-            taskInstanceId = assignment.taskInstanceId
+            taskInstanceId = assignment.taskInstanceId,
+            correctAnswerIndex = assignment.correctAnswerIndex
         )
         return assignmentJpa.save(entity).toDomain()
     }
@@ -144,7 +145,8 @@ class EnrollmentRepositoryAdapter(
             optionOrder = order,
             wrongAttemptCount = wrongAttemptCount,
             photoUrl = photoUrl,
-            taskInstanceId = taskInstanceId
+            taskInstanceId = taskInstanceId,
+            correctAnswerIndex = correctAnswerIndex
         )
     }
 }
