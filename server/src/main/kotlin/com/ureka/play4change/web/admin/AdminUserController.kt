@@ -3,6 +3,8 @@ package com.ureka.play4change.web.admin
 import com.ureka.play4change.application.port.BadgeQueryUseCase
 import com.ureka.play4change.application.port.RoadmapUseCase
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
+import com.ureka.play4change.domain.explanation.ExplanationRepository
+import com.ureka.play4change.domain.explanation.ExplanationSession
 import com.ureka.play4change.domain.identity.User
 import com.ureka.play4change.domain.identity.UserRepository
 import com.ureka.play4change.domain.identity.UserRole
@@ -69,6 +71,26 @@ data class AdminUserBadgeResponse(
     val earnedAt: OffsetDateTime
 )
 
+data class AdminExplanationSessionResponse(
+    val sessionId: String,
+    val errorPattern: String,
+    val status: String,
+    val explanationText: String?,
+    val generatedAt: OffsetDateTime,
+    val resolvedAt: OffsetDateTime?
+) {
+    companion object {
+        fun from(session: ExplanationSession) = AdminExplanationSessionResponse(
+            sessionId = session.id,
+            errorPattern = session.errorPattern,
+            status = session.status.name,
+            explanationText = session.explanationText,
+            generatedAt = session.generatedAt,
+            resolvedAt = session.resolvedAt
+        )
+    }
+}
+
 @RestController
 @RequestMapping("/admin/users")
 class AdminUserController(
@@ -76,7 +98,8 @@ class AdminUserController(
     private val enrollmentRepository: EnrollmentRepository,
     private val topicRepository: TopicRepository,
     private val badgeQueryUseCase: BadgeQueryUseCase,
-    private val roadmapUseCase: RoadmapUseCase
+    private val roadmapUseCase: RoadmapUseCase,
+    private val explanationRepository: ExplanationRepository
 ) {
 
     @GetMapping
@@ -181,6 +204,19 @@ class AdminUserController(
             ifLeft = { it.toErrorResponse() },
             ifRight = { ResponseEntity.ok(it.map(RoadmapNodeResponse::from)) }
         )
+    }
+
+    @GetMapping("/{userId}/enrollments/{enrollmentId}/explanations")
+    fun getUserEnrollmentExplanations(
+        @PathVariable userId: String,
+        @PathVariable enrollmentId: String
+    ): ResponseEntity<List<AdminExplanationSessionResponse>> {
+        val enrollment = enrollmentRepository.findById(enrollmentId)
+            ?: return ResponseEntity.notFound().build()
+        if (enrollment.userId != userId) return ResponseEntity.notFound().build()
+        val sessions = explanationRepository.findAllByEnrollmentId(enrollmentId)
+            .map { AdminExplanationSessionResponse.from(it) }
+        return ResponseEntity.ok(sessions)
     }
 
     @Suppress("UNCHECKED_CAST")
