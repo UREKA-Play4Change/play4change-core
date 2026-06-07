@@ -2,8 +2,11 @@ package com.ureka.play4change.web.admin
 
 import com.ureka.play4change.application.port.AdminTaskUseCase
 import com.ureka.play4change.application.port.UpdateTaskCommand
+import com.ureka.play4change.domain.identity.UserRepository
 import com.ureka.play4change.domain.struggle.StrugglePathStats
 import com.ureka.play4change.error.AppError
+import com.ureka.play4change.infrastructure.persistence.repository.ExplanationMessageJpaRepository
+import com.ureka.play4change.infrastructure.persistence.repository.ExplanationSessionJpaRepository
 import com.ureka.play4change.web.admin.dto.AdaptiveTaskAdminResponse
 import com.ureka.play4change.web.admin.dto.TaskTemplateAdminResponse
 import com.ureka.play4change.web.admin.dto.UpdateTaskRequest
@@ -15,10 +18,31 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.time.OffsetDateTime
+
+data class TopicExplanationResponse(
+    val sessionId: String,
+    val userId: String,
+    val userEmail: String,
+    val userName: String?,
+    val dayIndex: Int,
+    val originalTaskTitle: String,
+    val errorPattern: String,
+    val status: String,
+    val explanationText: String?,
+    val generatedAt: OffsetDateTime,
+    val resolvedAt: OffsetDateTime?,
+    val messages: List<AdminExplanationMessageResponse>
+)
 
 @RestController
 @RequestMapping("/admin")
-class AdminTaskController(private val adminTaskUseCase: AdminTaskUseCase) {
+class AdminTaskController(
+    private val adminTaskUseCase: AdminTaskUseCase,
+    private val explanationSessionJpa: ExplanationSessionJpaRepository,
+    private val explanationMessageJpa: ExplanationMessageJpaRepository,
+    private val userRepository: UserRepository
+) {
 
     @GetMapping("/topics/{topicId}/tasks")
     fun getTopicTasks(
@@ -90,6 +114,39 @@ class AdminTaskController(private val adminTaskUseCase: AdminTaskUseCase) {
                 ResponseEntity.ok(TaskTemplateAdminResponse.from(withStats))
             }
         )
+
+    @GetMapping("/topics/{topicId}/explanations")
+    fun getTopicExplanations(
+        @PathVariable topicId: String
+    ): ResponseEntity<List<TopicExplanationResponse>> {
+        val sessions = explanationSessionJpa.findByTopicIdWithDetails(topicId)
+        val userIds = sessions.map { it.enrollment.userId }.distinct()
+        val usersById = userIds
+            .mapNotNull { uid -> userRepository.findById(uid)?.let { uid to it } }
+            .toMap()
+
+        val responses = sessions.map { session ->
+            val user = usersById[session.enrollment.userId]
+            val messages = explanationMessageJpa
+                .findBySessionIdOrderBySentAtAsc(session.id)
+                .map { msg -> AdminExplanationMessageResponse(role = msg.role, content = msg.content, sentAt = msg.sentAt) }
+            TopicExplanationResponse(
+                sessionId = session.id,
+                userId = session.enrollment.userId,
+                userEmail = user?.email ?: session.enrollment.userId,
+                userName = user?.name,
+                dayIndex = session.originalTaskAssignment.taskTemplate.dayIndex,
+                originalTaskTitle = session.originalTaskAssignment.taskTemplate.title,
+                errorPattern = session.errorPattern,
+                status = session.status,
+                explanationText = session.explanationText,
+                generatedAt = session.generatedAt,
+                resolvedAt = session.resolvedAt,
+                messages = messages
+            )
+        }
+        return ResponseEntity.ok(responses)
+    }
 
     @Suppress("UNCHECKED_CAST")
     private fun <T> AppError.toErrorResponse(): ResponseEntity<T> =
