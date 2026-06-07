@@ -201,7 +201,14 @@ class LangChain4jTaskGenerationAdapter(
             FROM adaptive_tasks WHERE branch_id = ? ORDER BY order_index
             """.trimIndent(),
             branchId
-        ).map { row ->
+        ).mapNotNull { row ->
+            // Skip rows with no options — they pre-date the options validation fix or
+            // were stored from a malformed AI response and must not be reused.
+            val optionsStr = row["options"]?.toString() ?: return@mapNotNull null
+            val optionCount = runCatching {
+                Json.parseToJsonElement(optionsStr).jsonArray.size
+            }.getOrElse { 0 }
+            if (optionCount < 2) return@mapNotNull null
             GeneratedTask(
                 externalId = row["id"] as String,
                 title = row["title"] as String,
@@ -210,7 +217,7 @@ class LangChain4jTaskGenerationAdapter(
                 pointsReward = (row["points_reward"] as Number).toInt(),
                 embedding = FloatArray(0),
                 status = GenerationStatus.SUCCESS,
-                optionsJson = row["options"]?.toString(),
+                optionsJson = optionsStr,
                 correctAnswerIndex = (row["correct_answer"] as? Number)?.toInt() ?: 0
             )
         }
@@ -248,11 +255,15 @@ class LangChain4jTaskGenerationAdapter(
     }
 
     private fun generateFreshBranch(context: StruggleContext, embedding: FloatArray): AdaptiveBranch {
-        val response = chatModel.generate(
-            SystemMessage.from(StruggleAnalysisPrompt.system()),
-            UserMessage.from(StruggleAnalysisPrompt.user(context, defaultSubtaskCount))
-        )
-        val tasks = parseTasksFromJson(response.content().text(), context.moduleId)
+        val systemMsg = SystemMessage.from(StruggleAnalysisPrompt.system())
+        val userMsg = UserMessage.from(StruggleAnalysisPrompt.user(context, defaultSubtaskCount))
+        var tasks = parseTasksFromJson(chatModel.generate(systemMsg, userMsg).content().text(), context.moduleId)
+        if (tasks.none { it.status == GenerationStatus.SUCCESS }) {
+            // AI returned tasks with no options or none at all — retry once before giving up.
+            log.warn("No valid adaptive tasks on first attempt for task=${context.taskId} — retrying")
+            meterRegistry.counter("ai.generation.failures", "type", "adaptive_schema_retry").increment()
+            tasks = parseTasksFromJson(chatModel.generate(systemMsg, userMsg).content().text(), context.moduleId)
+        }
         val branchId = UUID.randomUUID().toString()
         deduplicationService.persistBranch(UUID.randomUUID().toString(), branchId, embedding)
         return AdaptiveBranch(
@@ -283,7 +294,12 @@ class LangChain4jTaskGenerationAdapter(
                 val description = obj["description"]?.jsonPrimitive?.content ?: return@runCatching null
                 val hint = obj["hint"]?.jsonPrimitive?.content ?: return@runCatching null
                 val points = obj["pointsReward"]?.jsonPrimitive?.int ?: 20
-                val optionsJsonStr = obj["options"]?.jsonArray?.toString()
+                val optionsArray = obj["options"]?.jsonArray
+                // A multiple-choice task with fewer than 2 options is unusable — skip it
+                // before spending an embedding API call. This guards against schema
+                // non-compliance where the AI omits or truncates the options field.
+                if (optionsArray == null || optionsArray.size < 2) return@runCatching null
+                val optionsJsonStr = optionsArray.toString()
                 val correctIdx = obj["correctAnswerIndex"]?.jsonPrimitive?.int ?: 0
 
                 // Embed for deduplication check
