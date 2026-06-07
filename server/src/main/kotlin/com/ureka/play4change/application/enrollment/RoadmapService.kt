@@ -44,7 +44,16 @@ class RoadmapService(
                 .sortedBy { it.dayIndex }
 
             val assignments = enrollmentRepository.findAssignmentsByEnrollmentId(enrollment.id)
-            val assignmentsByTemplateId = assignments.associateBy { it.taskTemplateId }
+            // Key by dayIndex (via template lookup) so assignments survive topic regeneration:
+            // after regeneration templates get new IDs; keying by templateId would find nothing for
+            // any task the user completed before the regeneration.
+            val assignmentsByDayIndex: Map<Int, com.ureka.play4change.domain.enrollment.TaskAssignment> =
+                assignments
+                    .mapNotNull { a ->
+                        taskTemplateRepository.findById(a.taskTemplateId)?.dayIndex?.let { d -> d to a }
+                    }
+                    .groupBy { it.first }
+                    .mapValues { (_, pairs) -> pairs.maxByOrNull { it.second.assignedAt }!!.second }
 
             val allSessions = struggleRepository.findAllByEnrollmentId(enrollment.id)
             val sessionsByAssignmentId = allSessions.groupBy { it.originalTaskAssignmentId }
@@ -52,14 +61,15 @@ class RoadmapService(
             val nodes = mutableListOf<RoadmapNode>()
 
             for (template in templates) {
-                val assignment = assignmentsByTemplateId[template.id]
+                val assignment = assignmentsByDayIndex[template.dayIndex]
                 val nodeStatus = when {
                     template.dayIndex < dayIndex -> when (assignment?.status) {
                         AssignmentStatus.SUBMITTED -> RoadmapNodeStatus.COMPLETED
                         AssignmentStatus.LATE -> RoadmapNodeStatus.LATE
+                        AssignmentStatus.PENDING -> RoadmapNodeStatus.PENDING  // reset after struggle resolution — awaiting retry
                         AssignmentStatus.SKIPPED -> RoadmapNodeStatus.SKIPPED
                         AssignmentStatus.PENDING_REVIEW -> RoadmapNodeStatus.PENDING_REVIEW
-                        else -> RoadmapNodeStatus.SKIPPED
+                        else -> RoadmapNodeStatus.SKIPPED  // null = never attempted
                     }
                     template.dayIndex == dayIndex -> when (assignment?.status) {
                         AssignmentStatus.SUBMITTED -> RoadmapNodeStatus.COMPLETED
