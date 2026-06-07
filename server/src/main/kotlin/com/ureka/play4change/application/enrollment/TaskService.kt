@@ -283,11 +283,11 @@ class TaskService(
         if (updatedAssignment.submittedAt != null && savedEnrollment.status == EnrollmentStatus.ACTIVE) {
             val topic = topicRepository.findById(savedEnrollment.topicId)
             if (topic != null) {
-                val submittedCount = enrollmentRepository.findAssignmentsByEnrollmentId(savedEnrollment.id)
-                    .count { it.submittedAt != null }
+                val submittedCount = enrollmentRepository.countSubmittedAssignmentsByEnrollmentId(savedEnrollment.id)
                 if (submittedCount >= topic.taskCount) {
                     enrollmentRepository.save(savedEnrollment.complete())
                     log.info("Enrollment {} completed for user {} on topic {}", savedEnrollment.id, command.userId, savedEnrollment.topicId)
+                    registry.counter("enrollments_completed_total", "topic_id", savedEnrollment.topicId).increment()
                     // Trigger badge issuance on completion in case the last answer was wrong
                     // (the earlier triggerBadgeIssuance only fires for correct answers)
                     if (!isCorrect) badgeIssuancePort.issueBadge(command.userId, savedEnrollment.topicId, savedEnrollment.id)

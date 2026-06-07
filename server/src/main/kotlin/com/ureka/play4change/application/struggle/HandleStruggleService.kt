@@ -213,6 +213,7 @@ class HandleStruggleService(
             )
         } catch (ex: Exception) {
             log.error("Unexpected error during struggle generation for enrollment {}: {}", enrollmentId, ex.message, ex)
+            registry.counter("ai.generation.failures", "type", "unexpected_error").increment()
             session?.let {
                 runCatching { struggleRepository.save(it.abandon()) }
                     .onFailure { e -> log.error("Failed to abandon session {} after error: {}", it.id, e.message) }

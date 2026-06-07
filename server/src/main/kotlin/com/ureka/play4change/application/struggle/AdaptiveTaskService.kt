@@ -18,6 +18,7 @@ import com.ureka.play4change.error.client.BadRequest
 import com.ureka.play4change.error.client.Conflict
 import com.ureka.play4change.error.client.Forbidden.ResourceOwnershipViolation
 import com.ureka.play4change.error.client.NotFound
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
@@ -29,7 +30,8 @@ class AdaptiveTaskService(
     private val struggleRepository: StruggleRepository,
     private val enrollmentRepository: EnrollmentRepository,
     private val handleStruggleService: HandleStruggleService,
-    private val explanationService: ExplanationUseCase
+    private val explanationService: ExplanationUseCase,
+    private val registry: MeterRegistry
 ) : StruggleUseCase {
 
     private val log = LoggerFactory.getLogger(AdaptiveTaskService::class.java)
@@ -118,6 +120,7 @@ class AdaptiveTaskService(
                             )
                         )
                     }
+                    registry.counter("struggle_sessions_resolved_total", "outcome", "success").increment()
                     log.info(
                         "Struggle session {} resolved successfully — original assignment {} reset to PENDING",
                         session.id, session.originalTaskAssignmentId
@@ -129,6 +132,7 @@ class AdaptiveTaskService(
                     // eventually escalate to the explanation path.
                     val depthForAssignment = struggleRepository
                         .countByEnrollmentIdAndOriginalAssignmentId(session.enrollmentId, session.originalTaskAssignmentId)
+                    registry.counter("struggle_sessions_resolved_total", "outcome", "failure").increment()
                     if (depthForAssignment < MAX_STRUGGLE_DEPTH) {
                         handleStruggleService.triggerFromPreviousSession(resolvedSession, command.userId)
                         log.info(
@@ -145,6 +149,7 @@ class AdaptiveTaskService(
                             errorPattern = session.errorPattern.name,
                             userId = command.userId
                         )
+                        registry.counter("struggle_sessions_escalated_to_explanation_total").increment()
                         log.info(
                             "Struggle session {} reached max depth ({}) — explanation triggered for assignment {}",
                             session.id, MAX_STRUGGLE_DEPTH, session.originalTaskAssignmentId

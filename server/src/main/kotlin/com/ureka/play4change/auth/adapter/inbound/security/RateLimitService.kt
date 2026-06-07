@@ -39,14 +39,23 @@ class RateLimitService(val timeMeter: TimeMeter) {
             .withCustomTimePrecision(timeMeter)
             .build()
 
-    private fun capacityFor(path: String): Int? = when (normalizePath(path)) {
-        "/auth/magic-link" -> 5
-        "/auth/magic-link/verify" -> 10
-        "/auth/verify" -> 10
-        "/auth/oauth" -> 10
-        "/auth/refresh" -> 20
-        "/auth/logout" -> 10
-        else -> null
+    private fun capacityFor(path: String): Int? {
+        val normalized = normalizePath(path)
+        return when {
+            normalized == "/auth/magic-link" -> 5
+            normalized == "/auth/magic-link/verify" -> 10
+            normalized == "/auth/verify" -> 10
+            normalized == "/auth/oauth" -> 10
+            normalized == "/auth/refresh" -> 20
+            normalized == "/auth/logout" -> 10
+            // Per-IP caps on high-frequency API paths — prevents brute-force answer submission,
+            // verdict flooding, and struggle path replay attacks.
+            normalized.matches(Regex("/topics/[^/]+/task-assignments/[^/]+/submit")) -> 30
+            normalized.matches(Regex("/topics/[^/]+/task-assignments/[^/]+/photo")) -> 20
+            normalized.matches(Regex("/reviews/[^/]+/verdict")) -> 20
+            normalized.matches(Regex("/enrollments/[^/]+/struggle/[^/]+/submit")) -> 30
+            else -> null
+        }
     }
 
     private fun normalizePath(path: String): String =
