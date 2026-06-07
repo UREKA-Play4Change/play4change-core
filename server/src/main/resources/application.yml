@@ -114,7 +114,7 @@ scheduler:
     rate-ms: 60000
   watchdog:
     rate-ms: 120000
-    stuck-threshold-minutes: 5
+    stuck-threshold-minutes: 15
 
 springdoc:
   swagger-ui:
