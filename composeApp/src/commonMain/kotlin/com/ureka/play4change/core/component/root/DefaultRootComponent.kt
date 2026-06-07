@@ -87,6 +87,10 @@ class DefaultRootComponent(
         navigation.push(Config.Struggle(enrollmentId))
     }
 
+    override fun navigateToExplanation(sessionId: String) {
+        navigation.push(Config.Explanation(sessionId))
+    }
+
     override fun navigateBack() {
         navigation.pop()
     }
@@ -133,6 +137,9 @@ class DefaultRootComponent(
             is Config.Struggle -> RootComponent.Child.Struggle(
                 get { parametersOf(context, config.enrollmentId) }
             )
+            is Config.Explanation -> RootComponent.Child.Explanation(
+                get { parametersOf(context, config.sessionId) }
+            )
         }
     }
 
@@ -146,5 +153,6 @@ class DefaultRootComponent(
         @Serializable data object About   : Config
         @Serializable data object Explore : Config
         @Serializable data class  Struggle(val enrollmentId: String) : Config
+        @Serializable data class  Explanation(val sessionId: String) : Config
     }
 }
