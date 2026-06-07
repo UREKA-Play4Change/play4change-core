@@ -126,6 +126,10 @@ class HandleStruggleService(
                 log.warn("Metrics registration failed (non-fatal): {}", ex.message)
             }
 
+            // Collect branch IDs the learner has already seen for this assignment so
+            // follow-up sessions never reuse questions the learner already failed.
+            val usedBranchIds = struggleRepository.findUsedBranchIdsByAssignment(enrollmentId, assignmentId)
+
             val context = StruggleContext(
                 userId = userId,
                 taskId = template.id,
@@ -137,7 +141,8 @@ class HandleStruggleService(
                 attemptCount = 2,
                 errorPattern = mapErrorPattern(errorPattern),
                 moduleObjective = module.objective.take(500),
-                taskDescription = template.description.take(500)
+                taskDescription = template.description.take(500),
+                excludedBranchIds = usedBranchIds
             )
 
             val result = runBlocking {
