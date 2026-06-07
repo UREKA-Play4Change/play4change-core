@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -58,7 +59,8 @@ class ExplanationService(
      * is reset to PENDING so the learner is never stuck.
      */
     @Async("generationExecutor")
-    fun triggerAsync(
+    @Transactional
+    override fun triggerAsync(
         enrollmentId: String,
         originalTaskAssignmentId: String,
         errorPattern: String,
