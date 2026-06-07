@@ -273,7 +273,7 @@ class ExplanationService(
         val history = allSessions.mapIndexed { idx, session ->
             StruggleSummary(
                 depth = idx + 1,
-                errorPattern = mapErrorPattern(session.errorPattern),
+                errorPattern = mapErrorPattern(session.errorPattern.name),
                 taskTitles = session.adaptiveTasks.map { it.title }
             )
         }
