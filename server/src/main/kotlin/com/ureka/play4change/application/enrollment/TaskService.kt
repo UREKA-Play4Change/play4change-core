@@ -182,7 +182,8 @@ class TaskService(
                     optionOrder = shuffledOrder,
                     wrongAttemptCount = 0,
                     photoUrl = null,
-                    taskInstanceId = selectedInstance?.id
+                    taskInstanceId = selectedInstance?.id,
+                    correctAnswerIndex = selectedInstance?.correctAnswer ?: template.correctAnswer
                 )
             )
             TodayTaskResult.Available(savedAssignment, template)
@@ -211,9 +212,8 @@ class TaskService(
             BadRequest.InvalidField("selectedOption", "out of range")
         }
 
-        val canonicalAnswer = resolveCorrectAnswer(
-            assignment.taskInstanceId, assignment.taskTemplateId, template.correctAnswer
-        )
+        val canonicalAnswer = assignment.correctAnswerIndex
+            ?: resolveCorrectAnswer(assignment.taskInstanceId, assignment.taskTemplateId, template.correctAnswer)
         val isCorrect = originalIndex == canonicalAnswer
         val now = OffsetDateTime.now()
         val isLate = now.isAfter(assignment.dueAt)
