@@ -13,8 +13,8 @@ if [ -f .env ]; then
   set -a; source .env; set +a
 fi
 
-echo "### Cleaning containers and volumes..."
-docker compose down -v
+#echo "### Cleaning containers and volumes..."
+#docker compose down -v
 
 echo "### Building and starting all services..."
 docker compose up --build -d
