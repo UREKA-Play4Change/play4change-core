@@ -25,7 +25,10 @@ import com.ureka.play4change.error.client.NotFound
 import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 @Service
@@ -70,8 +73,21 @@ class EnrollmentService(
                 Conflict.ConcurrentModification
             }
             log.info("User {} re-enrolling in topic {} — reactivating paused enrollment {}", command.userId, command.topicId, existingEnrollment.id)
+            val pausedAt = existingEnrollment.pausedAt
+                ?: existingEnrollment.lastActivityAt
+                ?: existingEnrollment.enrolledAt
+            val pauseDays = ChronoUnit.DAYS.between(
+                pausedAt.atZoneSameInstant(ZoneOffset.UTC).toLocalDate(),
+                LocalDate.now(ZoneOffset.UTC)
+            )
+            val adjustedEnrolledAt = existingEnrollment.enrolledAt.plusDays(pauseDays)
             return@either enrollmentRepository.save(
-                existingEnrollment.copy(status = EnrollmentStatus.ACTIVE, lastActivityAt = OffsetDateTime.now())
+                existingEnrollment.copy(
+                    status = EnrollmentStatus.ACTIVE,
+                    enrolledAt = adjustedEnrolledAt,
+                    pausedAt = null,
+                    lastActivityAt = OffsetDateTime.now()
+                )
             )
         }
 
