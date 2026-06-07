@@ -1,5 +1,6 @@
 package com.ureka.play4change.auth.adapter.inbound.web
 
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -11,15 +12,21 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 @RestControllerAdvice
 class AuthExceptionHandler {
 
+    private val log = LoggerFactory.getLogger(AuthExceptionHandler::class.java)
+
     @ExceptionHandler(IllegalArgumentException::class)
-    fun handleBadRequest(ex: IllegalArgumentException): ResponseEntity<MessageResponse> =
-        ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(MessageResponse(ex.message ?: "Bad request"))
+    fun handleBadRequest(ex: IllegalArgumentException): ResponseEntity<MessageResponse> {
+        log.debug("Auth bad request: {}", ex.message)
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(MessageResponse("Invalid request"))
+    }
 
     @ExceptionHandler(SecurityException::class)
-    fun handleSecurityViolation(ex: SecurityException): ResponseEntity<MessageResponse> =
-        ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-            .body(MessageResponse(ex.message ?: "Unauthorized"))
+    fun handleSecurityViolation(ex: SecurityException): ResponseEntity<MessageResponse> {
+        log.warn("Auth security violation: {}", ex.message)
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body(MessageResponse("Unauthorized"))
+    }
 
     @ExceptionHandler(IllegalStateException::class)
     fun handleUpstreamError(ex: IllegalStateException): ResponseEntity<MessageResponse> =
