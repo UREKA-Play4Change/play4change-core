@@ -13,6 +13,7 @@ import com.ureka.play4change.domain.struggle.StruggleSession
 import com.ureka.play4change.domain.struggle.StruggleStatus
 import com.ureka.play4change.application.port.ExplanationUseCase
 import com.ureka.play4change.domain.topic.TaskType
+import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -30,8 +31,9 @@ class StruggleResolutionTest {
     private val enrollmentRepository = mockk<EnrollmentRepository>()
     private val handleStruggleService = mockk<HandleStruggleService>(relaxed = true)
     private val explanationService = mockk<ExplanationUseCase>(relaxed = true)
+    private val registry = mockk<MeterRegistry>(relaxed = true)
 
-    private val service = AdaptiveTaskService(struggleRepository, enrollmentRepository, handleStruggleService, explanationService)
+    private val service = AdaptiveTaskService(struggleRepository, enrollmentRepository, handleStruggleService, explanationService, registry)
 
     private val userId = "user-1"
     private val enrollmentId = "enrollment-1"
@@ -144,6 +146,33 @@ class StruggleResolutionTest {
         val savedSession = slot<StruggleSession>()
         verify { struggleRepository.save(capture(savedSession)) }
         assertEquals(StruggleStatus.RESOLVED, savedSession.captured.status)
+    }
+
+    @Test
+    fun `failed adaptive tasks at depth 1 escalate immediately to explanation`() {
+        val task1 = makeAdaptiveTask("task-1", 0, completed = true).copy(isCorrect = false)
+        val task2 = makeAdaptiveTask("task-2", 1, completed = true).copy(isCorrect = false)
+        val task3 = makeAdaptiveTask("task-3", 2, completed = false)
+        val session = makeSession(listOf(task1, task2, task3))
+
+        every { struggleRepository.findById(sessionId) } returns session
+        every { enrollmentRepository.findById(enrollmentId) } returns enrollment
+        every { struggleRepository.save(any()) } answers { firstArg() }
+        every { enrollmentRepository.save(any()) } answers { firstArg() }
+        every { enrollmentRepository.findAssignmentById(originalAssignmentId) } returns originalAssignment
+        every { enrollmentRepository.saveAssignment(any()) } answers { firstArg() }
+        every {
+            struggleRepository.countByEnrollmentIdAndOriginalAssignmentId(enrollmentId, originalAssignmentId)
+        } returns 1
+        every { explanationService.createSession(any(), any(), any()) } returns "explanation-session-1"
+
+        val result = service.submitAdaptiveTask(
+            SubmitAdaptiveTaskCommand(userId, sessionId, "task-3", selectedOption = 1)
+        )
+
+        assertEquals("explanation-session-1", result.getOrNull()!!.explanationSessionId)
+        verify(exactly = 1) { explanationService.createSession(enrollmentId, originalAssignmentId, any()) }
+        verify(exactly = 0) { handleStruggleService.triggerFromPreviousSession(any(), any()) }
     }
 
     @Test
