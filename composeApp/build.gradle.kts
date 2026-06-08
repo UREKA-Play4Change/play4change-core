@@ -84,12 +84,24 @@ android {
     namespace = "com.ureka.play4change"
     compileSdk = libs.versions.androidCompileSdk.get().toInt()
 
+    signingConfigs {
+        create("release") {
+            val keystorePath = System.getenv("KEYSTORE_PATH")
+            if (keystorePath != null) {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
+        }
+    }
+
     defaultConfig {
         applicationId = "com.ureka.play4change"
         minSdk = libs.versions.androidMinSdk.get().toInt()
         targetSdk = libs.versions.androidTargetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = (project.findProperty("VERSION_CODE") as String?)?.toInt() ?: 1
+        versionName = (project.findProperty("VERSION_NAME") as String?) ?: "1.0"
     }
     buildFeatures {
         buildConfig = true
@@ -112,9 +124,10 @@ android {
         }
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             buildConfigField(
                 "String", "BASE_URL",
-                "\"${project.findProperty("BASE_URL") ?: "http://10.0.2.2:8080"}\""
+                "\"${project.findProperty("BASE_URL") ?: "https://play4change.ureka.com"}\""
             )
             buildConfigField("Boolean", "USE_MOCKS", "false")
         }
