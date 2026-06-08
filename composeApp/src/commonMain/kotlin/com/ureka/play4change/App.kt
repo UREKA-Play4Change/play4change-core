@@ -155,8 +155,9 @@ fun App(root: RootComponent) {
                     is RootComponent.Child.Struggle -> {
                         LaunchedEffect(child.component) {
                             child.component.effects.collect { effect ->
-                                when (effect as StruggleEffect) {
+                                when (val e = effect as StruggleEffect) {
                                     StruggleEffect.NavigateToHome -> root.navigateToHome()
+                                    is StruggleEffect.NavigateToExplanation -> root.navigateToExplanation(e.sessionId)
                                 }
                             }
                         }
