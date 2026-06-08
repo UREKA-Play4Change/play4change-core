@@ -2,6 +2,8 @@ package com.ureka.play4change.web.user.dto
 
 import com.ureka.play4change.domain.explanation.ExplanationMessage
 import com.ureka.play4change.domain.explanation.ExplanationSession
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 import java.time.OffsetDateTime
 
 data class ExplanationSessionResponse(
@@ -36,4 +38,6 @@ data class ExplanationMessageResponse(
     }
 }
 
-data class SendExplanationMessageRequest(val content: String)
+data class SendExplanationMessageRequest(
+    @field:NotBlank @field:Size(min = 1, max = 2000) val content: String
+)
