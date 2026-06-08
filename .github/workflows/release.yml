@@ -1,0 +1,63 @@
+name: Release Android APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release-apk:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Restore google-services.json
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > composeApp/google-services.json
+
+      - name: Decode keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > keystore.jks
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${{ github.ref_name }}"
+          VERSION_NAME="${TAG#v}"
+          # Compute versionCode as MAJOR*10000 + MINOR*100 + PATCH
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_NAME"
+          VERSION_CODE=$(( MAJOR * 10000 + MINOR * 100 + PATCH ))
+          echo "VERSION_NAME=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "VERSION_CODE=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+
+      - name: Build release APK
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/keystore.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          ./gradlew :composeApp:assembleRelease --no-daemon -x test \
+            -PBASE_URL=${{ secrets.BASE_URL }} \
+            -PVERSION_NAME=${{ steps.version.outputs.VERSION_NAME }} \
+            -PVERSION_CODE=${{ steps.version.outputs.VERSION_CODE }}
+
+      - name: Rename APK to play4change.apk
+        run: |
+          APK=$(find composeApp/build/outputs/apk/release -name "*.apk" | head -1)
+          cp "$APK" play4change.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: play4change.apk
