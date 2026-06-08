@@ -89,7 +89,12 @@ class DefaultStruggleComponent(
             StruggleEvents.Continue -> {
                 val s = state.value
                 if (s.sessionResolved) {
-                    emitEffect(StruggleEffect.NavigateToHome)
+                    val explanationId = s.pendingExplanationSessionId
+                    if (explanationId != null) {
+                        emitEffect(StruggleEffect.NavigateToExplanation(explanationId))
+                    } else {
+                        emitEffect(StruggleEffect.NavigateToHome)
+                    }
                 } else {
                     // Advance to next adaptive task
                     updateState {
@@ -124,7 +129,8 @@ class DefaultStruggleComponent(
                         submitted = true,
                         isCorrect = false,
                         pointsAwarded = 0,
-                        sessionResolved = result.sessionResolved
+                        sessionResolved = result.sessionResolved,
+                        pendingExplanationSessionId = result.explanationSessionId
                     )
                 }
             } else {
@@ -133,7 +139,8 @@ class DefaultStruggleComponent(
                         submitted = true,
                         isCorrect = true,
                         pointsAwarded = 0, // adaptive tasks never award score points
-                        sessionResolved = result.sessionResolved
+                        sessionResolved = result.sessionResolved,
+                        pendingExplanationSessionId = result.explanationSessionId
                     )
                 }
             }
