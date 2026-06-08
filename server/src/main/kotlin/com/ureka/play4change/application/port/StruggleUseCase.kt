@@ -16,7 +16,9 @@ data class AdaptiveSubmitResult(
     val task: AdaptiveTask,
     val isCorrect: Boolean,
     val pointsAwarded: Int,
-    val sessionResolved: Boolean
+    val sessionResolved: Boolean,
+    /** Non-null only when depth limit was reached and an explanation session was created. */
+    val explanationSessionId: String? = null
 )
 
 interface StruggleUseCase {
