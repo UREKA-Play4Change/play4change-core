@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
 
-private const val MAX_STRUGGLE_DEPTH = 3
+private const val MAX_STRUGGLE_DEPTH = 1
 
 @Service
 class AdaptiveTaskService(
