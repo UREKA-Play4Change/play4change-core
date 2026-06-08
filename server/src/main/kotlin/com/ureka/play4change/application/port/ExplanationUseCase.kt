@@ -20,5 +20,8 @@ interface ExplanationUseCase {
     fun getSession(userId: String, sessionId: String): Either<AppError, ExplanationSession>
     fun sendMessage(command: SendExplanationMessageCommand): Either<AppError, ExplanationMessage>
     fun resolve(command: ResolveExplanationCommand): Either<AppError, Unit>
-    fun triggerAsync(enrollmentId: String, originalTaskAssignmentId: String, errorPattern: String, userId: String)
+    /** Creates the GENERATING session synchronously and returns its ID. */
+    fun createSession(enrollmentId: String, originalTaskAssignmentId: String, errorPattern: String): String
+    /** Async AI generation for an already-persisted session. */
+    fun triggerAsync(sessionId: String, userId: String)
 }

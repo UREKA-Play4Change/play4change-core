@@ -17,7 +17,6 @@ interface MagicLinkTokenJpaRepository : JpaRepository<MagicLinkTokenEntity, Stri
     @Query("UPDATE MagicLinkTokenEntity m SET m.used = true WHERE m.id = :id")
     fun markUsed(id: String)
 
-    @Modifying
     @Transactional
     @Query(
         value = """

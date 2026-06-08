@@ -103,6 +103,8 @@ class AdaptiveTaskService(
             val enrollmentToSave = if (allCorrect) enrollment.incrementStreak() else enrollment
             if (enrollmentToSave !== enrollment) enrollmentRepository.save(enrollmentToSave)
 
+            var explanationSessionId: String? = null
+
             if (allComplete) {
                 if (allCorrect) {
                     // All adaptive tasks passed — reset original assignment so the learner can retry the main task
@@ -140,19 +142,19 @@ class AdaptiveTaskService(
                             session.id, depthForAssignment, MAX_STRUGGLE_DEPTH
                         )
                     } else {
-                        // Max depth reached — trigger AI explanation mode instead of immediately resetting.
-                        // The original assignment stays SUBMITTED; ExplanationService resets it when
-                        // the learner clicks "I Understood" (or if AI generation fails as a fallback).
-                        explanationService.triggerAsync(
+                        // Max depth reached — create the explanation session synchronously so its ID can
+                        // be returned to the client immediately, then kick off async AI generation.
+                        // The client navigates directly to the explanation screen without a home detour.
+                        explanationSessionId = explanationService.createSession(
                             enrollmentId = session.enrollmentId,
                             originalTaskAssignmentId = session.originalTaskAssignmentId,
-                            errorPattern = session.errorPattern.name,
-                            userId = command.userId
+                            errorPattern = session.errorPattern.name
                         )
+                        explanationService.triggerAsync(explanationSessionId!!, command.userId)
                         registry.counter("struggle_sessions_escalated_to_explanation_total").increment()
                         log.info(
-                            "Struggle session {} reached max depth ({}) — explanation triggered for assignment {}",
-                            session.id, MAX_STRUGGLE_DEPTH, session.originalTaskAssignmentId
+                            "Struggle session {} reached max depth ({}) — explanation session {} created for assignment {}",
+                            session.id, MAX_STRUGGLE_DEPTH, explanationSessionId, session.originalTaskAssignmentId
                         )
                     }
                 }
@@ -162,7 +164,8 @@ class AdaptiveTaskService(
                 task = updatedTask,
                 isCorrect = isCorrect,
                 pointsAwarded = pointsAwarded,
-                sessionResolved = allComplete
+                sessionResolved = allComplete,
+                explanationSessionId = explanationSessionId
             )
         }
 }

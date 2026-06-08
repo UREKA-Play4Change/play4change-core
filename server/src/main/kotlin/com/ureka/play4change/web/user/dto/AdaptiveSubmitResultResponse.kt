@@ -7,7 +7,8 @@ data class AdaptiveSubmitResultResponse(
     val title: String,
     val isCorrect: Boolean,
     val pointsAwarded: Int,
-    val sessionResolved: Boolean
+    val sessionResolved: Boolean,
+    val explanationSessionId: String?
 ) {
     companion object {
         fun from(r: AdaptiveSubmitResult) = AdaptiveSubmitResultResponse(
@@ -15,7 +16,8 @@ data class AdaptiveSubmitResultResponse(
             title = r.task.title,
             isCorrect = r.isCorrect,
             pointsAwarded = r.pointsAwarded,
-            sessionResolved = r.sessionResolved
+            sessionResolved = r.sessionResolved,
+            explanationSessionId = r.explanationSessionId
         )
     }
 }

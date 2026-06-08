@@ -17,6 +17,7 @@ data class StruggleState(
     val wrongAnswerFeedback: Boolean = false,
     val pointsAwarded: Int = 0,
     val sessionResolved: Boolean = false,
+    val pendingExplanationSessionId: String? = null,
 ) : ComponentState {
     val currentTask: AdaptiveTask? get() = tasks.getOrNull(currentIndex)
     val isLastTask: Boolean get() = currentIndex == tasks.lastIndex

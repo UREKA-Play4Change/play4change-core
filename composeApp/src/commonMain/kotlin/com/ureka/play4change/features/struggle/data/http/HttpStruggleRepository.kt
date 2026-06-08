@@ -48,7 +48,8 @@ private data class SubmitAdaptiveTaskRequestDto(val selectedOption: Int)
 private data class AdaptiveSubmitResultDto(
     val isCorrect: Boolean,
     val pointsAwarded: Int,
-    val sessionResolved: Boolean
+    val sessionResolved: Boolean,
+    val explanationSessionId: String? = null
 )
 
 // ---------------------------------------------------------------------------
@@ -87,7 +88,8 @@ class HttpStruggleRepository(
         return AdaptiveSubmitResult(
             isCorrect = dto.isCorrect,
             pointsAwarded = dto.pointsAwarded,
-            sessionResolved = dto.sessionResolved
+            sessionResolved = dto.sessionResolved,
+            explanationSessionId = dto.explanationSessionId
         )
     }
 
