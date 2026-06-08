@@ -37,3 +37,5 @@ agentic/security/zap-auth-admin-report.html
 agentic/security/zap-auth-admin-report.json
 agentic/security/zap-auth-user-report.html
 agentic/security/zap-auth-user-report.json
+play4change.jks
+keystore.jks
