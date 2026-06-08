@@ -10,13 +10,16 @@ COPY build.gradle.kts .
 COPY settings.gradle.kts .
 COPY gradle.properties .
 
+# Pre-download the Gradle distribution in its own layer so source changes
+# don't trigger a re-download on every rebuild
+RUN chmod +x gradlew && ./gradlew --version --no-daemon
+
 # Copy all module sources
 COPY common common
 COPY ai-agent ai-agent
 COPY server server
 
-# Make gradlew executable and build
-RUN chmod +x gradlew
+# Build
 RUN ./gradlew :server:bootJar --no-daemon -x test
 
 # ── Runtime stage ──────────────────────────────────────────────────────────────
