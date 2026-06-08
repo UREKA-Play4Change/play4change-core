@@ -9,7 +9,7 @@ import com.ureka.play4change.model.ExplanationContext
 //  ExplanationPrompt
 //
 //  Builds prompts for the explanation mode: the holistic explanation generated
-//  after a learner exhausts all three struggle-path depth levels, and the
+//  after a learner exhausts all struggle-path depth levels, and the
 //  conversational replies when the learner still feels confused.
 // ─────────────────────────────────────────────────────────────────────────────
 object ExplanationPrompt {
@@ -31,7 +31,7 @@ object ExplanationPrompt {
 
     fun userExplanation(context: ExplanationContext): String = """
         A student in a ${context.audienceLevel.toLabel()} course on "${context.subjectDomain}" has
-        struggled with the following task after three separate practice sessions:
+        struggled with the following task after exhausting their practice attempts:
 
         Task: ${context.taskDescription}
         Module objective: ${context.moduleObjective}
