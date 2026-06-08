@@ -55,24 +55,21 @@ class ExplanationService(
     private val log = LoggerFactory.getLogger(ExplanationService::class.java)
 
     /**
-     * Creates an ExplanationSession and asynchronously generates the AI explanation.
-     * Called from AdaptiveTaskService when the learner exhausts all struggle depth levels.
-     * If AI generation fails the session is set to RESOLVED and the original assignment
-     * is reset to PENDING so the learner is never stuck.
+     * Synchronously persists an ExplanationSession with GENERATING status and returns its ID.
+     * The caller is responsible for then invoking [triggerAsync] to start AI generation.
+     * Separating creation from generation lets the session ID be returned to the client
+     * immediately so it can navigate to the explanation screen without a home-screen detour.
      */
-    @Async("generationExecutor")
-    @Transactional(timeout = 120)
-    override fun triggerAsync(
+    @Transactional
+    override fun createSession(
         enrollmentId: String,
         originalTaskAssignmentId: String,
-        errorPattern: String,
-        userId: String
-    ) {
+        errorPattern: String
+    ): String {
         val dayIndex = enrollmentRepository.findAssignmentById(originalTaskAssignmentId)
             ?.taskTemplateId
             ?.let { taskTemplateRepository.findById(it)?.dayIndex }
             ?: 0
-
         val session = explanationRepository.save(
             ExplanationSession(
                 id = UUID.randomUUID().toString(),
@@ -88,10 +85,26 @@ class ExplanationService(
             )
         )
         registry.counter("explanation_sessions_created_total").increment()
+        log.debug("Explanation session {} created (GENERATING) for enrollment {}", session.id, enrollmentId)
+        return session.id
+    }
+
+    /**
+     * Asynchronously generates the AI explanation for an already-persisted session.
+     * Called right after [createSession]. If generation fails the session is resolved and
+     * the original assignment is reset to PENDING so the learner is never stuck.
+     */
+    @Async("generationExecutor")
+    @Transactional(timeout = 120)
+    override fun triggerAsync(sessionId: String, userId: String) {
+        val session = explanationRepository.findById(sessionId) ?: run {
+            log.error("Explanation session {} not found for async generation — nothing to do", sessionId)
+            return
+        }
 
         try {
-            val context = buildContext(enrollmentId, originalTaskAssignmentId, errorPattern, userId) ?: run {
-                log.error("Could not build ExplanationContext for enrollment {} — aborting explanation generation", enrollmentId)
+            val context = buildContext(session.enrollmentId, session.originalTaskAssignmentId, session.errorPattern, userId) ?: run {
+                log.error("Could not build ExplanationContext for session {} — aborting generation", sessionId)
                 fallbackResetAssignment(session)
                 return
             }
@@ -103,28 +116,28 @@ class ExplanationService(
             }
 
             if (explanationText == null) {
-                log.error("Explanation generation timed out for session {}", session.id)
+                log.error("Explanation generation timed out for session {}", sessionId)
                 fallbackResetAssignment(session)
                 return
             }
 
             explanationText.fold(
                 ifLeft = { error ->
-                    log.error("Explanation generation failed for session {}: {}", session.id, error)
+                    log.error("Explanation generation failed for session {}: {}", sessionId, error)
                     registry.counter("explanation_sessions_resolved_total", "outcome", "generation_failed").increment()
                     fallbackResetAssignment(session)
                 },
                 ifRight = { text ->
                     explanationRepository.save(session.activate(text))
                     registry.counter("explanation_sessions_resolved_total", "outcome", "success").increment()
-                    log.info("Explanation session {} ready for enrollment {}", session.id, enrollmentId)
+                    log.info("Explanation session {} ready for enrollment {}", sessionId, session.enrollmentId)
                 }
             )
         } catch (ex: Exception) {
-            log.error("Unexpected error during explanation generation for enrollment {}: {}", enrollmentId, ex.message, ex)
+            log.error("Unexpected error during explanation generation for session {}: {}", sessionId, ex.message, ex)
             registry.counter("explanation_sessions_resolved_total", "outcome", "unexpected_error").increment()
             runCatching { fallbackResetAssignment(session) }
-                .onFailure { e -> log.error("Failed fallback reset for session {}: {}", session.id, e.message) }
+                .onFailure { e -> log.error("Failed fallback reset for session {}: {}", sessionId, e.message) }
         }
     }
 
