@@ -12,6 +12,7 @@ import com.ureka.play4change.web.admin.AdminBadgeController
 import com.ureka.play4change.web.user.BadgeController
 import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -43,6 +44,11 @@ class BadgeControllerTest {
 
     @MockkBean
     private lateinit var meterRegistry: MeterRegistry
+
+    @BeforeEach
+    fun setup() {
+        every { rateLimitService.tryConsume(any(), any()) } returns true
+    }
 
     private fun userAuth(userId: String = "user-1") = authentication(
         UsernamePasswordAuthenticationToken(userId, null, listOf(SimpleGrantedAuthority("ROLE_USER")))
