@@ -86,7 +86,8 @@ class RoadmapServiceTest {
         every { topicModuleRepository.findByTopicId(topicId) } returns listOf(module)
         every { taskTemplateRepository.findCurrentByModuleId(moduleId) } returns listOf(template)
         every { enrollmentRepository.findAssignmentsByEnrollmentId(enrollmentId) } returns assignments
-        every { struggleRepository.findOpenByEnrollmentId(enrollmentId) } returns null
+        every { taskTemplateRepository.findById(templateId) } returns template
+        every { struggleRepository.findAllByEnrollmentId(enrollmentId) } returns emptyList()
         every { peerReviewRepository.findPendingByReviewerUserId(userId) } returns emptyList()
     }
 
