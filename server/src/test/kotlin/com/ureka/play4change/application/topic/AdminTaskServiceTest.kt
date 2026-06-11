@@ -72,6 +72,7 @@ class AdminTaskServiceTest {
         task = AdaptiveTask(
             id = "adaptive-1",
             struggleSessionId = "session-1",
+            branchId = null,
             title = "Simpler version",
             description = "Choose carefully",
             hint = null,
@@ -88,7 +89,9 @@ class AdminTaskServiceTest {
         sessionStatus = StruggleStatus.OPEN,
         errorPattern = ErrorPattern.WRONG_CONCEPT,
         sessionDetectedAt = OffsetDateTime.now(),
-        enrollmentId = "enrollment-1"
+        enrollmentId = "enrollment-1",
+        originalTaskTemplateId = "template-1",
+        originalTaskTitle = "Original task"
     )
 
     @Test
