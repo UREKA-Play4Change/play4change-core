@@ -96,12 +96,12 @@ class ErrorPatternClassifierTest {
     // ── PARTIAL_UNDERSTANDING ─────────────────────────────────────────────────
 
     @Test
-    fun `PARTIAL_UNDERSTANDING - two distinct wrong options selected`() {
+    fun `WRONG_CONCEPT - two distinct wrong options selected (PARTIAL_UNDERSTANDING removed from classifier)`() {
         // optionOrder[3] = 3; correctAnswer = 0; abs(3-0) = 3 > 1 → not READING_ERROR
-        // selectedOption = 1 ≠ newSelectedOption = 3             → PARTIAL_UNDERSTANDING
+        // classifier no longer tracks PARTIAL_UNDERSTANDING → falls through to WRONG_CONCEPT
         val a = assignment(optionOrder = listOf(0, 1, 2, 3), selectedOption = 1)
         val t = template(correctAnswer = 0)
-        assertEquals(ErrorPattern.PARTIAL_UNDERSTANDING, ErrorPatternClassifier.classify(a, 3, t))
+        assertEquals(ErrorPattern.WRONG_CONCEPT, ErrorPatternClassifier.classify(a, 3, t))
     }
 
     // ── TIME_PRESSURE ─────────────────────────────────────────────────────────
