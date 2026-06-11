@@ -83,6 +83,30 @@ detekt {
     buildUponDefaultConfig = true
 }
 
+tasks.named<dev.detekt.gradle.Detekt>("detektMain") {
+    baseline.set(file("$projectDir/detekt-baseline-main.xml"))
+}
+
+tasks.named<dev.detekt.gradle.Detekt>("detektTest") {
+    baseline.set(file("$projectDir/detekt-baseline-test.xml"))
+}
+
+tasks.named<dev.detekt.gradle.Detekt>("detekt") {
+    baseline.set(file("$projectDir/detekt-baseline-aggregate.xml"))
+}
+
+tasks.named<dev.detekt.gradle.DetektCreateBaselineTask>("detektBaselineMain") {
+    baseline.set(file("$projectDir/detekt-baseline-main.xml"))
+}
+
+tasks.named<dev.detekt.gradle.DetektCreateBaselineTask>("detektBaselineTest") {
+    baseline.set(file("$projectDir/detekt-baseline-test.xml"))
+}
+
+tasks.named<dev.detekt.gradle.DetektCreateBaselineTask>("detektBaseline") {
+    baseline.set(file("$projectDir/detekt-baseline-aggregate.xml"))
+}
+
 spotbugs {
     toolVersion.set("4.8.6")
     effort.set(com.github.spotbugs.snom.Effort.MAX)
