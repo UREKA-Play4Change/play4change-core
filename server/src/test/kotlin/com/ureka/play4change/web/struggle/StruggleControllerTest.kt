@@ -16,6 +16,7 @@ import com.ureka.play4change.infra.config.SecurityConfig
 import com.ureka.play4change.web.user.StruggleController
 import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -51,6 +52,11 @@ class StruggleControllerTest {
     @MockkBean
     private lateinit var meterRegistry: MeterRegistry
 
+    @BeforeEach
+    fun setup() {
+        every { rateLimitService.tryConsume(any(), any()) } returns true
+    }
+
     private fun userAuth(userId: String = "user-1") = authentication(
         UsernamePasswordAuthenticationToken(userId, null, listOf(SimpleGrantedAuthority("ROLE_USER")))
     )
@@ -58,6 +64,7 @@ class StruggleControllerTest {
     private fun makeAdaptiveTask(id: String, orderIndex: Int) = AdaptiveTask(
         id = id,
         struggleSessionId = "session-1",
+        branchId = null,
         title = "Adaptive task $orderIndex",
         description = "Description",
         hint = null,
