@@ -3,9 +3,7 @@ package com.ureka.play4change.application.badge
 import com.ureka.play4change.domain.badge.Badge
 import com.ureka.play4change.domain.badge.BadgeRepository
 import com.ureka.play4change.domain.badge.MicroCompetence
-import com.ureka.play4change.domain.enrollment.AssignmentStatus
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
-import com.ureka.play4change.domain.enrollment.TaskAssignment
 import com.ureka.play4change.domain.topic.Topic
 import com.ureka.play4change.domain.topic.TopicRepository
 import io.mockk.every
@@ -32,11 +30,6 @@ class BadgeIssuanceServiceTest {
         topicId = topicId
     )
 
-    private fun correctAssignment(): TaskAssignment = mockk {
-        every { isCorrect } returns true
-        every { status } returns AssignmentStatus.SUBMITTED
-    }
-
     private fun topicWithTaskCount(n: Int): Topic = mockk {
         every { taskCount } returns n
     }
@@ -44,8 +37,8 @@ class BadgeIssuanceServiceTest {
     @Test
     fun `completing the last task triggers badge issuance`() {
         every { topicRepository.findById(topicId) } returns topicWithTaskCount(2)
-        every { enrollmentRepository.findAssignmentsByEnrollmentId(enrollmentId) } returns
-            listOf(correctAssignment(), correctAssignment())
+        every { enrollmentRepository.countSubmittedAssignmentsByEnrollmentId(enrollmentId) } returns 2
+        every { enrollmentRepository.countCorrectAssignmentsByEnrollmentId(enrollmentId) } returns 2
         every { badgeRepository.findMicroCompetenceByTopicId(topicId) } returns microCompetence
         every { badgeRepository.findBadgeByUserIdAndMicroCompetenceId(userId, competenceId) } returns null
         every { badgeRepository.saveBadge(any()) } answers { firstArg() }
@@ -58,8 +51,8 @@ class BadgeIssuanceServiceTest {
     @Test
     fun `a second issuance call for the same user and competence is a no-op`() {
         every { topicRepository.findById(topicId) } returns topicWithTaskCount(1)
-        every { enrollmentRepository.findAssignmentsByEnrollmentId(enrollmentId) } returns
-            listOf(correctAssignment())
+        every { enrollmentRepository.countSubmittedAssignmentsByEnrollmentId(enrollmentId) } returns 1
+        every { enrollmentRepository.countCorrectAssignmentsByEnrollmentId(enrollmentId) } returns 1
         every { badgeRepository.findMicroCompetenceByTopicId(topicId) } returns microCompetence
         every { badgeRepository.findBadgeByUserIdAndMicroCompetenceId(userId, competenceId) } returns
             mockk<Badge>()
@@ -72,8 +65,8 @@ class BadgeIssuanceServiceTest {
     @Test
     fun `completing a non-final task does not issue a badge`() {
         every { topicRepository.findById(topicId) } returns topicWithTaskCount(3)
-        every { enrollmentRepository.findAssignmentsByEnrollmentId(enrollmentId) } returns
-            listOf(correctAssignment())  // only 1 of 3 tasks correct
+        every { enrollmentRepository.countSubmittedAssignmentsByEnrollmentId(enrollmentId) } returns 1
+        every { enrollmentRepository.countCorrectAssignmentsByEnrollmentId(enrollmentId) } returns 1
 
         service.issueBadge(userId, topicId, enrollmentId)
 

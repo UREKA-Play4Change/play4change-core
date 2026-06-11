@@ -19,6 +19,7 @@ import com.ureka.play4change.infra.config.SecurityConfig
 import com.ureka.play4change.web.admin.AdminTopicPrerequisiteController
 import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -53,6 +54,11 @@ class AdminTopicPrerequisiteControllerTest {
     @MockkBean
     private lateinit var meterRegistry: MeterRegistry
 
+    @BeforeEach
+    fun setup() {
+        every { rateLimitService.tryConsume(any(), any()) } returns true
+    }
+
     private fun adminAuth() = authentication(
         UsernamePasswordAuthenticationToken("admin-1", null, listOf(SimpleGrantedAuthority("ROLE_ADMIN")))
     )
@@ -66,7 +72,6 @@ class AdminTopicPrerequisiteControllerTest {
         contentSourceRef = "ref",
         rawExtractedText = null,
         taskCount = 5,
-        subscriptionWindowDays = 7,
         expiresAt = OffsetDateTime.now().plusDays(30),
         audienceLevel = AudienceLevel.BEGINNER,
         language = "en",

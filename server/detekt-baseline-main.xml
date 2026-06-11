@@ -2,28 +2,36 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>CyclomaticComplexMethod:HandleStruggleService.kt:HandleStruggleService$@Async("generationExecutor") fun triggerAsync</ID>
+    <ID>CyclomaticComplexMethod:HandleStruggleService.kt:HandleStruggleService$private fun doTrigger</ID>
     <ID>CyclomaticComplexMethod:RoadmapService.kt:RoadmapService$override fun getRoadmap: Either&lt;AppError, List&lt;RoadmapNode&gt;&gt;</ID>
+    <ID>CyclomaticComplexMethod:TaskService.kt:TaskService$@Suppress("LongMethod") // multi-branch prod/dev task delivery logic — splitting would obscure the flow override fun getTodayTask: Either&lt;AppError, TodayTaskResult&gt;</ID>
     <ID>CyclomaticComplexMethod:TaskService.kt:TaskService$override fun submitAnswer: Either&lt;AppError, SubmitResult&gt;</ID>
     <ID>EmptyFunctionBlock:WebMvcConfig.kt:WebMvcConfig${}</ID>
     <ID>ForbiddenVoid:AuthController.kt:AuthController$Void</ID>
+    <ID>ForbiddenVoid:ExplanationController.kt:ExplanationController$Void</ID>
     <ID>LongMethod:EnrollmentService.kt:EnrollmentService$override fun enroll: Either&lt;AppError, Enrollment&gt;</ID>
-    <ID>LongMethod:HandleStruggleService.kt:HandleStruggleService$@Async("generationExecutor") fun triggerAsync</ID>
+    <ID>LongMethod:ExplanationService.kt:ExplanationService$override fun sendMessage: Either&lt;AppError, ExplanationMessage&gt;</ID>
+    <ID>LongMethod:HandleStruggleService.kt:HandleStruggleService$private fun doTrigger</ID>
     <ID>LongMethod:PeerReviewService.kt:PeerReviewService$override fun submitVerdict: Either&lt;AppError, VerdictResult&gt;</ID>
     <ID>LongMethod:RoadmapService.kt:RoadmapService$override fun getRoadmap: Either&lt;AppError, List&lt;RoadmapNode&gt;&gt;</ID>
     <ID>LongMethod:TaskGenerationOrchestrator.kt:TaskGenerationOrchestrator$@Async("generationExecutor") fun generateAsync</ID>
     <ID>LongMethod:TaskService.kt:TaskService$override fun submitAnswer: Either&lt;AppError, SubmitResult&gt;</ID>
-    <ID>MagicNumber:CreateUrlTopicRequest.kt:CreateUrlTopicRequest$365</ID>
+    <ID>MagicNumber:AsyncConfig.kt:AsyncConfig$60</ID>
+    <ID>MagicNumber:CorrectTaskReportRequest.kt:CorrectTaskReportRequest$9</ID>
     <ID>MagicNumber:EnrollmentService.kt:EnrollmentService$24</ID>
-    <ID>MagicNumber:GoogleOAuthAdapter.kt:GoogleOAuthAdapter$3_600_000L</ID>
+    <ID>MagicNumber:ExplanationService.kt:ExplanationService$1_000L</ID>
+    <ID>MagicNumber:ExplanationService.kt:ExplanationService$2000</ID>
+    <ID>MagicNumber:ExplanationService.kt:ExplanationService$500</ID>
     <ID>MagicNumber:HandleStruggleService.kt:HandleStruggleService$1_000L</ID>
     <ID>MagicNumber:HandleStruggleService.kt:HandleStruggleService$2000</ID>
     <ID>MagicNumber:HandleStruggleService.kt:HandleStruggleService$500</ID>
     <ID>MagicNumber:MagicLinkService.kt:MagicLinkService$15</ID>
     <ID>MagicNumber:MagicLinkService.kt:MagicLinkService$32</ID>
+    <ID>MagicNumber:PeerReviewService.kt:PeerReviewService$48</ID>
     <ID>MagicNumber:RateLimitService.kt:RateLimitService$10</ID>
     <ID>MagicNumber:RateLimitService.kt:RateLimitService$1_000_000_000L</ID>
     <ID>MagicNumber:RateLimitService.kt:RateLimitService$20</ID>
+    <ID>MagicNumber:RateLimitService.kt:RateLimitService$30</ID>
     <ID>MagicNumber:RateLimitService.kt:RateLimitService$5</ID>
     <ID>MagicNumber:RequestIdFilter.kt:RequestIdFilter$8</ID>
     <ID>MagicNumber:TaskDeliveryProperties.kt:TaskDeliveryProperties$120</ID>
@@ -31,42 +39,70 @@
     <ID>MagicNumber:TaskGenerationOrchestrator.kt:TaskGenerationOrchestrator$1_000L</ID>
     <ID>MagicNumber:TaskGenerationOrchestrator.kt:TaskGenerationOrchestrator$500</ID>
     <ID>MagicNumber:TaskGenerationOrchestrator.kt:TaskGenerationOrchestrator$8000</ID>
+    <ID>MagicNumber:TaskService.kt:TaskService$0.25</ID>
+    <ID>MagicNumber:TaskService.kt:TaskService$0.75</ID>
     <ID>MagicNumber:TaskService.kt:TaskService$100</ID>
+    <ID>MagicNumber:TaskService.kt:TaskService$24</ID>
+    <ID>MagicNumber:TaskService.kt:TaskService$72</ID>
     <ID>MagicNumber:TokenService.kt:TokenService$1000L</ID>
     <ID>MagicNumber:TokenService.kt:TokenService$32</ID>
     <ID>MagicNumber:TokenService.kt:TokenService$60</ID>
-    <ID>MagicNumber:TopicController.kt:TopicController$3</ID>
-    <ID>MagicNumber:TopicController.kt:TopicController$30</ID>
-    <ID>MagicNumber:TopicManagementService.kt:TopicManagementService$3</ID>
+    <ID>MagicNumber:TopicController.kt:TopicController$10</ID>
+    <ID>MagicNumber:TopicController.kt:TopicController$90</ID>
+    <ID>MagicNumber:UpdateTaskRequest.kt:UpdateTaskRequest$9</ID>
     <ID>MagicNumber:WebMvcConfig.kt:WebMvcConfig$3600</ID>
-    <ID>MaxLineLength:GoogleOAuthAdapter.kt:GoogleOAuthAdapter$log.warn("GoogleOAuthAdapter: GOOGLE_CLIENT_ID is blank — Google OAuth is disabled; all tokens will be rejected")</ID>
+    <ID>MaxLineLength:AdaptiveTaskService.kt:AdaptiveTaskService$"Struggle session {} reached max depth ({}) — explanation session {} created for assignment {}"</ID>
+    <ID>MaxLineLength:AdaptiveTaskService.kt:AdaptiveTaskService$.</ID>
+    <ID>MaxLineLength:AdminTaskController.kt:AdminTaskController$.</ID>
+    <ID>MaxLineLength:AdminTaskService.kt:AdminTaskService$override</ID>
+    <ID>MaxLineLength:AsyncConfig.kt:AsyncConfig$log.error("Generation task rejected — pool saturated (pool={}, queue={}). Task dropped: {}", poolSize, queueCapacity, r)</ID>
+    <ID>MaxLineLength:BadgeIssuanceService.kt:BadgeIssuanceService$log.warn("Badge issuance skipped — no MicroCompetence found for topic {} (was INDEXING phase run for this topic?)", topicId)</ID>
+    <ID>MaxLineLength:CredentialStartupGuard.kt:CredentialStartupGuard$if (dbPassword == "play4change") log.warn("DB password is using the development default — do NOT use this in production")</ID>
+    <ID>MaxLineLength:CredentialStartupGuard.kt:CredentialStartupGuard$if (minioAccessKey == "minioadmin") log.warn("MinIO access key is using the development default — do NOT use this in production")</ID>
+    <ID>MaxLineLength:EnrollmentService.kt:EnrollmentService$log.info("User {} re-enrolling in topic {} — reactivating paused enrollment {}", command.userId, command.topicId, existingEnrollment.id)</ID>
+    <ID>MaxLineLength:ExplanationService.kt:ExplanationService$log.info("Explanation session {} resolved — original assignment {} reset to PENDING", session.id, session.originalTaskAssignmentId)</ID>
+    <ID>MaxLineLength:ExplanationService.kt:ExplanationService$log.warn("Explanation session {} failed generation — assignment {} reset to PENDING as fallback", session.id, session.originalTaskAssignmentId)</ID>
+    <ID>MaxLineLength:ExplanationService.kt:ExplanationService$val</ID>
+    <ID>MaxLineLength:HandleStruggleService.kt:HandleStruggleService$branchId = if (branch.reuseStrategy == ReuseStrategy.FULL_REUSE) branch.reusedFromBranchId else branch.branchId</ID>
+    <ID>MaxLineLength:HandleStruggleService.kt:HandleStruggleService$doTrigger(previousSession.enrollmentId, previousSession.originalTaskAssignmentId, previousSession.errorPattern, template, userId)</ID>
+    <ID>MaxLineLength:HandleStruggleService.kt:HandleStruggleService$log.error("Original assignment {} not found for follow-up struggle", previousSession.originalTaskAssignmentId)</ID>
+    <ID>MaxLineLength:HandleStruggleService.kt:HandleStruggleService$val</ID>
+    <ID>MaxLineLength:JwtSecretStartupGuard.kt:JwtSecretStartupGuard$"JWT_SECRET is set to the development default — this is insecure in production. Set a strong random secret."</ID>
+    <ID>MaxLineLength:JwtSecretStartupGuard.kt:JwtSecretStartupGuard$"JWT_SECRET is too short (${jwtProperties.secret.length} chars). Production requires &gt;= $MIN_PROD_SECRET_LENGTH characters."</ID>
+    <ID>MaxLineLength:PeerReviewService.kt:PeerReviewService$if</ID>
+    <ID>MaxLineLength:PeerReviewService.kt:PeerReviewService$val</ID>
+    <ID>MaxLineLength:RoadmapService.kt:RoadmapService$AssignmentStatus.PENDING -&gt; RoadmapNodeStatus.PENDING</ID>
+    <ID>MaxLineLength:StruggleSessionJpaRepository.kt:StruggleSessionJpaRepository$fun findFirstByEnrollmentIdAndStatusOrderByDetectedAtDesc: StruggleSessionEntity?</ID>
+    <ID>MaxLineLength:TaskAssignmentJpaRepository.kt:TaskAssignmentJpaRepository$@Query("SELECT COUNT(a) FROM TaskAssignmentEntity a WHERE a.enrollment.id = :enrollmentId AND a.submittedAt IS NOT NULL")</ID>
+    <ID>MaxLineLength:TaskService.kt:TaskService$if (!isCorrect) badgeIssuancePort.issueBadge(command.userId, savedEnrollment.topicId, savedEnrollment.id)</ID>
+    <ID>MaxLineLength:TaskService.kt:TaskService$if (resetPending != null) return@either TodayTaskResult.Available(resetPending.first, resetPending.second)</ID>
     <ID>MaxLineLength:TaskService.kt:TaskService$log.info("Enrollment {} completed for user {} on topic {}", savedEnrollment.id, command.userId, savedEnrollment.topicId)</ID>
+    <ID>MaxLineLength:TokenService.kt:TokenService$log.warn("SECURITY: refresh token reuse detected for userId={}, familyId={} — all sessions revoked", stored.userId, stored.familyId)</ID>
     <ID>MaxLineLength:TopicManagementService.kt:TopicManagementService$BadRequest.InvalidField("prerequisiteIds", "setting these prerequisites would create a cycle in the learning graph")</ID>
     <ID>MaxLineLength:TopicManagementService.kt:TopicManagementService$override</ID>
+    <ID>MaxLineLength:UpdateTaskRequest.kt:UpdateTaskRequest$@field:Size(min = 2, max = 10, message = "options must have between 2 and 10 entries") val options: List&lt;@Size(max = 500) String&gt;?</ID>
     <ID>NewLineAtEndOfFile:Application.kt:com.ureka.play4change.Application.kt</ID>
     <ID>NewLineAtEndOfFile:LangChain4jConfig.kt:com.ureka.play4change.infra.config.LangChain4jConfig.kt</ID>
     <ID>NewLineAtEndOfFile:LoggingInterceptor.kt:com.ureka.play4change.infra.pipeline.interceptors.LoggingInterceptor.kt</ID>
     <ID>NewLineAtEndOfFile:RequestIdFilter.kt:com.ureka.play4change.infra.pipeline.filters.RequestIdFilter.kt</ID>
     <ID>NewLineAtEndOfFile:VectorConverter.kt:com.ureka.play4change.infra.converter.VectorConverter.kt</ID>
+    <ID>ReturnCount:AdminUserController.kt:AdminUserController$@GetMapping("/{userId}/enrollments/{enrollmentId}/explanations") fun getUserEnrollmentExplanations: ResponseEntity&lt;List&lt;AdminExplanationSessionResponse&gt;&gt;</ID>
+    <ID>ReturnCount:AdminUserController.kt:AdminUserController$@GetMapping("/{userId}/enrollments/{enrollmentId}/roadmap") fun getUserEnrollmentRoadmap: ResponseEntity&lt;List&lt;RoadmapNodeResponse&gt;&gt;</ID>
     <ID>ReturnCount:AdminUserController.kt:AdminUserController$@PostMapping("/{userId}/promote") fun promoteUser: ResponseEntity&lt;UserAdminResponse&gt;</ID>
     <ID>ReturnCount:ErrorPatternClassifier.kt:ErrorPatternClassifier$fun classify: ErrorPattern</ID>
-    <ID>ReturnCount:HandleStruggleService.kt:HandleStruggleService$@Async("generationExecutor") fun triggerAsync</ID>
+    <ID>ReturnCount:ExplanationService.kt:ExplanationService$@Async("generationExecutor") @Transactional(timeout = 120) override fun triggerAsync</ID>
+    <ID>ReturnCount:ExplanationService.kt:ExplanationService$private fun buildContext: ExplanationContext?</ID>
+    <ID>ReturnCount:HandleStruggleService.kt:HandleStruggleService$private fun doTrigger</ID>
     <ID>ReturnCount:TopicManagementService.kt:TopicManagementService$fun dfs: Boolean</ID>
     <ID>ReturnCount:UrlSsrfValidator.kt:UrlSsrfValidator$private fun checkPrivateAddress: String?</ID>
     <ID>ReturnCount:VectorConverter.kt:VectorConverter$override fun convertToEntityAttribute: FloatArray?</ID>
     <ID>SpreadOperator:Application.kt:(*args)</ID>
     <ID>SpreadOperator:SecurityConfig.kt:SecurityConfig$(*swaggerPaths)</ID>
-    <ID>SwallowedException:FacebookOAuthAdapter.kt:FacebookOAuthAdapter$ex: Exception</ID>
-    <ID>SwallowedException:GoogleOAuthAdapter.kt:GoogleOAuthAdapter$ex: Exception</ID>
     <ID>SwallowedException:JwtAuthFilter.kt:JwtAuthFilter$ex: Exception</ID>
     <ID>SwallowedException:MinioFileStorageAdapter.kt:MinioFileStorageAdapter$ex: NoSuchBucketException</ID>
-    <ID>ThrowsCount:FacebookOAuthAdapter.kt:FacebookOAuthAdapter$override fun verify: OAuthClaims</ID>
-    <ID>ThrowsCount:GoogleOAuthAdapter.kt:GoogleOAuthAdapter$override fun verify: OAuthClaims</ID>
-    <ID>ThrowsCount:GoogleOAuthAdapter.kt:GoogleOAuthAdapter$private fun findPublicKey: PublicKey</ID>
     <ID>ThrowsCount:TokenService.kt:TokenService$override fun refresh: TokenPair</ID>
     <ID>TooGenericExceptionCaught:ContentExtractorAdapter.kt:ContentExtractorAdapter$ex: Exception</ID>
-    <ID>TooGenericExceptionCaught:FacebookOAuthAdapter.kt:FacebookOAuthAdapter$ex: Exception</ID>
-    <ID>TooGenericExceptionCaught:GoogleOAuthAdapter.kt:GoogleOAuthAdapter$ex: Exception</ID>
+    <ID>TooGenericExceptionCaught:ExplanationService.kt:ExplanationService$ex: Exception</ID>
     <ID>TooGenericExceptionCaught:HandleStruggleService.kt:HandleStruggleService$ex: Exception</ID>
     <ID>TooGenericExceptionCaught:JwtAuthFilter.kt:JwtAuthFilter$ex: Exception</ID>
     <ID>TooGenericExceptionCaught:RedisCacheAdapter.kt:RedisCacheAdapter$ex: Exception</ID>
@@ -74,32 +110,35 @@
     <ID>TooGenericExceptionCaught:TaskGenerationOrchestrator.kt:TaskGenerationOrchestrator$ex: Exception</ID>
     <ID>TooGenericExceptionCaught:TopicManagementService.kt:TopicManagementService$ex: Exception</ID>
     <ID>TooManyFunctions:EnrollmentRepository.kt:EnrollmentRepository</ID>
+    <ID>TooManyFunctions:EnrollmentRepositoryAdapter.kt:EnrollmentRepositoryAdapter : EnrollmentRepository</ID>
+    <ID>UnnecessaryNotNullOperator:AdaptiveTaskService.kt:AdaptiveTaskService$explanationSessionId!!</ID>
     <ID>UnsafeCallOnNullableType:EnrollmentService.kt:EnrollmentService$templates.minByOrNull { it.dayIndex }!!</ID>
+    <ID>UnsafeCallOnNullableType:RoadmapService.kt:RoadmapService$pairs.maxByOrNull { it.second.assignedAt }!!</ID>
     <ID>UnsafeCallOnNullableType:VerdictResultResponse.kt:VerdictResultResponse.Companion$r.peerReview.verdict!!</ID>
     <ID>UnusedParameter:AuthExceptionHandler.kt:AuthExceptionHandler$ex: HttpMessageNotReadableException</ID>
     <ID>UnusedParameter:AuthExceptionHandler.kt:AuthExceptionHandler$ex: IllegalStateException</ID>
     <ID>UnusedParameter:AuthExceptionHandler.kt:AuthExceptionHandler$ex: ObjectOptimisticLockingFailureException</ID>
     <ID>UnusedPrivateProperty:AsyncConfig.kt:AsyncConfig$@Value("\${ai.generation.pool-size:3}") private val poolSize: Int</ID>
     <ID>UnusedPrivateProperty:RoadmapService.kt:RoadmapService$private val topicRepository: TopicRepository</ID>
+    <ID>UnusedVariable:ExplanationService.kt:ExplanationService$val originalAssignment = enrollmentRepository.findAssignmentById(session.originalTaskAssignmentId)</ID>
     <ID>UseCheckOrError:ContentExtractorAdapter.kt:ContentExtractorAdapter$throw IllegalStateException("Empty response from $url")</ID>
-    <ID>UseCheckOrError:GoogleOAuthAdapter.kt:GoogleOAuthAdapter$throw IllegalStateException("Failed to fetch Google JWKS from $JWKS_URL")</ID>
-    <ID>UseCheckOrError:GoogleOAuthAdapter.kt:GoogleOAuthAdapter$throw IllegalStateException("Invalid JWKS response from Google: no 'keys' array")</ID>
-    <ID>UseCheckOrError:GoogleOAuthAdapter.kt:GoogleOAuthAdapter$throw IllegalStateException("JWK missing 'e' (exponent)")</ID>
-    <ID>UseCheckOrError:GoogleOAuthAdapter.kt:GoogleOAuthAdapter$throw IllegalStateException("JWK missing 'n' (modulus)")</ID>
     <ID>UseCheckOrError:TaskGenerationOrchestrator.kt:TaskGenerationOrchestrator$throw IllegalStateException("Topic $topicId not found after status update")</ID>
+    <ID>UseOrEmpty:AdaptiveTaskResponse.kt:AdaptiveTaskResponse.Companion$task.options ?: emptyList()</ID>
     <ID>UseOrEmpty:EnrollmentRepositoryAdapter.kt:EnrollmentRepositoryAdapter$optionOrder ?.let { json.decodeFromString&lt;List&lt;Int&gt;&gt;(it) } ?: emptyList()</ID>
+    <ID>UseOrEmpty:PeerReviewService.kt:PeerReviewService$reviewsByCandidateId[submission.id] ?: emptyList()</ID>
+    <ID>UseOrEmpty:RoadmapService.kt:RoadmapService$assignment?.let { sessionsByAssignmentId[it.id] } ?: emptyList()</ID>
     <ID>UseOrEmpty:StruggleRepositoryAdapter.kt:StruggleRepositoryAdapter$optionOrder?.let { runCatching { mapper.readValue&lt;List&lt;Int&gt;&gt;(it) }.getOrNull() } ?: emptyList()</ID>
     <ID>UseOrEmpty:TopicManagementService.kt:TopicManagementService$adjacency[node] ?: emptyList()</ID>
-    <ID>UseRequire:FacebookOAuthAdapter.kt:FacebookOAuthAdapter$throw IllegalArgumentException("Facebook rejected token: ${response.statusCode}")</ID>
-    <ID>UseRequire:GoogleOAuthAdapter.kt:GoogleOAuthAdapter$throw IllegalArgumentException("Google OAuth not configured")</ID>
     <ID>UseRequire:TokenService.kt:TokenService$throw IllegalArgumentException("Refresh token expired")</ID>
-    <ID>VariableNaming:LoggingInterceptor.kt:LoggingInterceptor$// Store timer start in request attribute — survives through to afterCompletion private val TIMER_ATTR = "request.timer.start"</ID>
     <ID>WildcardImport:AdaptiveTaskEntity.kt:import jakarta.persistence.*</ID>
     <ID>WildcardImport:AdminTopicPrerequisiteController.kt:import org.springframework.web.bind.annotation.*</ID>
     <ID>WildcardImport:AuthController.kt:import org.springframework.web.bind.annotation.*</ID>
     <ID>WildcardImport:EnrollmentController.kt:import org.springframework.web.bind.annotation.*</ID>
     <ID>WildcardImport:EnrollmentEntity.kt:import jakarta.persistence.*</ID>
     <ID>WildcardImport:EnrollmentRepositoryAdapter.kt:import com.ureka.play4change.domain.enrollment.*</ID>
+    <ID>WildcardImport:ExplanationController.kt:import org.springframework.web.bind.annotation.*</ID>
+    <ID>WildcardImport:ExplanationMessageEntity.kt:import jakarta.persistence.*</ID>
+    <ID>WildcardImport:ExplanationSessionEntity.kt:import jakarta.persistence.*</ID>
     <ID>WildcardImport:LangChain4jConfig.kt:import com.ureka.play4change.model.*</ID>
     <ID>WildcardImport:LangChain4jConfig.kt:import kotlinx.serialization.json.*</ID>
     <ID>WildcardImport:MagicLinkTokenEntity.kt:import jakarta.persistence.*</ID>

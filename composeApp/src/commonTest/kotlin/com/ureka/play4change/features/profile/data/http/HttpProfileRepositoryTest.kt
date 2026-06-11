@@ -90,6 +90,13 @@ class HttpProfileRepositoryTest {
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
+                "/topics" -> respond(
+                    content = ByteReadChannel(
+                        """[{"id":"topic-sust","title":"Sustainability","enrollmentStatus":"ACTIVE"}]"""
+                    ),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
                 else -> respond(ByteReadChannel(""), HttpStatusCode.NotFound)
             }
         }
@@ -98,16 +105,15 @@ class HttpProfileRepositoryTest {
 
         assertEquals(1, profile.badges.size)
         val badge = profile.badges[0]
-        assertEquals("first_task", badge.id)
-        assertEquals("first_task", badge.titleKey)
-        assertEquals("Complete your first task", badge.descriptionKey)
+        assertEquals("topic-sust", badge.id)
+        assertEquals("Sustainability", badge.titleKey)
         assertTrue(badge.isUnlocked)
         // earnedAt "2025-01-15T10:30:00Z" should parse to a positive epoch millis
         assertTrue((badge.unlockedAt ?: 0L) > 0L)
     }
 
     @Test
-    fun `getProfile uses GET method for both profile and badges endpoints`() = runTest {
+    fun `getProfile uses GET method for profile, badges, and topics endpoints`() = runTest {
         val methods = mutableListOf<HttpMethod>()
         val engine = MockEngine { request ->
             methods += request.method
@@ -124,6 +130,11 @@ class HttpProfileRepositoryTest {
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
+                "/topics" -> respond(
+                    content = ByteReadChannel("[]"),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
                 else -> respond(ByteReadChannel(""), HttpStatusCode.NotFound)
             }
         }
@@ -131,7 +142,7 @@ class HttpProfileRepositoryTest {
         buildRepo(engine).getProfile("ignored")
 
         assertTrue(methods.all { it == HttpMethod.Get })
-        assertEquals(2, methods.size)
+        assertEquals(3, methods.size)
     }
 
     // ---------------------------------------------------------------------------

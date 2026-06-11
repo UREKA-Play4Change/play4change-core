@@ -234,8 +234,8 @@ class LangChain4jTaskGenerationAdapter(
     private fun loadExistingBranch(branchId: String, strategy: ReuseStrategy): AdaptiveBranch {
         val tasks = jdbc.queryForList(
             """
-            SELECT id, title, description, hint, points_reward, options, correct_answer
-            FROM adaptive_tasks WHERE branch_id = ? ORDER BY order_index
+            SELECT DISTINCT ON (title) id, title, description, hint, points_reward, options, correct_answer
+            FROM adaptive_tasks WHERE branch_id = ? ORDER BY title, order_index
             """.trimIndent(),
             branchId
         ).mapNotNull { row ->

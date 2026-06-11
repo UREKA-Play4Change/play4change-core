@@ -52,7 +52,6 @@ class TopicPrerequisiteServiceTest {
         contentSourceRef = "ref",
         rawExtractedText = null,
         taskCount = 5,
-        subscriptionWindowDays = 7,
         expiresAt = OffsetDateTime.now().plusDays(30),
         audienceLevel = AudienceLevel.BEGINNER,
         language = "en",

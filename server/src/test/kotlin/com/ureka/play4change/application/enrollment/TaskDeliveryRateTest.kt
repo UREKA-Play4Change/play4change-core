@@ -9,6 +9,8 @@ import com.ureka.play4change.domain.enrollment.AssignmentStatus
 import com.ureka.play4change.domain.enrollment.Enrollment
 import com.ureka.play4change.application.struggle.HandleStruggleService
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
+import com.ureka.play4change.domain.explanation.ExplanationRepository
+import com.ureka.play4change.domain.struggle.StruggleRepository
 import com.ureka.play4change.domain.enrollment.EnrollmentStatus
 import com.ureka.play4change.domain.enrollment.TaskAssignment
 import com.ureka.play4change.domain.identity.AuthProvider
@@ -24,9 +26,11 @@ import com.ureka.play4change.domain.topic.TopicModuleRepository
 import com.ureka.play4change.domain.topic.TopicRepository
 import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every
+import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.core.env.Environment
@@ -34,6 +38,12 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 class TaskDeliveryRateTest {
+
+    @BeforeEach
+    fun setupDefaults() {
+        every { explanationRepository.findActiveByEnrollmentId(any()) } returns null
+        every { struggleRepository.findOpenByEnrollmentId(any()) } returns null
+    }
 
     private val enrollmentRepository = mockk<EnrollmentRepository>()
     private val taskTemplateRepository = mockk<TaskTemplateRepository>(relaxed = true)
@@ -43,6 +53,8 @@ class TaskDeliveryRateTest {
     private val topicModuleRepository = mockk<TopicModuleRepository>()
     private val languageGatingService = mockk<LanguageGatingService>()
     private val handleStruggleService = mockk<HandleStruggleService>(relaxed = true)
+    private val struggleRepository = mockk<StruggleRepository>(relaxed = true)
+    private val explanationRepository = mockk<ExplanationRepository>(relaxed = true)
     private val peerReviewUseCase = mockk<PeerReviewUseCase>(relaxed = true)
     private val badgeIssuancePort = mockk<BadgeIssuancePort>(relaxed = true)
     private val registry = mockk<MeterRegistry>(relaxed = true)
@@ -55,8 +67,8 @@ class TaskDeliveryRateTest {
         return TaskService(
             topicRepository, topicModuleRepository, taskTemplateRepository,
             taskInstanceRepository, enrollmentRepository, userRepository,
-            languageGatingService, handleStruggleService, peerReviewUseCase,
-            badgeIssuancePort, registry, props
+            languageGatingService, handleStruggleService, struggleRepository,
+            explanationRepository, peerReviewUseCase, badgeIssuancePort, registry, props
         )
     }
 

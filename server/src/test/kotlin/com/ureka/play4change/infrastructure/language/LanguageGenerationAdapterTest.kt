@@ -55,7 +55,6 @@ class LanguageGenerationAdapterTest {
         contentSourceRef = "https://example.com/climate",
         rawExtractedText = "Climate change is the long-term shift in global temperatures.",
         taskCount = 5,
-        subscriptionWindowDays = 30,
         expiresAt = OffsetDateTime.now().plusDays(30),
         audienceLevel = AudienceLevel.BEGINNER,
         language = "en",

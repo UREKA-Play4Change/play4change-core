@@ -16,6 +16,7 @@ import com.ureka.play4change.web.admin.AdminTaskReportController
 import com.ureka.play4change.web.user.TaskReportController
 import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -50,6 +51,11 @@ class TaskReportControllerTest {
 
     @MockkBean
     private lateinit var meterRegistry: MeterRegistry
+
+    @BeforeEach
+    fun setup() {
+        every { rateLimitService.tryConsume(any(), any()) } returns true
+    }
 
     private fun userAuth(userId: String = "user-1") = authentication(
         UsernamePasswordAuthenticationToken(userId, null, listOf(SimpleGrantedAuthority("ROLE_USER")))

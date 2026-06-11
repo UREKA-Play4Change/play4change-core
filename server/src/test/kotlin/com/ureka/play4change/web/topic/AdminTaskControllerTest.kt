@@ -8,6 +8,9 @@ import com.ureka.play4change.application.port.TaskTemplateWithStats
 import com.ureka.play4change.application.port.UpdateTaskCommand
 import com.ureka.play4change.auth.adapter.inbound.security.RateLimitService
 import com.ureka.play4change.auth.application.TokenService
+import com.ureka.play4change.domain.identity.UserRepository
+import com.ureka.play4change.infrastructure.persistence.repository.ExplanationMessageJpaRepository
+import com.ureka.play4change.infrastructure.persistence.repository.ExplanationSessionJpaRepository
 import com.ureka.play4change.domain.struggle.AdaptiveTask
 import com.ureka.play4change.domain.struggle.AdaptiveTaskAdminView
 import com.ureka.play4change.domain.struggle.ErrorPattern
@@ -20,6 +23,7 @@ import com.ureka.play4change.infra.config.SecurityConfig
 import com.ureka.play4change.web.admin.AdminTaskController
 import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -54,6 +58,20 @@ class AdminTaskControllerTest {
     @MockkBean
     private lateinit var meterRegistry: MeterRegistry
 
+    @MockkBean
+    private lateinit var explanationSessionJpa: ExplanationSessionJpaRepository
+
+    @MockkBean
+    private lateinit var explanationMessageJpa: ExplanationMessageJpaRepository
+
+    @MockkBean
+    private lateinit var userRepository: UserRepository
+
+    @BeforeEach
+    fun setup() {
+        every { rateLimitService.tryConsume(any(), any()) } returns true
+    }
+
     private fun adminAuth() = authentication(
         UsernamePasswordAuthenticationToken("admin-1", null, listOf(SimpleGrantedAuthority("ROLE_ADMIN")))
     )
@@ -82,6 +100,7 @@ class AdminTaskControllerTest {
         task = AdaptiveTask(
             id = "adaptive-1",
             struggleSessionId = "session-1",
+            branchId = null,
             title = "Simpler question",
             description = "Pick one",
             hint = null,
@@ -98,7 +117,9 @@ class AdminTaskControllerTest {
         sessionStatus = StruggleStatus.OPEN,
         errorPattern = ErrorPattern.WRONG_CONCEPT,
         sessionDetectedAt = OffsetDateTime.now(),
-        enrollmentId = "enrollment-1"
+        enrollmentId = "enrollment-1",
+        originalTaskTemplateId = "template-1",
+        originalTaskTitle = "Original task"
     )
 
     @Test
