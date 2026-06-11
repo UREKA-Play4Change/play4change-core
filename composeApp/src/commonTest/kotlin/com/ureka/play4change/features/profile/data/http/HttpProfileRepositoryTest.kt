@@ -113,7 +113,7 @@ class HttpProfileRepositoryTest {
     }
 
     @Test
-    fun `getProfile uses GET method for profile, badges, and topics endpoints`() = runTest {
+    fun `getProfile uses GET method for profile and badges and topics endpoints`() = runTest {
         val methods = mutableListOf<HttpMethod>()
         val engine = MockEngine { request ->
             methods += request.method

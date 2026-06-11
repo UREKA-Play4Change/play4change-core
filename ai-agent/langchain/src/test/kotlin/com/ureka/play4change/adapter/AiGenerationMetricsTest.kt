@@ -67,6 +67,8 @@ class AiGenerationMetricsTest {
             deduplicationService = deduplicationService,
             jdbc = jdbc,
             meterRegistry = meterRegistry,
+            partialReuseThreshold = 0.65,
+            fullReuseThreshold = 0.90,
             defaultSubtaskCount = 3
         )
 
@@ -128,6 +130,8 @@ class AiGenerationMetricsTest {
             deduplicationService = deduplicationService,
             jdbc = jdbc,
             meterRegistry = meterRegistry,
+            partialReuseThreshold = 0.65,
+            fullReuseThreshold = 0.90,
             defaultSubtaskCount = 3
         )
 

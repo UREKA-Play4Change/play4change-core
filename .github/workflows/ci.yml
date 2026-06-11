@@ -38,7 +38,7 @@ jobs:
       run: chmod +x gradlew
 
     - name: Build and run tests with Gradle
-      run: ./gradlew build
+      run: ./gradlew build -x :composeApp:packageRelease -x :composeApp:packageReleaseUniversalApk
 
     - name: Detekt
       run: ./gradlew :server:detektMain

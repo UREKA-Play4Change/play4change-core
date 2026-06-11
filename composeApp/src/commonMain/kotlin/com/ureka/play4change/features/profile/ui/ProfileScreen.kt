@@ -69,8 +69,6 @@ import play4change.composeapp.generated.resources.profile_accuracy_label
 import play4change.composeapp.generated.resources.profile_edit_name
 import play4change.composeapp.generated.resources.profile_language_english
 import play4change.composeapp.generated.resources.profile_language_label
-import play4change.composeapp.generated.resources.profile_language_portuguese
-import play4change.composeapp.generated.resources.profile_language_spanish
 import play4change.composeapp.generated.resources.profile_name_hint
 import play4change.composeapp.generated.resources.profile_points_label
 import play4change.composeapp.generated.resources.profile_preferences_section
@@ -301,9 +299,7 @@ fun ProfileScreen(component: DefaultProfileComponent) {
                             Text(
                                 text = languageDisplayName(
                                     profile.preferredLanguage,
-                                    stringResource(Res.string.profile_language_english),
-                                    stringResource(Res.string.profile_language_portuguese),
-                                    stringResource(Res.string.profile_language_spanish)
+                                    stringResource(Res.string.profile_language_english)
                                 ),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -377,9 +373,7 @@ private fun LanguagePickerDialog(
     onDismiss: () -> Unit
 ) {
     val english = stringResource(Res.string.profile_language_english)
-    val portuguese = stringResource(Res.string.profile_language_portuguese)
-    val spanish = stringResource(Res.string.profile_language_spanish)
-    val languages = listOf("en" to english, "pt-PT" to portuguese, "es-ES" to spanish)
+    val languages = listOf("en" to english)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -407,17 +401,8 @@ private fun LanguagePickerDialog(
     )
 }
 
-private fun languageDisplayName(
-    code: String,
-    english: String,
-    portuguese: String,
-    spanish: String
-): String = when (code) {
-    "en" -> english
-    "pt-PT" -> portuguese
-    "es-ES" -> spanish
-    else -> code
-}
+private fun languageDisplayName(code: String, english: String): String =
+    if (code == "en") english else code
 
 @Composable
 private fun StatColumn(

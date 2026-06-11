@@ -73,8 +73,6 @@
   <string name="profile_preferences_section">Preferences</string>
   <string name="profile_language_label">Language</string>
   <string name="profile_language_english">English</string>
-  <string name="profile_language_portuguese">Portuguese</string>
-  <string name="profile_language_spanish">Spanish</string>
 
   <!-- About -->
   <string name="about_title">About</string>
