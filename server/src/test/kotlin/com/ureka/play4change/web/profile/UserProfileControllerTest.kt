@@ -14,6 +14,7 @@ import com.ureka.play4change.infra.config.SecurityConfig
 import com.ureka.play4change.web.user.UserProfileController
 import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -49,6 +50,11 @@ class UserProfileControllerTest {
 
     @MockkBean
     private lateinit var meterRegistry: MeterRegistry
+
+    @BeforeEach
+    fun setup() {
+        every { rateLimitService.tryConsume(any(), any()) } returns true
+    }
 
     private val stubProfile = UserProfile(
         userId = "user-1",
