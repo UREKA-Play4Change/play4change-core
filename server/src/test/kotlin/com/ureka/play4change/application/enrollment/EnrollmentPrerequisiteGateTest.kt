@@ -59,7 +59,6 @@ class EnrollmentPrerequisiteGateTest {
         contentSourceRef = "ref",
         rawExtractedText = null,
         taskCount = 5,
-        subscriptionWindowDays = 7,
         expiresAt = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
         audienceLevel = AudienceLevel.BEGINNER,
         language = "en",
