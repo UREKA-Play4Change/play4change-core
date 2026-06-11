@@ -7,6 +7,8 @@ import com.ureka.play4change.application.port.SubmitVerdictCommand
 import com.ureka.play4change.application.peerreview.PeerReviewService
 import com.ureka.play4change.application.struggle.HandleStruggleService
 import com.ureka.play4change.config.TaskDeliveryProperties
+import com.ureka.play4change.domain.explanation.ExplanationRepository
+import com.ureka.play4change.domain.struggle.StruggleRepository
 import com.ureka.play4change.domain.enrollment.AssignmentStatus
 import com.ureka.play4change.domain.enrollment.Enrollment
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
@@ -126,6 +128,8 @@ class LearnerFlowMetricsTest {
             userRepository = mockk(relaxed = true),
             languageGatingService = mockk(relaxed = true),
             handleStruggleService = mockk(relaxed = true),
+            struggleRepository = mockk<StruggleRepository>(relaxed = true),
+            explanationRepository = mockk<ExplanationRepository>(relaxed = true),
             peerReviewUseCase = mockk(relaxed = true),
             badgeIssuancePort = mockk<BadgeIssuancePort>(relaxed = true),
             registry = meterRegistry,
@@ -176,6 +180,8 @@ class LearnerFlowMetricsTest {
             userRepository = mockk(relaxed = true),
             languageGatingService = mockk(relaxed = true),
             handleStruggleService = handleStruggle,
+            struggleRepository = mockk<StruggleRepository>(relaxed = true),
+            explanationRepository = mockk<ExplanationRepository>(relaxed = true),
             peerReviewUseCase = mockk(relaxed = true),
             badgeIssuancePort = mockk<BadgeIssuancePort>(relaxed = true),
             registry = meterRegistry,
@@ -209,6 +215,7 @@ class LearnerFlowMetricsTest {
             verdict = null,
             comment = null,
             assignedAt = now.minusMinutes(10),
+            expiresAt = now.plusDays(1),
             reviewedAt = null
         )
 
