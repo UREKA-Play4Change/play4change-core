@@ -17,6 +17,7 @@ import com.ureka.play4change.web.admin.SseTopicEventPublisher
 import com.ureka.play4change.web.admin.TopicController
 import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -52,6 +53,11 @@ class TopicControllerPhaseTest {
     @MockkBean
     private lateinit var ssePublisher: SseTopicEventPublisher
 
+    @BeforeEach
+    fun setup() {
+        every { rateLimitService.tryConsume(any(), any()) } returns true
+    }
+
     private fun adminAuth() = authentication(
         UsernamePasswordAuthenticationToken("admin-1", null, listOf(SimpleGrantedAuthority("ROLE_ADMIN")))
     )
@@ -67,7 +73,6 @@ class TopicControllerPhaseTest {
         contentSourceRef = "https://example.com",
         rawExtractedText = null,
         taskCount = 5,
-        subscriptionWindowDays = 7,
         expiresAt = now.plusDays(30),
         audienceLevel = AudienceLevel.BEGINNER,
         language = "en",
