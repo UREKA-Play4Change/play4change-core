@@ -11,7 +11,9 @@ import com.ureka.play4change.domain.enrollment.Enrollment
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
 import com.ureka.play4change.domain.enrollment.EnrollmentStatus
 import com.ureka.play4change.domain.enrollment.TaskAssignment
+import com.ureka.play4change.domain.explanation.ExplanationRepository
 import com.ureka.play4change.domain.identity.UserRepository
+import com.ureka.play4change.domain.struggle.StruggleRepository
 import com.ureka.play4change.domain.topic.TaskInstanceRepository
 import com.ureka.play4change.domain.topic.TaskTemplate
 import com.ureka.play4change.domain.topic.TaskTemplateRepository
@@ -37,6 +39,8 @@ class StruggleDetectionTest {
     private val topicModuleRepository = mockk<TopicModuleRepository>(relaxed = true)
     private val languageGatingService = mockk<LanguageGatingService>(relaxed = true)
     private val handleStruggleService = mockk<HandleStruggleService>(relaxed = true)
+    private val struggleRepository = mockk<StruggleRepository>(relaxed = true)
+    private val explanationRepository = mockk<ExplanationRepository>(relaxed = true)
     private val peerReviewUseCase = mockk<PeerReviewUseCase>(relaxed = true)
     private val badgeIssuancePort = mockk<BadgeIssuancePort>(relaxed = true)
     private val registry = mockk<MeterRegistry>(relaxed = true) {
@@ -46,8 +50,8 @@ class StruggleDetectionTest {
     private val service = TaskService(
         topicRepository, topicModuleRepository, taskTemplateRepository,
         taskInstanceRepository, enrollmentRepository, userRepository,
-        languageGatingService, handleStruggleService, peerReviewUseCase,
-        badgeIssuancePort, registry, TaskDeliveryProperties()
+        languageGatingService, handleStruggleService, struggleRepository,
+        explanationRepository, peerReviewUseCase, badgeIssuancePort, registry, TaskDeliveryProperties()
     )
 
     private val userId = "user-1"
@@ -94,7 +98,7 @@ class StruggleDetectionTest {
     }
 
     @Test
-    fun `first wrong answer does not trigger struggle session creation`() {
+    fun `any wrong answer immediately triggers struggle session creation`() {
         val assignment = makeAssignment(wrongAttemptCount = 0)
         val template = makeTemplate(correctAnswer = 0)
         stubSave(assignment)
@@ -103,7 +107,7 @@ class StruggleDetectionTest {
         // submit option index 1 (mapped from optionOrder[1] = 1, canonical answer = 0) → wrong
         service.submitAnswer(SubmitAnswerCommand(userId, assignmentId, selectedOption = 1, timezone = null))
 
-        verify(exactly = 0) { handleStruggleService.triggerAsync(any(), any(), any(), any(), any()) }
+        verify(exactly = 1) { handleStruggleService.triggerAsync(enrollmentId, assignmentId, any(), template, userId) }
     }
 
     @Test
@@ -120,11 +124,10 @@ class StruggleDetectionTest {
     }
 
     @Test
-    fun `wrong answer on a different task does not trigger struggle for that new task`() {
+    fun `wrong answer on a different task also triggers struggle immediately`() {
         val otherTemplateId = "template-other"
         val otherAssignmentId = "assignment-other"
         val otherTemplate = makeTemplate(correctAnswer = 0).copy(id = otherTemplateId)
-        // A brand-new assignment for a different task — wrongAttemptCount starts at 0
         val otherAssignment = makeAssignment(wrongAttemptCount = 0, templateId = otherTemplateId)
             .copy(id = otherAssignmentId)
 
@@ -134,10 +137,10 @@ class StruggleDetectionTest {
         every { enrollmentRepository.save(any()) } answers { firstArg() }
         every { taskTemplateRepository.findById(otherTemplateId) } returns otherTemplate
         every { taskInstanceRepository.findByTaskTemplateId(otherTemplateId) } returns emptyList()
+        every { topicRepository.findById(any()) } returns null
 
-        // First wrong on the other task — should NOT trigger struggle
         service.submitAnswer(SubmitAnswerCommand(userId, otherAssignmentId, selectedOption = 1, timezone = null))
 
-        verify(exactly = 0) { handleStruggleService.triggerAsync(any(), any(), any(), any(), any()) }
+        verify(exactly = 1) { handleStruggleService.triggerAsync(enrollmentId, otherAssignmentId, any(), otherTemplate, userId) }
     }
 }
