@@ -43,7 +43,7 @@ class RateLimitTest {
     @MockkBean lateinit var authUseCase: AuthUseCase
     // TokenService implements TokenUseCase — one mock satisfies both injection points
     @MockkBean lateinit var tokenService: TokenService
-    @MockkBean lateinit var meterRegistry: MeterRegistry
+    @MockkBean(relaxed = true) lateinit var meterRegistry: MeterRegistry
 
     @BeforeEach
     fun reset() {
