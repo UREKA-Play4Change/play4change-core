@@ -8,14 +8,13 @@ androidx-lifecycle = "2.9.6"
 androidx-testExt = "1.3.0"
 composeMultiplatform = "1.10.0"
 junit = "4.13.2"
+junitJupiter = "5.10.2"
 kotlin = "2.3.0"
 material3 = "1.10.0-alpha05"
-#Added
 decompose = "3.3.0-alpha01"
 ktor = "3.0.0"
-coroutines = "1.9.0"
+kotlinxCoroutines = "1.9.0"
 serialization = "1.7.3"
-settings = "1.2.0"
 koin = "3.5.3"
 koin-compose = "1.1.2"
 springBoot = "3.2.3"
@@ -23,8 +22,6 @@ springDependencyManagement = "1.1.4"
 jjwt = "0.12.5"
 uuid = "0.8.4"
 # Kotlin
-kotlinxCoroutines = "1.9.0"
-kotlinxSerialization = "1.7.3"
 kotlinxDatetime = "0.6.1"
 arrow = "1.2.4"
 
@@ -32,12 +29,6 @@ arrow = "1.2.4"
 androidMinSdk = "24"
 androidTargetSdk = "36"
 androidCompileSdk = "36"
-
-# Compose
-compose = "1.7.5"
-activityCompose = "1.9.3"
-navigationCompose = "2.8.4"
-
 
 # AI
 langchain4j = "0.36.2"
@@ -47,10 +38,6 @@ mistral = "0.36.2"
 postgresql = "42.7.4"
 pgvector = "0.1.6"
 flyway = "10.20.1"
-hikari = "5.1.0"
-
-# Resilience
-resilience4j = "2.2.0"
 
 # Observability
 micrometer = "1.13.6"
@@ -59,6 +46,15 @@ prometheusRegistry = "1.13.6"
 # Testing
 mockk = "1.13.12"
 kotest = "5.9.1"
+
+# Server extras
+springdoc = "2.3.0"
+bucket4j = "8.10.1"
+caffeine = "3.1.8"
+awssdk = "2.25.31"
+pdfbox = "3.0.1"
+jsoup = "1.17.2"
+springmockk = "4.0.2"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -84,13 +80,15 @@ decompose-compose = { module = "com.arkivanov.decompose:extensions-compose", ver
 # 2. Serialization (JSON)
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 # 3. Coroutines
-kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 # 4. Ktor (Network Abstraction)
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 # 5. Settings (Local Storage)
-multiplatform-settings = { module = "com.russhwolf:multiplatform-settings", version.ref = "settings" }
+multiplatform-settings = { module = "com.russhwolf:multiplatform-settings", version.ref = "koin" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin-compose" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
@@ -99,7 +97,6 @@ spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-start
 spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa", version.ref = "springBoot" }
 spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation", version.ref = "springBoot" }
 spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator", version.ref = "springBoot" }
-
 
 # Database
 postgresql = { module = "org.postgresql:postgresql" }
@@ -110,28 +107,16 @@ spring-security-crypto = { module = "org.springframework.security:spring-securit
 spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-starter-security" }
 kotlinx-uuid = { module = "com.benasher44:uuid", version.ref = "uuid" }
 # ── Kotlin ────────────────────────────────────────────────────────────────────
-kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
-kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 
 # ── Arrow ─────────────────────────────────────────────────────────────────────
 arrow-core = { group = "io.arrow-kt", name = "arrow-core", version.ref = "arrow" }
 arrow-fx-coroutines = { module = "io.arrow-kt:arrow-fx-coroutines", version.ref = "arrow" }
 
-# ── Android / Compose ─────────────────────────────────────────────────────────
-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
-compose-navigation = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
-
 # ── KMP ───────────────────────────────────────────────────────────────────────
-decompose-core = { module = "com.arkivanov.decompose:decompose", version.ref = "decompose" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
-ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
-
-# ── Spring Boot ───────────────────────────────────────────────────────────────
-spring-boot-starter-oauth2-resource-server = { module = "org.springframework.boot:spring-boot-starter-oauth2-resource-server" }
-spring-retry = { module = "org.springframework.retry:spring-retry" }
 
 # ── AI ────────────────────────────────────────────────────────────────────────
 langchain4j-core = { module = "dev.langchain4j:langchain4j", version.ref = "langchain4j" }
@@ -144,23 +129,28 @@ pgvector-jdbc = { module = "com.pgvector:pgvector", version.ref = "pgvector" }
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
 
-# ── Resilience ────────────────────────────────────────────────────────────────
-resilience4j-spring-boot3 = { module = "io.github.resilience4j:resilience4j-spring-boot3", version.ref = "resilience4j" }
-resilience4j-kotlin = { module = "io.github.resilience4j:resilience4j-kotlin", version.ref = "resilience4j" }
-
 # ── Observability ─────────────────────────────────────────────────────────────
 micrometer-core = { module = "io.micrometer:micrometer-core", version.ref = "micrometer" }
 micrometer-prometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "prometheusRegistry" }
 
+# ── Server extras ─────────────────────────────────────────────────────────────
+springdoc-openapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
+bucket4j-core = { module = "com.bucket4j:bucket4j-core", version.ref = "bucket4j" }
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
+awssdk-s3 = { module = "software.amazon.awssdk:s3", version.ref = "awssdk" }
+pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "pdfbox" }
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
+
 # ── Testing ───────────────────────────────────────────────────────────────────
-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junitJupiter" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junitJupiter" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 kotest-runner = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
-kotest-assertions-arrow = { module = "io.kotest.extensions:kotest-assertions-arrow", version = "1.4.0" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+spring-security-test = { module = "org.springframework.security:spring-security-test" }
+springmockk = { module = "com.ninja-squad:springmockk", version.ref = "springmockk" }
 ktor-client-auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktor" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
-kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 androidx-security-crypto = { module = "androidx.security:security-crypto", version = "1.0.0" }
 
 [plugins]
@@ -169,12 +159,10 @@ androidLibrary = { id = "com.android.library", version.ref = "agp" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
-#Added
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 springBoot = { id = "org.springframework.boot", version.ref = "springBoot" }
 springDependencyManagement = { id = "io.spring.dependency-management", version.ref = "springDependencyManagement" }
 kotlinSpring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
 kotlinJpa = { id = "org.jetbrains.kotlin.plugin.jpa", version.ref = "kotlin" }
-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 flyway = { id = "org.flywaydb.flyway", version.ref = "flyway" }
