@@ -1,6 +1,8 @@
 package com.ureka.play4change.infrastructure.persistence.repository
 
 import com.ureka.play4change.infrastructure.persistence.entity.EnrollmentEntity
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
@@ -9,6 +11,7 @@ interface EnrollmentJpaRepository : JpaRepository<EnrollmentEntity, String> {
     fun findByUserIdAndTopicId(userId: String, topicId: String): EnrollmentEntity?
     fun findByUserIdAndStatus(userId: String, status: String): List<EnrollmentEntity>
     fun findByUserId(userId: String): List<EnrollmentEntity>
+    fun findByUserId(userId: String, pageable: Pageable): Page<EnrollmentEntity>
     fun countByTopicId(topicId: String): Long
     fun countByUserId(userId: String): Long
 }
