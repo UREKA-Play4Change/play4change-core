@@ -23,5 +23,6 @@ data class TopicBadgeStatsDto(
 
 interface BadgeQueryUseCase {
     fun getUserBadges(userId: String): List<UserBadgeDto>
+    fun getUserBadgesPaged(userId: String, page: Int, size: Int): com.ureka.play4change.domain.topic.PageResult<UserBadgeDto>
     fun getTopicBadgeStats(topicId: String): TopicBadgeStatsDto
 }
