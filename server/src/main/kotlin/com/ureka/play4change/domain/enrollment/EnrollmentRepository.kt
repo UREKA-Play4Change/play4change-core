@@ -6,6 +6,7 @@ interface EnrollmentRepository {
     fun findActiveByUserId(userId: String): List<Enrollment>
     fun findCompletedByUserId(userId: String): List<Enrollment>
     fun findAllByUserId(userId: String): List<Enrollment>
+    fun findAllByUserIdPaged(userId: String, page: Int, size: Int): com.ureka.play4change.domain.topic.PageResult<Enrollment>
     fun findAssignmentById(id: String): TaskAssignment?
     fun findAssignmentByEnrollmentAndTemplate(enrollmentId: String, taskTemplateId: String): TaskAssignment?
     fun findAssignmentsByEnrollmentId(enrollmentId: String): List<TaskAssignment>
