@@ -177,9 +177,13 @@ class AdminUserController(
     }
 
     @GetMapping("/{userId}/enrollments")
-    fun getUserEnrollments(@PathVariable userId: String): ResponseEntity<List<AdminEnrollmentResponse>> {
-        val enrollments = enrollmentRepository.findAllByUserId(userId)
-        val responses = enrollments.sortedByDescending { it.enrolledAt }.map { enrollment ->
+    fun getUserEnrollments(
+        @PathVariable userId: String,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "50") size: Int
+    ): ResponseEntity<PageResponse<AdminEnrollmentResponse>> {
+        val pageResult = enrollmentRepository.findAllByUserIdPaged(userId, page, size)
+        val responses = pageResult.content.map { enrollment ->
             val topic = topicRepository.findById(enrollment.topicId)
             AdminEnrollmentResponse(
                 enrollmentId = enrollment.id,
@@ -193,21 +197,39 @@ class AdminUserController(
                 enrolledAt = enrollment.enrolledAt
             )
         }
-        return ResponseEntity.ok(responses)
+        return ResponseEntity.ok(
+            PageResponse(
+                content = responses,
+                page = pageResult.page,
+                size = pageResult.size,
+                totalElements = pageResult.totalElements,
+                totalPages = pageResult.totalPages
+            )
+        )
     }
 
     @GetMapping("/{userId}/badges")
-    fun getUserBadges(@PathVariable userId: String): ResponseEntity<List<AdminUserBadgeResponse>> {
-        val badges = badgeQueryUseCase.getUserBadges(userId)
+    fun getUserBadges(
+        @PathVariable userId: String,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "50") size: Int
+    ): ResponseEntity<PageResponse<AdminUserBadgeResponse>> {
+        val result = badgeQueryUseCase.getUserBadgesPaged(userId, page, size)
         return ResponseEntity.ok(
-            badges.map { b ->
-                AdminUserBadgeResponse(
-                    microCompetenceName = b.microCompetenceName,
-                    description = b.description,
-                    topicTitle = b.topicTitle,
-                    earnedAt = b.earnedAt
-                )
-            }
+            PageResponse(
+                content = result.content.map { b ->
+                    AdminUserBadgeResponse(
+                        microCompetenceName = b.microCompetenceName,
+                        description = b.description,
+                        topicTitle = b.topicTitle,
+                        earnedAt = b.earnedAt
+                    )
+                },
+                page = result.page,
+                size = result.size,
+                totalElements = result.totalElements,
+                totalPages = result.totalPages
+            )
         )
     }
 
@@ -228,16 +250,27 @@ class AdminUserController(
     @GetMapping("/{userId}/enrollments/{enrollmentId}/explanations")
     fun getUserEnrollmentExplanations(
         @PathVariable userId: String,
-        @PathVariable enrollmentId: String
-    ): ResponseEntity<List<AdminExplanationSessionResponse>> {
+        @PathVariable enrollmentId: String,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int
+    ): ResponseEntity<PageResponse<AdminExplanationSessionResponse>> {
         val enrollment = enrollmentRepository.findById(enrollmentId)
             ?: return ResponseEntity.notFound().build()
         if (enrollment.userId != userId) return ResponseEntity.notFound().build()
-        val sessions = explanationRepository.findAllByEnrollmentId(enrollmentId).map { session ->
+        val pageResult = explanationRepository.findAllByEnrollmentIdPaged(enrollmentId, page, size)
+        val responses = pageResult.content.map { session ->
             val messages = explanationRepository.findMessagesBySessionId(session.id)
             AdminExplanationSessionResponse.from(session, messages)
         }
-        return ResponseEntity.ok(sessions)
+        return ResponseEntity.ok(
+            PageResponse(
+                content = responses,
+                page = pageResult.page,
+                size = pageResult.size,
+                totalElements = pageResult.totalElements,
+                totalPages = pageResult.totalPages
+            )
+        )
     }
 
     @Suppress("UNCHECKED_CAST")
