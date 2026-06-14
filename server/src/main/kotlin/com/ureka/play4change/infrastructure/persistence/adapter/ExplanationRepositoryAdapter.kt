@@ -5,12 +5,14 @@ import com.ureka.play4change.domain.explanation.ExplanationRepository
 import com.ureka.play4change.domain.explanation.ExplanationSession
 import com.ureka.play4change.domain.explanation.ExplanationStatus
 import com.ureka.play4change.domain.explanation.MessageRole
+import com.ureka.play4change.domain.topic.PageResult
 import com.ureka.play4change.infrastructure.persistence.entity.ExplanationMessageEntity
 import com.ureka.play4change.infrastructure.persistence.entity.ExplanationSessionEntity
 import com.ureka.play4change.infrastructure.persistence.repository.EnrollmentJpaRepository
 import com.ureka.play4change.infrastructure.persistence.repository.ExplanationMessageJpaRepository
 import com.ureka.play4change.infrastructure.persistence.repository.ExplanationSessionJpaRepository
 import com.ureka.play4change.infrastructure.persistence.repository.TaskAssignmentJpaRepository
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 
 @Component
@@ -29,6 +31,18 @@ class ExplanationRepositoryAdapter(
 
     override fun findAllByEnrollmentId(enrollmentId: String): List<ExplanationSession> =
         jpa.findByEnrollmentIdOrderByGeneratedAtAsc(enrollmentId).map { it.toDomain() }
+
+    override fun findAllByEnrollmentIdPaged(enrollmentId: String, page: Int, size: Int): PageResult<ExplanationSession> {
+        val pageable = PageRequest.of(page, size)
+        val jpaPage = jpa.findByEnrollmentIdPaged(enrollmentId, pageable)
+        return PageResult(
+            content = jpaPage.content.map { it.toDomain() },
+            page = jpaPage.number,
+            size = jpaPage.size,
+            totalElements = jpaPage.totalElements,
+            totalPages = jpaPage.totalPages
+        )
+    }
 
     override fun save(session: ExplanationSession): ExplanationSession {
         val enrollmentEntity = enrollmentJpa.getReferenceById(session.enrollmentId)
