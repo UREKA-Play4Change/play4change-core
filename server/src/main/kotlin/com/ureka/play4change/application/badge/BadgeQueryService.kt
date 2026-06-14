@@ -6,6 +6,7 @@ import com.ureka.play4change.application.port.TopicBadgeStatsDto
 import com.ureka.play4change.application.port.UserBadgeDto
 import com.ureka.play4change.domain.badge.BadgeRepository
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
+import com.ureka.play4change.domain.topic.PageResult
 import com.ureka.play4change.domain.topic.TopicRepository
 import org.springframework.stereotype.Service
 import kotlin.math.roundToInt
@@ -30,6 +31,29 @@ class BadgeQueryService(
                 earnedAt = badge.earnedAt
             )
         }
+
+    override fun getUserBadgesPaged(userId: String, page: Int, size: Int): PageResult<UserBadgeDto> {
+        val badgePage = badgeRepository.findBadgesByUserIdPaged(userId, page, size)
+        val dtos = badgePage.content.mapNotNull { badge ->
+            val competence = badgeRepository.findMicroCompetenceById(badge.microCompetenceId)
+                ?: return@mapNotNull null
+            val topic = topicRepository.findById(competence.topicId)
+                ?: return@mapNotNull null
+            UserBadgeDto(
+                microCompetenceName = competence.name,
+                description = competence.description,
+                topicTitle = topic.title,
+                earnedAt = badge.earnedAt
+            )
+        }
+        return PageResult(
+            content = dtos,
+            page = badgePage.page,
+            size = badgePage.size,
+            totalElements = badgePage.totalElements,
+            totalPages = badgePage.totalPages
+        )
+    }
 
     override fun getTopicBadgeStats(topicId: String): TopicBadgeStatsDto {
         val enrolledCount = enrollmentRepository.countByTopicId(topicId).toInt()
