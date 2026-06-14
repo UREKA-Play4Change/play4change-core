@@ -6,6 +6,7 @@ import com.ureka.play4change.features.explore.domain.model.TopicIconType
 import com.ureka.play4change.features.explore.domain.repository.ExploreRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.statement.bodyAsText
@@ -32,6 +33,15 @@ private data class UserTopicDto(
     val prerequisiteTopicIds: List<String> = emptyList()
 )
 
+@Serializable
+private data class PagedTopicResponseDto(
+    val content: List<UserTopicDto>,
+    val page: Int = 0,
+    val size: Int = 0,
+    val totalElements: Long = 0,
+    val totalPages: Int = 1
+)
+
 // ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
@@ -43,10 +53,13 @@ class HttpExploreRepository(
     private val json = Json { ignoreUnknownKeys = true }
 
     override suspend fun getTopics(userId: String): List<Topic> {
-        val response = client.get("topics")
+        val response = client.get("topics") {
+            parameter("page", 0)
+            parameter("size", 50)
+        }
         if (!response.status.isSuccess()) return emptyList()
-        val dtos = json.decodeFromString<List<UserTopicDto>>(response.bodyAsText())
-        return dtos.map { it.toTopic() }
+        val paged = json.decodeFromString<PagedTopicResponseDto>(response.bodyAsText())
+        return paged.content.map { it.toTopic() }
     }
 
     override suspend fun enrollTopic(userId: String, topicId: String): Boolean {
