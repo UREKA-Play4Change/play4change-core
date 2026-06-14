@@ -7,6 +7,7 @@ import com.ureka.play4change.features.profile.domain.model.ProfileData
 import com.ureka.play4change.features.profile.domain.repository.ProfileRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.put
@@ -58,6 +59,24 @@ private data class UpdatePreferencesRequestDto(val language: String)
 
 @Serializable
 private data class LogoutRequestDto(val refreshToken: String)
+
+@Serializable
+private data class PagedBadgeResponseDto(
+    val content: List<UserBadgeDto>,
+    val page: Int = 0,
+    val size: Int = 0,
+    val totalElements: Long = 0,
+    val totalPages: Int = 1
+)
+
+@Serializable
+private data class PagedTopicResponseDto(
+    val content: List<TopicDto>,
+    val page: Int = 0,
+    val size: Int = 0,
+    val totalElements: Long = 0,
+    val totalPages: Int = 1
+)
 
 // ---------------------------------------------------------------------------
 // Implementation
@@ -127,12 +146,19 @@ class HttpProfileRepository(
      */
     private suspend fun fetchTopicBadges(): List<Badge> {
         val earned = runCatching {
-            json.decodeFromString<List<UserBadgeDto>>(client.get("profile/badges").bodyAsText())
+            json.decodeFromString<PagedBadgeResponseDto>(
+                client.get("profile/badges") {
+                    parameter("size", 100)
+                }.bodyAsText()
+            ).content
         }.getOrElse { emptyList() }
 
         val enrolledTopics = runCatching {
-            json.decodeFromString<List<TopicDto>>(client.get("topics").bodyAsText())
-                .filter { it.hasEnrollment }
+            json.decodeFromString<PagedTopicResponseDto>(
+                client.get("topics") {
+                    parameter("size", 100)
+                }.bodyAsText()
+            ).content.filter { it.hasEnrollment }
         }.getOrElse { emptyList() }
 
         // Index earned badges by topic title (lowercase) for O(1) lookup.
