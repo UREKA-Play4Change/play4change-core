@@ -2,7 +2,7 @@ package com.ureka.play4change.features.profile.presentation
 
 import com.arkivanov.decompose.ComponentContext
 import com.ureka.play4change.core.component.base.BaseComponent
-import com.ureka.play4change.core.error.AppError
+import com.ureka.play4change.core.error.UiError
 import com.ureka.play4change.core.component.stateful.safeLaunch
 import com.ureka.play4change.features.profile.domain.repository.ProfileRepository
 
@@ -18,7 +18,7 @@ class DefaultProfileComponent(
     private fun loadProfile() {
         safeLaunch(scope) {
             val profile = repository.getProfile("current-user")
-            updateState { copy(isLoading = false, profile = profile, nameInput = profile.name) }
+            updateState { copy(isLoading = false, profile = profile, nameInput = profile.name, badgePage = 0) }
         }
     }
 
@@ -36,7 +36,19 @@ class DefaultProfileComponent(
             ProfileEvents.ShowLanguagePicker -> updateState { copy(languagePickerVisible = true) }
             ProfileEvents.DismissLanguagePicker -> updateState { copy(languagePickerVisible = false) }
             is ProfileEvents.LanguageSelected -> changeLanguage(event.code)
+            ProfileEvents.NextBadgePage -> {
+                val total = badgeTotalPages()
+                if (state.value.badgePage < total - 1) updateState { copy(badgePage = badgePage + 1) }
+            }
+            ProfileEvents.PreviousBadgePage -> {
+                if (state.value.badgePage > 0) updateState { copy(badgePage = badgePage - 1) }
+            }
         }
+    }
+
+    private fun badgeTotalPages(): Int {
+        val count = state.value.profile?.badges?.size ?: 0
+        return maxOf(1, (count + BADGE_PAGE_SIZE - 1) / BADGE_PAGE_SIZE)
     }
 
     private fun saveName() {
@@ -61,6 +73,10 @@ class DefaultProfileComponent(
         }
     }
 
-    override fun ProfileState.copyBase(isLoading: Boolean, error: AppError?): ProfileState =
+    override fun ProfileState.copyBase(isLoading: Boolean, error: UiError?): ProfileState =
         copy(isLoading = isLoading, error = error)
+
+    private companion object {
+        const val BADGE_PAGE_SIZE = 5
+    }
 }
