@@ -1,7 +1,7 @@
 package com.ureka.play4change.infrastructure.language
 
 import com.ureka.play4change.application.port.LanguageGenerationPort
-import com.ureka.play4change.application.topic.AiOutputSanitiser
+import com.ureka.play4change.infrastructure.ai.AiOutputSanitiser
 import com.ureka.play4change.domain.topic.TaskTemplate
 import com.ureka.play4change.domain.topic.TaskTemplateRepository
 import com.ureka.play4change.domain.topic.TaskType
@@ -13,9 +13,7 @@ import com.ureka.play4change.model.GenerationRequest
 import com.ureka.play4change.model.GenerationStatus
 import com.ureka.play4change.port.TaskGenerationPort
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonPrimitive
+import com.ureka.play4change.infrastructure.ai.OptionsJsonParser
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
@@ -95,7 +93,7 @@ class LanguageGenerationAdapter(
             hint = AiOutputSanitiser.sanitise(task.hint),
             taskType = TaskType.MULTIPLE_CHOICE,
             pointsReward = task.pointsReward,
-            options = task.optionsJson?.let { parseOptionsJson(it) }?.map { AiOutputSanitiser.sanitise(it) },
+            options = task.optionsJson?.let { OptionsJsonParser.parse(it) }?.map { AiOutputSanitiser.sanitise(it) },
             correctAnswer = task.correctAnswerIndex,
             version = 1,
             isCurrent = true,
@@ -108,9 +106,6 @@ class LanguageGenerationAdapter(
         log.info("Language variant saved: moduleId={} dayIndex={} language={}", moduleId, dayIndex, language)
     }
 
-    private fun parseOptionsJson(json: String): List<String>? = runCatching {
-        Json.parseToJsonElement(json).jsonArray.map { it.jsonPrimitive.content }
-    }.getOrNull()
 
     companion object {
         private const val RAW_TEXT_CHAR_LIMIT = 8_000
