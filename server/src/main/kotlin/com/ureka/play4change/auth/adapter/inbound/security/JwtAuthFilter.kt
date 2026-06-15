@@ -14,8 +14,11 @@ import org.springframework.web.filter.OncePerRequestFilter
 @Component
 class JwtAuthFilter(
     private val tokenService: TokenService,
-    private val environment: Environment,
+    environment: Environment,
 ) : OncePerRequestFilter() {
+
+    // Evaluated once at construction — active profiles are fixed after context refresh.
+    private val isProd: Boolean = environment.activeProfiles.contains("prod")
 
     companion object {
         private val ALWAYS_PUBLIC = listOf(
@@ -37,7 +40,6 @@ class JwtAuthFilter(
         filterChain: FilterChain
     ) {
         val path = request.requestURI
-        val isProd = environment.activeProfiles.contains("prod")
         val isPublic = ALWAYS_PUBLIC.any { path == it || path.startsWith(it) } ||
             (!isProd && SWAGGER_PREFIXES.any { path == it || path.startsWith(it) })
         if (isPublic) {
