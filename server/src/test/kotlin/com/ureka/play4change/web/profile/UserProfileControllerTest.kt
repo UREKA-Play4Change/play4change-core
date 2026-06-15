@@ -4,13 +4,13 @@ import arrow.core.Either
 import com.ninjasquad.springmockk.MockkBean
 import com.ureka.play4change.application.port.UpdateProfileNameCommand
 import com.ureka.play4change.application.port.UpdateProfileNameUseCase
-import com.ureka.play4change.application.user.GetUserProfileUseCase
+import com.ureka.play4change.application.port.GetUserProfileUseCase
 import com.ureka.play4change.application.user.UserProfile
 import com.ureka.play4change.auth.adapter.inbound.security.RateLimitService
 import com.ureka.play4change.auth.application.TokenService
 import com.ureka.play4change.error.client.BadRequest
 import com.ureka.play4change.error.client.NotFound
-import com.ureka.play4change.infra.config.SecurityConfig
+import com.ureka.play4change.infrastructure.config.SecurityConfig
 import com.ureka.play4change.web.user.UserProfileController
 import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every
