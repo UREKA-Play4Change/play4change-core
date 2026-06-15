@@ -96,7 +96,8 @@ app:
       - es-ES
 
 resend:
-  from: ${RESEND_FROM:noreply@play4change.app}
+  api-key: ${RESEND_API_KEY:}
+  from: ${RESEND_FROM:noreply@radesh-govind.com}
 
 minio:
   endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
