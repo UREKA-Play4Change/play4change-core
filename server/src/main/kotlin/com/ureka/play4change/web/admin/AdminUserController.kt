@@ -255,8 +255,8 @@ class AdminUserController(
         @RequestParam(defaultValue = "20") size: Int
     ): ResponseEntity<PageResponse<AdminExplanationSessionResponse>> {
         val enrollment = enrollmentRepository.findById(enrollmentId)
+            ?.takeIf { it.userId == userId }
             ?: return ResponseEntity.notFound().build()
-        if (enrollment.userId != userId) return ResponseEntity.notFound().build()
         val pageResult = explanationRepository.findAllByEnrollmentIdPaged(enrollmentId, page, size)
         val responses = pageResult.content.map { session ->
             val messages = explanationRepository.findMessagesBySessionId(session.id)
