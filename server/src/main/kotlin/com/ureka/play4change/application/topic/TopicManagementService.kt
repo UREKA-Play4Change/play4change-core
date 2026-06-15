@@ -1,6 +1,7 @@
 package com.ureka.play4change.application.topic
 
 import arrow.core.Either
+import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
@@ -12,6 +13,7 @@ import com.ureka.play4change.application.port.LearningGraph
 import com.ureka.play4change.application.port.PrerequisiteEdge
 import com.ureka.play4change.application.port.TopicDetail
 import com.ureka.play4change.application.port.TopicUseCase
+import com.ureka.play4change.domain.topic.AudienceLevel
 import com.ureka.play4change.domain.topic.ContentSourceType
 import com.ureka.play4change.domain.topic.GenerationPhase
 import com.ureka.play4change.domain.topic.PageResult
@@ -62,39 +64,22 @@ class TopicManagementService(
             BadRequest.InvalidField("url", "page returned no extractable text")
         }
 
-        val topicId = UUID.randomUUID().toString()
-        val storageKey = "topics/$topicId/content.txt"
-        val contentRef = try {
-            fileStoragePort.uploadFile(storageKey, rawText.toByteArray(Charsets.UTF_8), "text/plain")
-        } catch (ex: Exception) {
-            log.error("MinIO upload failed for topic {}: {}", topicId, ex.message)
-            raise(InternalServerError.UnexpectedException)
-        }
-
-        val now = OffsetDateTime.now()
-        val topic = topicRepository.save(
-            Topic(
-                id = topicId,
-                title = command.title,
-                description = command.description,
-                category = command.category,
-                contentSourceType = ContentSourceType.URL,
-                contentSourceRef = contentRef,
-                rawExtractedText = rawText,
-                taskCount = command.taskCount,
-                expiresAt = command.expiresAt,
-                audienceLevel = command.audienceLevel,
-                language = command.language,
-                status = TopicStatus.PENDING,
-                createdBy = adminId,
-                createdAt = now,
-                currentPhase = GenerationPhase.INGESTION,
-                phaseUpdatedAt = now
-            )
+        val topic = persistAndLaunch(
+            rawText = rawText,
+            storageKey = "topics/{id}/content.txt",
+            bytes = rawText.toByteArray(Charsets.UTF_8),
+            mimeType = "text/plain",
+            contentSourceType = ContentSourceType.URL,
+            title = command.title,
+            description = command.description,
+            category = command.category,
+            taskCount = command.taskCount,
+            audienceLevel = command.audienceLevel,
+            language = command.language,
+            expiresAt = command.expiresAt,
+            adminId = adminId
         )
-
-        log.info("Topic {} created from URL by admin {}", topicId, adminId)
-        orchestrator.generateAsync(topicId)
+        log.info("Topic {} created from URL by admin {}", topic.id, adminId)
         topic
     }
 
@@ -117,29 +102,69 @@ class TopicManagementService(
             BadRequest.InvalidField("file", "PDF contains no extractable text")
         }
 
+        val topic = persistAndLaunch(
+            rawText = rawText,
+            storageKey = "topics/{id}/content.pdf",
+            bytes = command.pdfBytes,
+            mimeType = "application/pdf",
+            contentSourceType = ContentSourceType.PDF,
+            title = command.title,
+            description = command.description,
+            category = command.category,
+            taskCount = command.taskCount,
+            audienceLevel = command.audienceLevel,
+            language = command.language,
+            expiresAt = command.expiresAt,
+            adminId = adminId
+        )
+        log.info("Topic {} created from PDF '{}' by admin {}", topic.id, command.fileName, adminId)
+        topic
+    }
+
+    /**
+     * Shared tail of both create-topic flows: generates a topic ID, uploads the content
+     * to object storage, persists the [Topic] entity, and kicks off async generation.
+     *
+     * The [storageKey] template may contain the literal `{id}` placeholder which is
+     * replaced with the generated topic ID before the upload.
+     */
+    private fun Raise<AppError>.persistAndLaunch(
+        rawText: String,
+        storageKey: String,
+        bytes: ByteArray,
+        mimeType: String,
+        contentSourceType: ContentSourceType,
+        title: String,
+        description: String,
+        category: String,
+        taskCount: Int,
+        audienceLevel: AudienceLevel,
+        language: String,
+        expiresAt: OffsetDateTime,
+        adminId: String
+    ): Topic {
         val topicId = UUID.randomUUID().toString()
-        val storageKey = "topics/$topicId/content.pdf"
+        val resolvedKey = storageKey.replace("{id}", topicId)
         val contentRef = try {
-            fileStoragePort.uploadFile(storageKey, command.pdfBytes, "application/pdf")
+            fileStoragePort.uploadFile(resolvedKey, bytes, mimeType)
         } catch (ex: Exception) {
             log.error("MinIO upload failed for topic {}: {}", topicId, ex.message)
             raise(InternalServerError.UnexpectedException)
         }
-
         val now = OffsetDateTime.now()
         val topic = topicRepository.save(
             Topic(
                 id = topicId,
-                title = command.title,
-                description = command.description,
-                category = command.category,
-                contentSourceType = ContentSourceType.PDF,
+                title = title,
+                description = description,
+                category = category,
+                contentSourceType = contentSourceType,
                 contentSourceRef = contentRef,
                 rawExtractedText = rawText,
-                taskCount = command.taskCount,
-                expiresAt = command.expiresAt,
-                audienceLevel = command.audienceLevel,
-                language = command.language,
+                taskCount = taskCount,
+                expiresAt = expiresAt,
+                audienceLevel = audienceLevel,
+                language = language,
                 status = TopicStatus.PENDING,
                 createdBy = adminId,
                 createdAt = now,
@@ -147,10 +172,8 @@ class TopicManagementService(
                 phaseUpdatedAt = now
             )
         )
-
-        log.info("Topic {} created from PDF '{}' by admin {}", topicId, command.fileName, adminId)
         orchestrator.generateAsync(topicId)
-        topic
+        return topic
     }
 
     override fun getById(topicId: String): Either<AppError, Topic> = either {
