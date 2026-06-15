@@ -19,7 +19,7 @@ import com.ureka.play4change.domain.topic.TaskQuestionStats
 import com.ureka.play4change.domain.topic.TaskTemplate
 import com.ureka.play4change.domain.topic.TaskType
 import com.ureka.play4change.error.client.NotFound
-import com.ureka.play4change.infra.config.SecurityConfig
+import com.ureka.play4change.infrastructure.config.SecurityConfig
 import com.ureka.play4change.web.admin.AdminTaskController
 import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every
