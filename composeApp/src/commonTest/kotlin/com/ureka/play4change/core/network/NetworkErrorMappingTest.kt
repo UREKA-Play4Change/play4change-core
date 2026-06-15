@@ -86,28 +86,28 @@ class NetworkErrorMappingTest {
     // ---------------------------------------------------------------------------
 
     @Test
-    fun `Unauthorized toUiError() maps to Unauthorised`() {
+    fun `Unauthorized toUiError maps to Unauthorised`() {
         assertIs<com.ureka.play4change.core.error.UiError.ClientError.Unauthorised>(
             NetworkError.Unauthorized.toUiError()
         )
     }
 
     @Test
-    fun `NoConnection toUiError() maps to NetworkUnavailable`() {
+    fun `NoConnection toUiError maps to NetworkUnavailable`() {
         assertIs<com.ureka.play4change.core.error.UiError.ClientError.NetworkUnavailable>(
             NetworkError.NoConnection.toUiError()
         )
     }
 
     @Test
-    fun `Timeout toUiError() maps to NetworkUnavailable`() {
+    fun `Timeout toUiError maps to NetworkUnavailable`() {
         assertIs<com.ureka.play4change.core.error.UiError.ClientError.NetworkUnavailable>(
             NetworkError.Timeout.toUiError()
         )
     }
 
     @Test
-    fun `ServerError toUiError() maps to ServiceUnavailable`() {
+    fun `ServerError toUiError maps to ServiceUnavailable`() {
         assertIs<com.ureka.play4change.core.error.UiError.ServerError.ServiceUnavailable>(
             NetworkError.ServerError(500).toUiError()
         )
