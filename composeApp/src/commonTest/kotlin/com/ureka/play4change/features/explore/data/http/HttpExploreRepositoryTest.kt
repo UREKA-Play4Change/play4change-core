@@ -48,23 +48,23 @@ class HttpExploreRepositoryTest {
             assertEquals("/topics", request.url.encodedPath)
             respond(
                 content = ByteReadChannel(
-                    """[
+                    """{"content":[
                         {"id":"sustainability","title":"Sustainability","description":"Learn about climate.","category":"SUSTAINABILITY","taskCount":14,"isEnrolled":true,"enrollmentStatus":"ACTIVE"},
                         {"id":"digital","title":"Digital Literacy","description":"Navigate digital world.","category":"DIGITAL","taskCount":10,"isEnrolled":false}
-                    ]"""
+                    ],"page":0,"size":20,"totalElements":2,"totalPages":1}"""
                 ),
                 status = HttpStatusCode.OK,
                 headers = headersOf(HttpHeaders.ContentType, "application/json")
             )
         }
 
-        val topics = buildRepo(engine).getTopics("user-1")
+        val page = buildRepo(engine).getTopics("user-1", 0, 20)
 
-        assertEquals(2, topics.size)
-        assertEquals("sustainability", topics[0].id)
-        assertEquals("Sustainability", topics[0].title)
-        assertTrue(topics[0].isActive)
-        assertFalse(topics[1].isActive)
+        assertEquals(2, page.content.size)
+        assertEquals("sustainability", page.content[0].id)
+        assertEquals("Sustainability", page.content[0].title)
+        assertTrue(page.content[0].isActive)
+        assertFalse(page.content[1].isActive)
     }
 
     @Test
@@ -72,19 +72,19 @@ class HttpExploreRepositoryTest {
         val engine = MockEngine { _ ->
             respond(
                 content = ByteReadChannel(
-                    """[{"id":"t1","title":"Health","description":"Health topics.","category":"HEALTH","taskCount":5,"isEnrolled":false}]"""
+                    """{"content":[{"id":"t1","title":"Health","description":"Health topics.","category":"HEALTH","taskCount":5,"isEnrolled":false}],"page":0,"size":20,"totalElements":1,"totalPages":1}"""
                 ),
                 status = HttpStatusCode.OK,
                 headers = headersOf(HttpHeaders.ContentType, "application/json")
             )
         }
 
-        val topics = buildRepo(engine).getTopics("user-1")
+        val page = buildRepo(engine).getTopics("user-1", 0, 20)
 
-        assertEquals(1, topics.size)
+        assertEquals(1, page.content.size)
         assertEquals(
             com.ureka.play4change.features.explore.domain.model.TopicIconType.HEALTH,
-            topics[0].iconType
+            page.content[0].iconType
         )
     }
 
