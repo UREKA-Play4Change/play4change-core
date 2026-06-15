@@ -6,7 +6,7 @@ import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import com.ureka.play4change.application.port.UpdateProfileNameCommand
 import com.ureka.play4change.application.port.UpdateProfileNameUseCase
-import com.ureka.play4change.application.user.GetUserProfileUseCase
+import com.ureka.play4change.application.port.GetUserProfileUseCase
 import com.ureka.play4change.application.user.UserProfile
 import com.ureka.play4change.domain.identity.UserRepository
 import com.ureka.play4change.error.AppError
