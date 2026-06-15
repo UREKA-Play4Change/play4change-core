@@ -2,10 +2,10 @@ package com.ureka.play4change.auth
 
 import com.ureka.play4change.auth.application.MagicLinkService
 import com.ureka.play4change.auth.application.TokenService
-import com.ureka.play4change.auth.domain.model.AuthProvider
+import com.ureka.play4change.auth.AuthProvider
 import com.ureka.play4change.auth.domain.model.MagicLinkToken
 import com.ureka.play4change.auth.domain.model.TokenPair
-import com.ureka.play4change.auth.domain.model.User
+import com.ureka.play4change.auth.domain.model.AuthUser
 import com.ureka.play4change.auth.port.outbound.EmailPort
 import com.ureka.play4change.auth.port.outbound.MagicLinkTokenRepository
 import com.ureka.play4change.auth.port.outbound.UserRepository
@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.security.crypto.codec.Hex
 import java.security.MessageDigest
+import java.time.Clock
 import java.time.OffsetDateTime
 
 class MagicLinkServiceTest {
@@ -34,6 +35,7 @@ class MagicLinkServiceTest {
         userRepository = userRepository,
         emailPort = emailPort,
         tokenService = tokenService,
+        clock = Clock.systemUTC()
     )
 
     private val existingUser = User(
