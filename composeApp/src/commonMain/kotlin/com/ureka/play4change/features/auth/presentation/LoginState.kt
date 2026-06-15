@@ -1,7 +1,7 @@
 package com.ureka.play4change.features.auth.presentation
 
 import com.ureka.play4change.core.component.base.ComponentState
-import com.ureka.play4change.core.error.AppError
+import com.ureka.play4change.core.error.UiError
 
 enum class LoginStage { EmailEntry, LinkSent }
 
@@ -19,7 +19,7 @@ data class LoginState(
     val loadingAction: LoginLoadingAction? = null,
     val tokenInput: String = "",
     override val isLoading: Boolean = false,
-    override val error: AppError? = null
+    override val error: UiError? = null
 ) : ComponentState
 
 val LoginState.isEmailLoading: Boolean get() = loadingAction is LoginLoadingAction.Email
