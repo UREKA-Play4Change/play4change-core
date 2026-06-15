@@ -24,6 +24,9 @@ sealed class NetworkError {
     /** Request or socket timed out. */
     data object Timeout : NetworkError()
 
+    /** 429 — too many requests; the server-side rate limit for this endpoint was exceeded. */
+    data object RateLimited : NetworkError()
+
     /** Any other error not covered by the cases above. */
     data class Unknown(val message: String) : NetworkError()
 
