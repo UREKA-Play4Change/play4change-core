@@ -11,19 +11,19 @@ import com.ureka.play4change.domain.topic.TaskTemplate
 import com.ureka.play4change.domain.topic.TaskTemplateRepository
 import com.ureka.play4change.domain.topic.TopicModuleRepository
 import com.ureka.play4change.domain.topic.TopicRepository
+import com.ureka.play4change.infrastructure.ai.AiContextLimits
+import com.ureka.play4change.infrastructure.ai.OptionsJsonParser
 import com.ureka.play4change.model.GenerationStatus
 import com.ureka.play4change.model.ReuseStrategy
 import com.ureka.play4change.model.StruggleContext
 import com.ureka.play4change.port.TaskGenerationPort
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonPrimitive
 import io.micrometer.core.instrument.MeterRegistry
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -37,43 +37,56 @@ class HandleStruggleService(
     private val taskTemplateRepository: TaskTemplateRepository,
     private val taskGenerationPort: TaskGenerationPort,
     private val registry: MeterRegistry,
+    @Qualifier("generationCoroutineScope") private val generationScope: CoroutineScope,
     @Value("\${ai.mistral.timeout-seconds:60}") private val timeoutSeconds: Long
 ) {
 
     private val log = LoggerFactory.getLogger(HandleStruggleService::class.java)
 
-    @Async("generationExecutor")
     fun triggerAsync(
         enrollmentId: String,
         assignmentId: String,
         errorPattern: ErrorPattern,
         template: TaskTemplate,
         userId: String
-    ) = doTrigger(enrollmentId, assignmentId, errorPattern, template, userId)
+    ) {
+        generationScope.launch {
+            doTrigger(enrollmentId, assignmentId, errorPattern, template, userId)
+        }
+    }
 
     /**
      * Spawns a follow-up struggle session after the learner failed one or more
      * tasks in a previous adaptive session. The same [StruggleSession.originalTaskAssignmentId]
      * is preserved so the chain always traces back to the one main-path task.
      */
-    @Async("generationExecutor")
     fun triggerFromPreviousSession(previousSession: StruggleSession, userId: String) {
-        val originalAssignment = enrollmentRepository.findAssignmentById(previousSession.originalTaskAssignmentId) ?: run {
-            log.error("Original assignment {} not found for follow-up struggle", previousSession.originalTaskAssignmentId)
-            return
+        generationScope.launch {
+            val originalAssignment = enrollmentRepository.findAssignmentById(previousSession.originalTaskAssignmentId)
+                ?: run {
+                    log.error("Original assignment {} not found for follow-up struggle", previousSession.originalTaskAssignmentId)
+                    return@launch
+                }
+            val template = taskTemplateRepository.findById(originalAssignment.taskTemplateId)
+                ?: run {
+                    log.error("Template {} not found for follow-up struggle", originalAssignment.taskTemplateId)
+                    return@launch
+                }
+            doTrigger(
+                previousSession.enrollmentId,
+                previousSession.originalTaskAssignmentId,
+                previousSession.errorPattern,
+                template,
+                userId
+            )
         }
-        val template = taskTemplateRepository.findById(originalAssignment.taskTemplateId) ?: run {
-            log.error("Template {} not found for follow-up struggle", originalAssignment.taskTemplateId)
-            return
-        }
-        doTrigger(previousSession.enrollmentId, previousSession.originalTaskAssignmentId, previousSession.errorPattern, template, userId)
     }
 
     // ---------------------------------------------------------------------------
     // Core generation logic (shared by both trigger paths)
     // ---------------------------------------------------------------------------
 
-    private fun doTrigger(
+    private suspend fun doTrigger(
         enrollmentId: String,
         assignmentId: String,
         errorPattern: ErrorPattern,
@@ -118,10 +131,7 @@ class HandleStruggleService(
                     ErrorPattern.TIME_PRESSURE -> "time_pressure"
                 }
                 registry.counter("struggle_sessions_total", "error_pattern", errorPatternTag).increment()
-                registry.counter(
-                    "struggle_sessions_created_total",
-                    "topic_id", enrollment.topicId
-                ).increment()
+                registry.counter("struggle_sessions_created_total", "topic_id", enrollment.topicId).increment()
             } catch (ex: Exception) {
                 log.warn("Metrics registration failed (non-fatal): {}", ex.message)
             }
@@ -135,20 +145,19 @@ class HandleStruggleService(
                 taskId = template.id,
                 moduleId = module.id,
                 topicId = enrollment.topicId,
-                subjectDomain = template.description.take(2000),
+                subjectDomain = template.description.take(AiContextLimits.STRUGGLE_CONTEXT_CHARS),
                 audienceLevel = com.ureka.play4change.domain.AudienceLevel.valueOf(topic.audienceLevel.name),
                 language = topic.language,
                 attemptCount = 2,
                 errorPattern = mapErrorPattern(errorPattern),
-                moduleObjective = module.objective.take(500),
-                taskDescription = template.description.take(500),
+                moduleObjective = module.objective.take(AiContextLimits.DESCRIPTION_CHARS),
+                taskDescription = template.description.take(AiContextLimits.DESCRIPTION_CHARS),
                 excludedBranchIds = usedBranchIds
             )
 
-            val result = runBlocking {
-                withTimeoutOrNull(timeoutSeconds * 1_000L) {
-                    taskGenerationPort.generateAdaptiveBranch(context)
-                }
+            // AI call — suspends rather than blocking the thread
+            val result = withTimeoutOrNull(timeoutSeconds * 1_000L) {
+                taskGenerationPort.generateAdaptiveBranch(context)
             }
 
             if (result == null) {
@@ -166,8 +175,7 @@ class HandleStruggleService(
                     val adaptiveTasks = branch.subtasks
                         .filter { it.status == GenerationStatus.SUCCESS }
                         .mapIndexed { idx, task ->
-                            val options = task.optionsJson
-                                ?.let { parseOptionsJson(it) }
+                            val options = task.optionsJson?.let { OptionsJsonParser.parse(it) }
                             val taskId = UUID.randomUUID().toString()
                             val shuffledOrder = if (options != null) {
                                 TaskShuffleSeed.shuffleOptions(options.size, userId, taskId, session.id)
@@ -228,8 +236,4 @@ class HandleStruggleService(
             ErrorPattern.READING_ERROR -> com.ureka.play4change.model.ErrorPattern.UNCLEAR_INSTRUCTIONS
             ErrorPattern.TIME_PRESSURE -> com.ureka.play4change.model.ErrorPattern.TIME_PRESSURE
         }
-
-    private fun parseOptionsJson(jsonStr: String): List<String>? = runCatching {
-        Json.parseToJsonElement(jsonStr).jsonArray.map { it.jsonPrimitive.content }
-    }.getOrNull()
 }
