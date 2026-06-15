@@ -5,6 +5,7 @@ import com.ureka.play4change.application.port.BadgeQueryUseCase
 import com.ureka.play4change.application.port.RecentEarnerDto
 import com.ureka.play4change.application.port.TopicBadgeStatsDto
 import com.ureka.play4change.application.port.UserBadgeDto
+import com.ureka.play4change.domain.topic.PageResult
 import com.ureka.play4change.auth.adapter.inbound.security.RateLimitService
 import com.ureka.play4change.auth.application.TokenService
 import com.ureka.play4change.infrastructure.config.SecurityConfig
@@ -66,13 +67,14 @@ class BadgeControllerTest {
             topicTitle = "Java Intro",
             earnedAt = OffsetDateTime.parse("2025-01-15T10:00:00Z")
         )
-        every { badgeQueryUseCase.getUserBadges("user-1") } returns listOf(badge)
+        every { badgeQueryUseCase.getUserBadgesPaged("user-1", 0, 50) } returns
+            PageResult(content = listOf(badge), page = 0, size = 50, totalElements = 1L, totalPages = 1)
 
         mockMvc.perform(get("/profile/badges").with(userAuth()))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$[0].microCompetenceName").value("Java Basics"))
-            .andExpect(jsonPath("$[0].description").value("Core Java concepts"))
-            .andExpect(jsonPath("$[0].topicTitle").value("Java Intro"))
+            .andExpect(jsonPath("$.content[0].microCompetenceName").value("Java Basics"))
+            .andExpect(jsonPath("$.content[0].description").value("Core Java concepts"))
+            .andExpect(jsonPath("$.content[0].topicTitle").value("Java Intro"))
     }
 
     @Test
