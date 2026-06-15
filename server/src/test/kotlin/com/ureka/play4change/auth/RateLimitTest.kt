@@ -6,7 +6,7 @@ import com.ureka.play4change.auth.adapter.inbound.security.RateLimitService
 import com.ureka.play4change.auth.adapter.inbound.web.AuthController
 import com.ureka.play4change.auth.application.TokenService
 import com.ureka.play4change.auth.port.inbound.AuthUseCase
-import com.ureka.play4change.infra.config.SecurityConfig
+import com.ureka.play4change.infrastructure.config.SecurityConfig
 import io.github.bucket4j.TimeMeter
 import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every
