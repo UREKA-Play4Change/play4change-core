@@ -1,16 +1,13 @@
 package com.ureka.play4change.infrastructure.ai
 
 import com.ureka.play4change.application.port.BatchInstancePort
-import com.ureka.play4change.application.topic.AiOutputSanitiser
 import com.ureka.play4change.domain.AudienceLevel
 import com.ureka.play4change.domain.topic.TaskTemplate
 import com.ureka.play4change.model.GenerationRequest
 import com.ureka.play4change.model.GenerationStatus
 import com.ureka.play4change.port.TaskGenerationPort
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonPrimitive
+import com.ureka.play4change.infrastructure.ai.OptionsJsonParser
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
@@ -64,7 +61,7 @@ class BatchInstanceAdapter(
                         .filter { it.status == GenerationStatus.SUCCESS && it.optionsJson != null }
                         .mapNotNull { task ->
                             task.optionsJson
-                                ?.let { parseOptions(it) }
+                                ?.let { OptionsJsonParser.parse(it) }
                                 ?.map { AiOutputSanitiser.sanitise(it) }
                                 ?.let { opts -> placeCorrectAtIndex(opts, template.correctAnswer ?: 0) }
                         }
@@ -90,9 +87,6 @@ class BatchInstanceAdapter(
         return mutable
     }
 
-    private fun parseOptions(json: String): List<String>? = runCatching {
-        Json.parseToJsonElement(json).jsonArray.map { it.jsonPrimitive.content }
-    }.getOrNull()
 
     companion object {
         private const val MODULE_OBJECTIVE_LIMIT = 500
