@@ -2,7 +2,9 @@ package com.ureka.play4change.features.auth.presentation
 
 import com.arkivanov.decompose.ComponentContext
 import com.ureka.play4change.core.component.base.BaseComponent
-import com.ureka.play4change.core.error.AppError
+import com.ureka.play4change.core.error.UiError
+import com.ureka.play4change.core.network.NetworkException
+import com.ureka.play4change.core.network.toUiError
 import com.ureka.play4change.features.auth.domain.repository.AuthRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -40,11 +42,13 @@ class DefaultLoginComponent(
                 startCountdown()
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: NetworkException) {
+                updateState { copy(loadingAction = null, error = e.error.toUiError()) }
             } catch (e: Exception) {
                 updateState {
                     copy(
                         loadingAction = null,
-                        error = AppError.ServerError.Unexpected(e.message)
+                        error = UiError.ServerError.Unexpected(e.message)
                     )
                 }
             }
@@ -61,11 +65,13 @@ class DefaultLoginComponent(
                 startCountdown()
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: NetworkException) {
+                updateState { copy(loadingAction = null, error = e.error.toUiError()) }
             } catch (e: Exception) {
                 updateState {
                     copy(
                         loadingAction = null,
-                        error = AppError.ServerError.Unexpected(e.message)
+                        error = UiError.ServerError.Unexpected(e.message)
                     )
                 }
             }
@@ -85,17 +91,19 @@ class DefaultLoginComponent(
                     updateState {
                         copy(
                             loadingAction = null,
-                            error = AppError.ServerError.Unexpected("Token verification failed")
+                            error = UiError.ServerError.Unexpected("Token verification failed")
                         )
                     }
                 }
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: NetworkException) {
+                updateState { copy(loadingAction = null, error = e.error.toUiError()) }
             } catch (e: Exception) {
                 updateState {
                     copy(
                         loadingAction = null,
-                        error = AppError.ServerError.Unexpected(e.message)
+                        error = UiError.ServerError.Unexpected(e.message)
                     )
                 }
             }
@@ -113,6 +121,6 @@ class DefaultLoginComponent(
         }
     }
 
-    override fun LoginState.copyBase(isLoading: Boolean, error: AppError?): LoginState =
+    override fun LoginState.copyBase(isLoading: Boolean, error: UiError?): LoginState =
         copy(isLoading = isLoading, error = error)
 }
