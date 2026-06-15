@@ -12,7 +12,7 @@ import com.ureka.play4change.domain.topic.GenerationPhase
 import com.ureka.play4change.domain.topic.Topic
 import com.ureka.play4change.domain.topic.TopicPhaseLog
 import com.ureka.play4change.domain.topic.TopicStatus
-import com.ureka.play4change.infra.config.SecurityConfig
+import com.ureka.play4change.infrastructure.config.SecurityConfig
 import com.ureka.play4change.web.admin.SseTopicEventPublisher
 import com.ureka.play4change.web.admin.TopicController
 import io.micrometer.core.instrument.MeterRegistry
