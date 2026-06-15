@@ -83,9 +83,6 @@
     <ID>MaxLineLength:TopicManagementService.kt:TopicManagementService$override</ID>
     <ID>MaxLineLength:UpdateTaskRequest.kt:UpdateTaskRequest$@field:Size(min = 2, max = 10, message = "options must have between 2 and 10 entries") val options: List&lt;@Size(max = 500) String&gt;?</ID>
     <ID>NewLineAtEndOfFile:Application.kt:com.ureka.play4change.Application.kt</ID>
-    <ID>NewLineAtEndOfFile:AuthProvider.kt:com.ureka.play4change.auth.AuthProvider.kt</ID>
-    <ID>NewLineAtEndOfFile:LangChain4jConfig.kt:com.ureka.play4change.infrastructure.config.LangChain4jConfig.kt</ID>
-    <ID>NewLineAtEndOfFile:VectorConverter.kt:com.ureka.play4change.infrastructure.converter.VectorConverter.kt</ID>
     <ID>ReturnCount:AdminUserController.kt:AdminUserController$@GetMapping("/{userId}/enrollments/{enrollmentId}/roadmap") fun getUserEnrollmentRoadmap: ResponseEntity&lt;List&lt;RoadmapNodeResponse&gt;&gt;</ID>
     <ID>ReturnCount:AdminUserController.kt:AdminUserController$@PostMapping("/{userId}/promote") fun promoteUser: ResponseEntity&lt;UserAdminResponse&gt;</ID>
     <ID>ReturnCount:ErrorPatternClassifier.kt:ErrorPatternClassifier$fun classify: ErrorPattern</ID>
@@ -100,6 +97,7 @@
     <ID>ThrowsCount:TokenService.kt:TokenService$override fun refresh: TokenPair</ID>
     <ID>TooGenericExceptionCaught:ContentExtractorAdapter.kt:ContentExtractorAdapter$ex: Exception</ID>
     <ID>TooGenericExceptionCaught:ExplanationService.kt:ExplanationService$ex: Exception</ID>
+    <ID>TooGenericExceptionCaught:HandleStruggleService.kt:HandleStruggleService$e: Exception</ID>
     <ID>TooGenericExceptionCaught:HandleStruggleService.kt:HandleStruggleService$ex: Exception</ID>
     <ID>TooGenericExceptionCaught:JwtAuthFilter.kt:JwtAuthFilter$ex: Exception</ID>
     <ID>TooGenericExceptionCaught:ResendEmailAdapter.kt:ResendEmailAdapter$ex: Exception</ID>
