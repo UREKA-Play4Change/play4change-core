@@ -2,10 +2,10 @@ package com.ureka.play4change.features.home.presentation
 
 import com.arkivanov.decompose.ComponentContext
 import com.ureka.play4change.core.component.base.BaseComponent
-import com.ureka.play4change.core.error.AppError
+import com.ureka.play4change.core.error.UiError
 import com.ureka.play4change.core.component.stateful.safeLaunch
 import com.ureka.play4change.core.network.NetworkException
-import com.ureka.play4change.core.network.toAppError
+import com.ureka.play4change.core.network.toUiError
 import com.ureka.play4change.core.network.toNetworkError
 import com.ureka.play4change.features.home.domain.repository.HomeRepository
 import com.ureka.play4change.features.profile.domain.repository.ProfileRepository
@@ -38,10 +38,10 @@ class DefaultHomeComponent(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: NetworkException) {
-                updateState { copy(isLoading = false, networkError = e.error, error = e.error.toAppError()) }
+                updateState { copy(isLoading = false, networkError = e.error, error = e.error.toUiError()) }
             } catch (e: Exception) {
                 val netError = e.toNetworkError()
-                updateState { copy(isLoading = false, networkError = netError, error = netError.toAppError()) }
+                updateState { copy(isLoading = false, networkError = netError, error = netError.toUiError()) }
             }
         }
     }
@@ -102,6 +102,6 @@ class DefaultHomeComponent(
         }
     }
 
-    override fun HomeState.copyBase(isLoading: Boolean, error: AppError?): HomeState =
+    override fun HomeState.copyBase(isLoading: Boolean, error: UiError?): HomeState =
         copy(isLoading = isLoading, error = error)
 }
