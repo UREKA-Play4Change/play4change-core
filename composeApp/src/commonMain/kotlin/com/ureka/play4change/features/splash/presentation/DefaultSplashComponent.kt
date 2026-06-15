@@ -2,7 +2,7 @@ package com.ureka.play4change.features.splash.presentation
 
 import com.arkivanov.decompose.ComponentContext
 import com.ureka.play4change.core.component.base.BaseComponent
-import com.ureka.play4change.core.error.AppError
+import com.ureka.play4change.core.error.UiError
 import com.ureka.play4change.core.component.stateful.safeLaunch
 import com.ureka.play4change.features.splash.domain.repository.SplashRepository
 import kotlinx.coroutines.delay
@@ -37,6 +37,6 @@ class DefaultSplashComponent(
         // No events for splash
     }
 
-    override fun SplashState.copyBase(isLoading: Boolean, error: AppError?): SplashState =
+    override fun SplashState.copyBase(isLoading: Boolean, error: UiError?): SplashState =
         copy(isLoading = isLoading, error = error)
 }
