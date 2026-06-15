@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# setup.sh — destroy all containers/volumes, rebuild from scratch, start tunnel
+# setup.sh — rebuild from scratch and start all services including the Cloudflare tunnel.
+#
+# The tunnel runs as a Docker Compose service (cloudflare-tunnel) so it stays up
+# automatically — no separate terminal process needed.
+# Prerequisite: ~/.cloudflared/<CLOUDFLARE_TUNNEL_ID>.json must exist on this machine.
 #
 # Usage:
 #   ./scripts/setup.sh
@@ -16,26 +20,5 @@ fi
 #echo "### Cleaning containers and volumes..."
 #docker compose down -v
 
-echo "### Building and starting all services..."
+echo "### Building and starting all services (including Cloudflare tunnel)..."
 docker compose up --build -d
-
-echo "### Starting Cloudflare tunnel..."
-TUNNEL_ID="${CLOUDFLARE_TUNNEL_ID:-}"
-CREDS_FILE="$HOME/.cloudflared/$TUNNEL_ID.json"
-TOKEN_FILE="$HOME/.cloudflared/${TUNNEL_ID}.token"
-
-if [ -n "${CLOUDFLARE_TUNNEL_TOKEN:-}" ]; then
-  cloudflared tunnel run --token "$CLOUDFLARE_TUNNEL_TOKEN"
-elif [ -f "$TOKEN_FILE" ]; then
-  cloudflared tunnel run --token "$(cat "$TOKEN_FILE")"
-elif [ -f "$CREDS_FILE" ]; then
-  cloudflared tunnel run "$TUNNEL_ID"
-else
-  echo ""
-  echo "ERROR: Cloudflare tunnel credentials not found. Provide one of:"
-  echo "  1. Set CLOUDFLARE_TUNNEL_TOKEN env var with your tunnel token"
-  echo "  2. Save the token to: $TOKEN_FILE"
-  echo "     cloudflared tunnel token $TUNNEL_ID > $TOKEN_FILE"
-  echo "  3. Place the credentials JSON at: $CREDS_FILE"
-  exit 1
-fi
