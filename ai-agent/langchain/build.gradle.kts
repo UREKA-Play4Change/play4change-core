@@ -29,9 +29,6 @@ dependencies {
     // Observability
     implementation(libs.micrometer.core)
 
-    implementation(libs.postgresql.driver)
-    implementation(libs.pgvector.jdbc)
-
     // Add this to provide JdbcTemplate and Spring Data capabilities
     implementation(libs.spring.boot.starter.data.jpa)
 
