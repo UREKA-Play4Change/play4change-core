@@ -13,7 +13,7 @@ import com.ureka.play4change.domain.explanation.ExplanationRepository
 import com.ureka.play4change.domain.struggle.StruggleRepository
 import com.ureka.play4change.domain.enrollment.EnrollmentStatus
 import com.ureka.play4change.domain.enrollment.TaskAssignment
-import com.ureka.play4change.domain.identity.AuthProvider
+import com.ureka.play4change.auth.AuthProvider
 import com.ureka.play4change.domain.identity.User
 import com.ureka.play4change.domain.identity.UserRepository
 import com.ureka.play4change.domain.identity.UserRole
@@ -34,6 +34,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.core.env.Environment
+import java.time.Clock
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -68,7 +69,8 @@ class TaskDeliveryRateTest {
             topicRepository, topicModuleRepository, taskTemplateRepository,
             taskInstanceRepository, enrollmentRepository, userRepository,
             languageGatingService, handleStruggleService, struggleRepository,
-            explanationRepository, peerReviewUseCase, badgeIssuancePort, registry, props
+            explanationRepository, peerReviewUseCase, badgeIssuancePort, registry, props,
+            Clock.systemUTC()
         )
     }
 
