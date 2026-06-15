@@ -69,6 +69,9 @@ import play4change.composeapp.generated.resources.explore_leave_confirm_body
 import play4change.composeapp.generated.resources.explore_leave_confirm_title
 import play4change.composeapp.generated.resources.explore_subtitle
 import play4change.composeapp.generated.resources.explore_title
+import play4change.composeapp.generated.resources.pagination_next
+import play4change.composeapp.generated.resources.pagination_page_of
+import play4change.composeapp.generated.resources.pagination_previous
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -211,6 +214,36 @@ fun ExploreScreen(component: DefaultExploreComponent) {
                                 .fillMaxWidth()
                                 .padding(horizontal = Spacing.l, vertical = Spacing.xl)
                         )
+                    }
+                }
+
+                if (state.totalPages > 1) {
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = Spacing.l, vertical = Spacing.s),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TextButton(
+                                onClick = { onEvent(ExploreEvents.PreviousPage) },
+                                enabled = state.page > 0
+                            ) {
+                                Text(stringResource(Res.string.pagination_previous))
+                            }
+                            Text(
+                                text = stringResource(Res.string.pagination_page_of, state.page + 1, state.totalPages),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            TextButton(
+                                onClick = { onEvent(ExploreEvents.NextPage) },
+                                enabled = state.page < state.totalPages - 1
+                            ) {
+                                Text(stringResource(Res.string.pagination_next))
+                            }
+                        }
                     }
                 }
             }
