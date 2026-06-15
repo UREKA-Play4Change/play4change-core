@@ -26,6 +26,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
+import java.time.Clock
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -51,7 +52,8 @@ class StruggleDetectionTest {
         topicRepository, topicModuleRepository, taskTemplateRepository,
         taskInstanceRepository, enrollmentRepository, userRepository,
         languageGatingService, handleStruggleService, struggleRepository,
-        explanationRepository, peerReviewUseCase, badgeIssuancePort, registry, TaskDeliveryProperties()
+        explanationRepository, peerReviewUseCase, badgeIssuancePort, registry, TaskDeliveryProperties(),
+        Clock.systemUTC()
     )
 
     private val userId = "user-1"
