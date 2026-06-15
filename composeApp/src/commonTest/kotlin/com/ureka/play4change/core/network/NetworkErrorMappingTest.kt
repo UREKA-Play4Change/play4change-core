@@ -82,34 +82,34 @@ class NetworkErrorMappingTest {
     }
 
     // ---------------------------------------------------------------------------
-    // NetworkError.toAppError — NetworkError → AppError
+    // NetworkError.toUiError() — NetworkError → UiError
     // ---------------------------------------------------------------------------
 
     @Test
-    fun `Unauthorized toAppError maps to Unauthorised`() {
-        assertIs<com.ureka.play4change.core.error.AppError.ClientError.Unauthorised>(
-            NetworkError.Unauthorized.toAppError()
+    fun `Unauthorized toUiError() maps to Unauthorised`() {
+        assertIs<com.ureka.play4change.core.error.UiError.ClientError.Unauthorised>(
+            NetworkError.Unauthorized.toUiError()()
         )
     }
 
     @Test
-    fun `NoConnection toAppError maps to NetworkUnavailable`() {
-        assertIs<com.ureka.play4change.core.error.AppError.ClientError.NetworkUnavailable>(
-            NetworkError.NoConnection.toAppError()
+    fun `NoConnection toUiError() maps to NetworkUnavailable`() {
+        assertIs<com.ureka.play4change.core.error.UiError.ClientError.NetworkUnavailable>(
+            NetworkError.NoConnection.toUiError()()
         )
     }
 
     @Test
-    fun `Timeout toAppError maps to NetworkUnavailable`() {
-        assertIs<com.ureka.play4change.core.error.AppError.ClientError.NetworkUnavailable>(
-            NetworkError.Timeout.toAppError()
+    fun `Timeout toUiError() maps to NetworkUnavailable`() {
+        assertIs<com.ureka.play4change.core.error.UiError.ClientError.NetworkUnavailable>(
+            NetworkError.Timeout.toUiError()()
         )
     }
 
     @Test
-    fun `ServerError toAppError maps to ServiceUnavailable`() {
-        assertIs<com.ureka.play4change.core.error.AppError.ServerError.ServiceUnavailable>(
-            NetworkError.ServerError(500).toAppError()
+    fun `ServerError toUiError() maps to ServiceUnavailable`() {
+        assertIs<com.ureka.play4change.core.error.UiError.ServerError.ServiceUnavailable>(
+            NetworkError.ServerError(500).toUiError()()
         )
     }
 
