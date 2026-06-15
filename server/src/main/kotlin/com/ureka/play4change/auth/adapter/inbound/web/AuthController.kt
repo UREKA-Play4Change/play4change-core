@@ -43,15 +43,8 @@ class AuthController(
     fun refresh(@Valid @RequestBody request: RefreshRequest): ResponseEntity<TokenResponse> =
         ResponseEntity.ok(tokenUseCase.refresh(request.refreshToken).toResponse())
 
-    @DeleteMapping("/logout")
-    fun logout(@Valid @RequestBody request: RefreshRequest): ResponseEntity<Void> {
-        tokenUseCase.revoke(request.refreshToken)
-        return ResponseEntity.noContent().build()
-    }
-
-    /** Web frontend sends POST; DELETE is kept for demo/CLI clients. */
     @PostMapping("/logout")
-    fun logoutPost(@Valid @RequestBody request: RefreshRequest): ResponseEntity<Void> {
+    fun logout(@Valid @RequestBody request: RefreshRequest): ResponseEntity<Void> {
         tokenUseCase.revoke(request.refreshToken)
         return ResponseEntity.noContent().build()
     }
