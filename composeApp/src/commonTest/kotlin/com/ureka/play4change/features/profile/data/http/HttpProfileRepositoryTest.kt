@@ -85,14 +85,14 @@ class HttpProfileRepositoryTest {
                 )
                 "/profile/badges" -> respond(
                     content = ByteReadChannel(
-                        """[{"microCompetenceName":"first_task","description":"Complete your first task","topicTitle":"Sustainability","earnedAt":"2025-01-15T10:30:00Z"}]"""
+                        """{"content":[{"microCompetenceName":"first_task","description":"Complete your first task","topicTitle":"Sustainability","earnedAt":"2025-01-15T10:30:00Z"}],"page":0,"size":1,"totalElements":1,"totalPages":1}"""
                     ),
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
                 "/topics" -> respond(
                     content = ByteReadChannel(
-                        """[{"id":"topic-sust","title":"Sustainability","enrollmentStatus":"ACTIVE"}]"""
+                        """{"content":[{"id":"topic-sust","title":"Sustainability","enrollmentStatus":"ACTIVE"}],"page":0,"size":1,"totalElements":1,"totalPages":1}"""
                     ),
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
