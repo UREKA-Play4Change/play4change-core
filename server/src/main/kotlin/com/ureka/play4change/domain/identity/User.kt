@@ -1,5 +1,6 @@
 package com.ureka.play4change.domain.identity
 
+import com.ureka.play4change.auth.AuthProvider
 import java.time.OffsetDateTime
 
 data class User(
