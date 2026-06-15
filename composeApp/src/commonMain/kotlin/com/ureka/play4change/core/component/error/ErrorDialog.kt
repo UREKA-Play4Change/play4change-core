@@ -19,7 +19,7 @@ import com.ureka.play4change.core.component.base.BaseComponent
 import com.ureka.play4change.core.component.base.ComponentEvents
 import com.ureka.play4change.core.component.base.ComponentState
 import com.ureka.play4change.core.component.stateful.clearError
-import com.ureka.play4change.core.error.AppError
+import com.ureka.play4change.core.error.UiError
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import play4change.composeapp.generated.resources.Res
@@ -31,6 +31,8 @@ import play4change.composeapp.generated.resources.error_not_found
 import play4change.composeapp.generated.resources.error_not_found_title
 import play4change.composeapp.generated.resources.error_service_title
 import play4change.composeapp.generated.resources.error_service_unavailable
+import play4change.composeapp.generated.resources.error_rate_limited
+import play4change.composeapp.generated.resources.error_rate_limited_title
 import play4change.composeapp.generated.resources.error_sign_in
 import play4change.composeapp.generated.resources.error_try_again
 import play4change.composeapp.generated.resources.error_unexpected
@@ -40,55 +42,59 @@ import play4change.composeapp.generated.resources.ok
 @Composable
 fun <E : ComponentEvents, S : ComponentState> ErrorDialog(
     component: BaseComponent<S, E>,
-    error: AppError?,
+    error: UiError?,
     onRetry: (() -> Unit)? = null
 ) {
     if (error == null) return
 
     val icon: ImageVector = when (error) {
-        is AppError.ClientError.NetworkUnavailable -> Icons.Rounded.WifiOff
-        is AppError.ClientError.Unauthorised       -> Icons.Rounded.Lock
-        is AppError.ClientError.ValidationError    -> Icons.Rounded.Warning
-        is AppError.ServerError.ServiceUnavailable -> Icons.Rounded.CloudOff
-        is AppError.ServerError.NotFound           -> Icons.Rounded.Info
-        is AppError.ServerError.Unexpected         -> Icons.Rounded.Warning
+        is UiError.ClientError.NetworkUnavailable -> Icons.Rounded.WifiOff
+        is UiError.ClientError.Unauthorised       -> Icons.Rounded.Lock
+        is UiError.ClientError.ValidationError    -> Icons.Rounded.Warning
+        is UiError.ClientError.RateLimited        -> Icons.Rounded.Warning
+        is UiError.ServerError.ServiceUnavailable -> Icons.Rounded.CloudOff
+        is UiError.ServerError.NotFound           -> Icons.Rounded.Info
+        is UiError.ServerError.Unexpected         -> Icons.Rounded.Warning
     }
 
     val iconTint = when (error) {
-        is AppError.ServerError.NotFound -> MaterialTheme.colorScheme.secondary
+        is UiError.ServerError.NotFound -> MaterialTheme.colorScheme.secondary
         else                             -> MaterialTheme.colorScheme.error
     }
 
     val titleRes: StringResource = when (error) {
-        is AppError.ClientError.NetworkUnavailable -> Res.string.error_network_title
-        is AppError.ClientError.Unauthorised       -> Res.string.error_auth_title
-        is AppError.ClientError.ValidationError    -> Res.string.error_unexpected_title
-        is AppError.ServerError.ServiceUnavailable -> Res.string.error_service_title
-        is AppError.ServerError.NotFound           -> Res.string.error_not_found_title
-        is AppError.ServerError.Unexpected         -> Res.string.error_unexpected_title
+        is UiError.ClientError.NetworkUnavailable -> Res.string.error_network_title
+        is UiError.ClientError.Unauthorised       -> Res.string.error_auth_title
+        is UiError.ClientError.ValidationError    -> Res.string.error_unexpected_title
+        is UiError.ClientError.RateLimited        -> Res.string.error_rate_limited_title
+        is UiError.ServerError.ServiceUnavailable -> Res.string.error_service_title
+        is UiError.ServerError.NotFound           -> Res.string.error_not_found_title
+        is UiError.ServerError.Unexpected         -> Res.string.error_unexpected_title
     }
 
     val messageRes: StringResource = when (error) {
-        is AppError.ClientError.NetworkUnavailable -> Res.string.error_network
-        is AppError.ClientError.Unauthorised       -> Res.string.error_auth_required
-        is AppError.ClientError.ValidationError    -> Res.string.error_unexpected
-        is AppError.ServerError.ServiceUnavailable -> Res.string.error_service_unavailable
-        is AppError.ServerError.NotFound           -> Res.string.error_not_found
-        is AppError.ServerError.Unexpected         -> Res.string.error_unexpected
+        is UiError.ClientError.NetworkUnavailable -> Res.string.error_network
+        is UiError.ClientError.Unauthorised       -> Res.string.error_auth_required
+        is UiError.ClientError.ValidationError    -> Res.string.error_unexpected
+        is UiError.ClientError.RateLimited        -> Res.string.error_rate_limited
+        is UiError.ServerError.ServiceUnavailable -> Res.string.error_service_unavailable
+        is UiError.ServerError.NotFound           -> Res.string.error_not_found
+        is UiError.ServerError.Unexpected         -> Res.string.error_unexpected
     }
 
     // Retry only makes sense for transient failures — auth and not-found require action,
     // not repetition.
     val retryable: Boolean = when (error) {
-        is AppError.ClientError.NetworkUnavailable -> true
-        is AppError.ClientError.Unauthorised       -> false
-        is AppError.ClientError.ValidationError    -> false
-        is AppError.ServerError.ServiceUnavailable -> true
-        is AppError.ServerError.NotFound           -> false
-        is AppError.ServerError.Unexpected         -> true
+        is UiError.ClientError.NetworkUnavailable -> true
+        is UiError.ClientError.Unauthorised       -> false
+        is UiError.ClientError.ValidationError    -> false
+        is UiError.ClientError.RateLimited        -> true
+        is UiError.ServerError.ServiceUnavailable -> true
+        is UiError.ServerError.NotFound           -> false
+        is UiError.ServerError.Unexpected         -> true
     }
 
-    val isAuthError = error is AppError.ClientError.Unauthorised
+    val isAuthError = error is UiError.ClientError.Unauthorised
     val showRetry   = retryable && onRetry != null
 
     AlertDialog(
