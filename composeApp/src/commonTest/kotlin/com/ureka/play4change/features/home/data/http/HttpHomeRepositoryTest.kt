@@ -81,7 +81,7 @@ class HttpHomeRepositoryTest {
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
                 "/topics" -> respond(
-                    content = ByteReadChannel("""[{"id":"t1","title":"Sustainability","isEnrolled":true}]"""),
+                    content = ByteReadChannel("""{"content":[{"id":"t1","title":"Sustainability","isEnrolled":true}],"page":0,"size":20,"totalElements":1,"totalPages":1}"""),
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
@@ -114,11 +114,7 @@ class HttpHomeRepositoryTest {
                 )
                 request.url.encodedPath == "/topics" -> respond(
                     content = ByteReadChannel(
-                        """[
-                            {"id":"sustainability","title":"Sustainability","isEnrolled":true},
-                            {"id":"digital","title":"Digital","isEnrolled":true},
-                            {"id":"health","title":"Health","isEnrolled":false}
-                        ]"""
+                        """{"content":[{"id":"sustainability","title":"Sustainability","isEnrolled":true},{"id":"digital","title":"Digital","isEnrolled":true},{"id":"health","title":"Health","isEnrolled":false}],"page":0,"size":20,"totalElements":3,"totalPages":1}"""
                     ),
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
@@ -161,7 +157,7 @@ class HttpHomeRepositoryTest {
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
                 "/topics" -> respond(
-                    content = ByteReadChannel("""[{"id":"t1","title":"Sustainability","isEnrolled":true}]"""),
+                    content = ByteReadChannel("""{"content":[{"id":"t1","title":"Sustainability","isEnrolled":true}],"page":0,"size":20,"totalElements":1,"totalPages":1}"""),
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
@@ -196,7 +192,7 @@ class HttpHomeRepositoryTest {
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
                 request.url.encodedPath == "/topics" -> respond(
-                    content = ByteReadChannel("""[{"id":"t1","title":"Sustainability","isEnrolled":true}]"""),
+                    content = ByteReadChannel("""{"content":[{"id":"t1","title":"Sustainability","isEnrolled":true}],"page":0,"size":20,"totalElements":1,"totalPages":1}"""),
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
@@ -232,7 +228,7 @@ class HttpHomeRepositoryTest {
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
                 "/topics" -> respond(
-                    content = ByteReadChannel("""[{"id":"t1","title":"Sustainability","isEnrolled":true}]"""),
+                    content = ByteReadChannel("""{"content":[{"id":"t1","title":"Sustainability","isEnrolled":true}],"page":0,"size":20,"totalElements":1,"totalPages":1}"""),
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
