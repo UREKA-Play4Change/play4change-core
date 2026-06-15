@@ -36,6 +36,8 @@ import com.ureka.play4change.error.client.NotFound
 import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -55,7 +57,8 @@ class TaskService(
     private val peerReviewUseCase: PeerReviewUseCase,
     private val badgeIssuancePort: BadgeIssuancePort,
     private val registry: MeterRegistry,
-    private val taskDeliveryProperties: TaskDeliveryProperties
+    private val taskDeliveryProperties: TaskDeliveryProperties,
+    private val clock: Clock
 ) : TaskUseCase {
 
     private val log = LoggerFactory.getLogger(TaskService::class.java)
@@ -94,7 +97,7 @@ class TaskService(
                 val lastSubmittedAt = assignments.mapNotNull { it.submittedAt }.maxOrNull()
                 if (lastSubmittedAt != null) {
                     val rateSeconds = taskDeliveryProperties.effectiveRateSeconds()
-                    val secondsSince = ChronoUnit.SECONDS.between(lastSubmittedAt, OffsetDateTime.now())
+                    val secondsSince = ChronoUnit.SECONDS.between(lastSubmittedAt, OffsetDateTime.now(clock))
                     if (secondsSince < rateSeconds) {
                         return@either TodayTaskResult.NotAvailableYet(lastSubmittedAt.plusSeconds(rateSeconds))
                     }
@@ -106,7 +109,7 @@ class TaskService(
                     NotFound.ResourceNotFound("Topic", topicId)
                 }.taskCount
                 if (dayIndex >= taskCount) {
-                    return@either TodayTaskResult.NotAvailableYet(OffsetDateTime.now().plusYears(100))
+                    return@either TodayTaskResult.NotAvailableYet(OffsetDateTime.now(clock).plusYears(100))
                 }
             } else {
                 // Prod mode: serve any reset PENDING task (e.g. from a resolved struggle) before
@@ -162,7 +165,7 @@ class TaskService(
             val shuffledOrder = TaskShuffleSeed.shuffleOptions(
                 effectiveOptionCount, userId, template.id, enrollment.id
             )
-            val now = OffsetDateTime.now()
+            val now = OffsetDateTime.now(clock)
 
             val savedAssignment = enrollmentRepository.saveAssignment(
                 TaskAssignment(
@@ -189,6 +192,7 @@ class TaskService(
             TodayTaskResult.Available(savedAssignment, template)
         }
 
+    @Transactional
     override fun submitAnswer(command: SubmitAnswerCommand): Either<AppError, SubmitResult> = either {
         val assignment = ensureNotNull(enrollmentRepository.findAssignmentById(command.assignmentId)) {
             NotFound.ResourceNotFound("TaskAssignment", command.assignmentId)
@@ -215,7 +219,7 @@ class TaskService(
         val canonicalAnswer = assignment.correctAnswerIndex
             ?: resolveCorrectAnswer(assignment.taskInstanceId, assignment.taskTemplateId, template.correctAnswer)
         val isCorrect = originalIndex == canonicalAnswer
-        val now = OffsetDateTime.now()
+        val now = OffsetDateTime.now(clock)
         val isLate = now.isAfter(assignment.dueAt)
 
         val pointsAwarded = when {
@@ -343,6 +347,7 @@ class TaskService(
             ?.correctAnswer
             ?: fallback
 
+    @Transactional
     override fun submitPhoto(command: SubmitPhotoCommand): Either<AppError, SubmitTodoResult> = either {
         val assignment = ensureNotNull(enrollmentRepository.findAssignmentById(command.assignmentId)) {
             NotFound.ResourceNotFound("TaskAssignment", command.assignmentId)
