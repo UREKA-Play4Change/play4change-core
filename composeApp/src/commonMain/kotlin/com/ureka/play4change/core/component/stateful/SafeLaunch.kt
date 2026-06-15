@@ -2,7 +2,7 @@ package com.ureka.play4change.core.component.stateful
 
 import com.ureka.play4change.core.component.base.ComponentState
 import com.ureka.play4change.core.network.NetworkException
-import com.ureka.play4change.core.network.toAppError
+import com.ureka.play4change.core.network.toUiError
 import com.ureka.play4change.core.network.toNetworkError
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -20,9 +20,9 @@ fun <S : ComponentState> StatefulComponent<S>.safeLaunch(
         } catch (e: CancellationException) {
             throw e
         } catch (e: NetworkException) {
-            updateState { copyBase(isLoading = false, error = e.error.toAppError()) }
+            updateState { copyBase(isLoading = false, error = e.error.toUiError()) }
         } catch (e: Exception) {
-            updateState { copyBase(isLoading = false, error = e.toNetworkError().toAppError()) }
+            updateState { copyBase(isLoading = false, error = e.toNetworkError().toUiError()) }
         }
     }
 }
