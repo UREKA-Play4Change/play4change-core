@@ -34,3 +34,6 @@
 -dontwarn okio.**
 -keep class okhttp3.** { *; }
 -keep interface okhttp3.** { *; }
+
+# ── Google Error Prone / Tink ─────────────────────────────────────────────────
+-dontwarn com.google.errorprone.annotations.**
