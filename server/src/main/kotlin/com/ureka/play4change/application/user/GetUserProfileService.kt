@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.ureka.play4change.application.port.EnrollmentUseCase
+import com.ureka.play4change.application.port.GetUserProfileUseCase
 import com.ureka.play4change.domain.enrollment.EnrollmentRepository
 import com.ureka.play4change.domain.identity.UserRepository
 import com.ureka.play4change.error.AppError
