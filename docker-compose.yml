@@ -138,6 +138,25 @@
       depends_on:
         - prometheus
 
+    # ── Cloudflare Tunnel ─────────────────────────────────────────────────────
+    # Runs cloudflared as a managed service so the public URL
+    # (https://radesh-govind.com/play4change-server) is always reachable —
+    # including from real Android devices — without a separate terminal process.
+    cloudflare-tunnel:
+      image: cloudflare/cloudflared:latest
+      container_name: play4change-tunnel
+      command: tunnel --no-autoupdate run ${CLOUDFLARE_TUNNEL_ID}
+      volumes:
+        - ${HOME}/.cloudflared:/home/nonroot/.cloudflared:ro
+      environment:
+        TUNNEL_TRANSPORT_PROTOCOL: ${TUNNEL_TRANSPORT_PROTOCOL:-auto}
+        TUNNEL_EDGE_IP_VERSION: ${TUNNEL_EDGE_IP_VERSION:-4}
+        TUNNEL_EDGE_BIND_ADDRESS: ${TUNNEL_EDGE_BIND_ADDRESS:-0.0.0.0}
+      depends_on:
+        nginx:
+          condition: service_started
+      restart: unless-stopped
+
   volumes:
     postgres_data:
     minio_data:
