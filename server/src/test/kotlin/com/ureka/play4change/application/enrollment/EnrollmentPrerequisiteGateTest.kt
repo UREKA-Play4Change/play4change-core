@@ -25,6 +25,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import java.time.Clock
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -43,7 +44,8 @@ class EnrollmentPrerequisiteGateTest {
         taskTemplateRepository,
         enrollmentRepository,
         prerequisiteRepository,
-        registry
+        registry,
+        Clock.systemUTC()
     )
 
     private val userId = "user-1"
