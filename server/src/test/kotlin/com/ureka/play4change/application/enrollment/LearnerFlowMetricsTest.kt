@@ -30,6 +30,7 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import java.time.Clock
 import java.time.OffsetDateTime
 
 class LearnerFlowMetricsTest {
@@ -133,7 +134,8 @@ class LearnerFlowMetricsTest {
             peerReviewUseCase = mockk(relaxed = true),
             badgeIssuancePort = mockk<BadgeIssuancePort>(relaxed = true),
             registry = meterRegistry,
-            taskDeliveryProperties = TaskDeliveryProperties()
+            taskDeliveryProperties = TaskDeliveryProperties(),
+            clock = Clock.systemUTC()
         )
 
         val result = taskService.submitAnswer(SubmitAnswerCommand(userId, assignmentId, 0, null))
@@ -185,7 +187,8 @@ class LearnerFlowMetricsTest {
             peerReviewUseCase = mockk(relaxed = true),
             badgeIssuancePort = mockk<BadgeIssuancePort>(relaxed = true),
             registry = meterRegistry,
-            taskDeliveryProperties = TaskDeliveryProperties()
+            taskDeliveryProperties = TaskDeliveryProperties(),
+            clock = Clock.systemUTC()
         )
 
         // selectedOption=3 maps to optionOrder[3]=3, which != correctAnswer(0) → incorrect

@@ -2,10 +2,10 @@ package com.ureka.play4change.features.struggle.presentation
 
 import com.arkivanov.decompose.ComponentContext
 import com.ureka.play4change.core.component.base.BaseComponent
-import com.ureka.play4change.core.error.AppError
+import com.ureka.play4change.core.error.UiError
 import com.ureka.play4change.core.component.stateful.safeLaunch
 import com.ureka.play4change.core.network.NetworkException
-import com.ureka.play4change.core.network.toAppError
+import com.ureka.play4change.core.network.toUiError
 import com.ureka.play4change.core.network.toNetworkError
 import com.ureka.play4change.core.network.NetworkError
 import com.ureka.play4change.features.struggle.domain.repository.StruggleRepository
@@ -49,9 +49,9 @@ class DefaultStruggleComponent(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: NetworkException) {
-                updateState { copy(isLoading = false, error = e.error.toAppError()) }
+                updateState { copy(isLoading = false, error = e.error.toUiError()) }
             } catch (e: Exception) {
-                updateState { copy(isLoading = false, error = e.toNetworkError().toAppError()) }
+                updateState { copy(isLoading = false, error = e.toNetworkError().toUiError()) }
             }
         }
     }
@@ -147,6 +147,6 @@ class DefaultStruggleComponent(
         }
     }
 
-    override fun StruggleState.copyBase(isLoading: Boolean, error: AppError?): StruggleState =
+    override fun StruggleState.copyBase(isLoading: Boolean, error: UiError?): StruggleState =
         copy(isLoading = isLoading, error = error)
 }

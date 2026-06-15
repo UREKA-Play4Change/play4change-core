@@ -24,9 +24,8 @@ dependencies {
     implementation(libs.spring.boot.starter.actuator)
 
     runtimeOnly(libs.postgresql)
-    implementation("org.flywaydb:flyway-core")
-
-
+    implementation(libs.flyway.core)
+    runtimeOnly(libs.flyway.postgresql)
 
     // LangChain4j — core + Mistral provider
     implementation(libs.langchain4j.core)
@@ -38,12 +37,12 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test)
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.jupiter.engine)
     testImplementation(libs.mockk)
     testImplementation(libs.spring.boot.starter.test)
-    testImplementation("org.springframework.security:spring-security-test")
-    testImplementation("com.ninja-squad:springmockk:4.0.2")
+    testImplementation(libs.spring.security.test)
+    testImplementation(libs.springmockk)
 
     implementation(libs.spring.boot.starter.security)
     implementation(libs.kotlinx.serialization.json)
@@ -52,22 +51,23 @@ dependencies {
     runtimeOnly(libs.jjwt.impl)
     runtimeOnly(libs.jjwt.jackson)
     implementation(libs.spring.security.crypto)
-    implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("io.micrometer:micrometer-registry-prometheus")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+    implementation(libs.micrometer.prometheus)
 
     // OpenAPI / Swagger UI
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+    implementation(libs.springdoc.openapi)
 
-    // Rate limiting
-    implementation("com.bucket4j:bucket4j-core:8.10.1")
+    // Rate limiting (in-memory; bucket4j-redis can be added if distributed rate limiting is needed)
+    implementation(libs.bucket4j.core)
+    // Caffeine for time-bounded eviction of rate-limit buckets (prevents unbounded memory growth)
+    implementation(libs.caffeine)
 
-    // Phase 3 — content & storage
-    implementation("software.amazon.awssdk:s3:2.25.31")
-    implementation("org.apache.pdfbox:pdfbox:3.0.1")
-    implementation("org.jsoup:jsoup:1.17.2")
+    // Content & storage
+    implementation(libs.awssdk.s3)
+    implementation(libs.pdfbox)
+    implementation(libs.jsoup)
 
+    spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:1.13.0")
 }
 
 kotlin {
@@ -113,10 +113,6 @@ spotbugs {
     reportLevel.set(com.github.spotbugs.snom.Confidence.HIGH)
     excludeFilter.set(file("spotbugs-exclude.xml"))
     ignoreFailures.set(false)
-}
-
-dependencies {
-    spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:1.13.0")
 }
 
 tasks.named("spotbugsMain") {

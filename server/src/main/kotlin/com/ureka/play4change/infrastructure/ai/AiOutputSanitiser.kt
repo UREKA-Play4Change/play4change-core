@@ -1,4 +1,4 @@
-package com.ureka.play4change.application.topic
+package com.ureka.play4change.infrastructure.ai
 
 import org.jsoup.Jsoup
 
@@ -13,6 +13,10 @@ import org.jsoup.Jsoup
  * Uses Jsoup.parse().text() which strips all tags, decodes HTML entities, and
  * returns plain text suitable for DB storage. Script element content is not
  * included in jsoup's text output, providing defence against injected scripts.
+ *
+ * Lives in `infrastructure.ai` (not `application.topic`) because sanitising raw AI
+ * output is an infrastructure concern — it compensates for a characteristic of the
+ * AI provider, not for business logic.
  */
 object AiOutputSanitiser {
     fun sanitise(input: String): String = Jsoup.parse(input).text()

@@ -12,7 +12,7 @@ import com.ureka.play4change.domain.struggle.ErrorPattern
 import com.ureka.play4change.domain.struggle.StruggleSession
 import com.ureka.play4change.domain.struggle.StruggleStatus
 import com.ureka.play4change.error.client.NotFound
-import com.ureka.play4change.infra.config.SecurityConfig
+import com.ureka.play4change.infrastructure.config.SecurityConfig
 import com.ureka.play4change.web.user.StruggleController
 import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every

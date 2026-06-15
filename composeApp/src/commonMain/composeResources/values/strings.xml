@@ -168,6 +168,11 @@
   <string name="nav_log_out_confirm_title">Log out?</string>
   <string name="nav_log_out_confirm_body">You will be signed out of your account.</string>
 
+  <!-- Pagination -->
+  <string name="pagination_previous">← Previous</string>
+  <string name="pagination_next">Next →</string>
+  <string name="pagination_page_of">%1$d of %2$d</string>
+
   <!-- Common -->
   <string name="ok">OK</string>
   <string name="cancel">Cancel</string>
@@ -180,6 +185,7 @@
   <string name="error_service_title">Service unavailable</string>
   <string name="error_not_found_title">Not found</string>
   <string name="error_unexpected_title">Something went wrong</string>
+  <string name="error_rate_limited_title">Too many requests</string>
 
   <!-- Error messages -->
   <string name="error_network">Check your connection and try again.</string>
@@ -187,6 +193,7 @@
   <string name="error_service_unavailable">We\'re having trouble on our end. Please try again in a moment.</string>
   <string name="error_not_found">We couldn\'t find what you\'re looking for.</string>
   <string name="error_unexpected">Something went wrong. Please try again.</string>
+  <string name="error_rate_limited">You\'ve made too many requests. Please wait a moment and try again.</string>
 
   <!-- Error actions -->
   <string name="error_try_again">Try again</string>

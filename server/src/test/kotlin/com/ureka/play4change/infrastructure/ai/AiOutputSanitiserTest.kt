@@ -1,4 +1,4 @@
-package com.ureka.play4change.application.topic
+package com.ureka.play4change.infrastructure.ai
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

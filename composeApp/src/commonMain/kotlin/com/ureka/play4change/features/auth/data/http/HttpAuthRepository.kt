@@ -3,19 +3,17 @@
 package com.ureka.play4change.features.auth.data.http
 
 import com.ureka.play4change.auth.AuthTokens
-import com.ureka.play4change.core.network.NetworkError
 import com.ureka.play4change.core.network.NetworkException
+import com.ureka.play4change.core.network.networkErrorFromStatus
 import com.ureka.play4change.core.network.TokenStorage
 import com.ureka.play4change.features.auth.domain.model.AuthResult
 import com.ureka.play4change.features.auth.domain.model.MagicLinkResult
 import com.ureka.play4change.features.auth.domain.repository.AuthRepository
 import io.ktor.client.HttpClient
-import io.ktor.client.request.delete
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.serialization.Serializable
@@ -59,7 +57,8 @@ class HttpAuthRepository(
             contentType(ContentType.Application.Json)
             setBody(MagicLinkRequestBody(email))
         }
-        return MagicLinkResult(success = response.status.isSuccess())
+        if (!response.status.isSuccess()) throw NetworkException(networkErrorFromStatus(response.status.value))
+        return MagicLinkResult(success = true)
     }
 
     override suspend fun verifyMagicLink(token: String): AuthResult? {
@@ -67,21 +66,10 @@ class HttpAuthRepository(
             contentType(ContentType.Application.Json)
             setBody(MagicLinkVerifyBody(token))
         }
-        return when {
-            response.status.isSuccess() -> {
-                val body = Json.decodeFromString<TokenResponseBody>(response.bodyAsText())
-                tokenStorage.store(body.accessToken, body.refreshToken)
-                body.toAuthResult()
-            }
-            response.status == HttpStatusCode.Unauthorized ->
-                throw NetworkException(NetworkError.Unauthorized)
-            response.status == HttpStatusCode.Forbidden ->
-                throw NetworkException(NetworkError.Forbidden)
-            response.status.value in 500..599 ->
-                throw NetworkException(NetworkError.ServerError(response.status.value))
-            else ->
-                throw NetworkException(NetworkError.Unknown("HTTP ${response.status.value}"))
-        }
+        if (!response.status.isSuccess()) throw NetworkException(networkErrorFromStatus(response.status.value))
+        val body = Json.decodeFromString<TokenResponseBody>(response.bodyAsText())
+        tokenStorage.store(body.accessToken, body.refreshToken)
+        return body.toAuthResult()
     }
 
     override suspend fun refresh(refreshToken: String): AuthResult? {

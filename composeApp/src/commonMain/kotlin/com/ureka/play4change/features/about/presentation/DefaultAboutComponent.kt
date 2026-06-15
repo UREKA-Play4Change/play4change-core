@@ -2,7 +2,7 @@ package com.ureka.play4change.features.about.presentation
 
 import com.arkivanov.decompose.ComponentContext
 import com.ureka.play4change.core.component.base.BaseComponent
-import com.ureka.play4change.core.error.AppError
+import com.ureka.play4change.core.error.UiError
 
 class DefaultAboutComponent(
     componentContext: ComponentContext
@@ -14,6 +14,6 @@ class DefaultAboutComponent(
         }
     }
 
-    override fun AboutState.copyBase(isLoading: Boolean, error: AppError?): AboutState =
+    override fun AboutState.copyBase(isLoading: Boolean, error: UiError?): AboutState =
         copy(isLoading = isLoading, error = error)
 }

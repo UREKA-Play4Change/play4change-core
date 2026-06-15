@@ -1,6 +1,6 @@
 package com.ureka.play4change.web.admin
 
-import com.ureka.play4change.application.admin.GetAdminProfileUseCase
+import com.ureka.play4change.application.port.GetAdminProfileUseCase
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping

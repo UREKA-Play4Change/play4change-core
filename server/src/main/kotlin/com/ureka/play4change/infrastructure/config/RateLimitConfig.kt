@@ -1,4 +1,4 @@
-package com.ureka.play4change.infra.config
+package com.ureka.play4change.infrastructure.config
 
 import io.github.bucket4j.TimeMeter
 import org.springframework.context.annotation.Bean

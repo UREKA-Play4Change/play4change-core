@@ -1,10 +1,10 @@
 package com.ureka.play4change.core.error
 
-sealed interface AppError {
+sealed interface UiError {
     val messageKey: String
     val params: List<String>
 
-    sealed interface ClientError : AppError {
+    sealed interface ClientError : UiError {
         data object NetworkUnavailable : ClientError {
             override val messageKey = "error_network"
             override val params = emptyList<String>()
@@ -16,9 +16,13 @@ sealed interface AppError {
             override val messageKey = "error_auth_required"
             override val params = emptyList<String>()
         }
+        data object RateLimited : ClientError {
+            override val messageKey = "error_rate_limited"
+            override val params = emptyList<String>()
+        }
     }
 
-    sealed interface ServerError : AppError {
+    sealed interface ServerError : UiError {
         data object ServiceUnavailable : ServerError {
             override val messageKey = "error_service_unavailable"
             override val params = emptyList<String>()

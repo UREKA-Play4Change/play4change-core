@@ -64,6 +64,9 @@ import play4change.composeapp.generated.resources.badge_streak_3
 import play4change.composeapp.generated.resources.badge_streak_7
 import play4change.composeapp.generated.resources.badges_empty
 import play4change.composeapp.generated.resources.badges_title
+import play4change.composeapp.generated.resources.pagination_next
+import play4change.composeapp.generated.resources.pagination_page_of
+import play4change.composeapp.generated.resources.pagination_previous
 import play4change.composeapp.generated.resources.cancel
 import play4change.composeapp.generated.resources.profile_accuracy_label
 import play4change.composeapp.generated.resources.profile_edit_name
@@ -76,6 +79,8 @@ import play4change.composeapp.generated.resources.profile_save
 import play4change.composeapp.generated.resources.profile_streak_label
 import play4change.composeapp.generated.resources.profile_title
 import kotlin.math.roundToInt
+
+private const val BADGE_PAGE_SIZE = 5
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -332,7 +337,12 @@ fun ProfileScreen(component: DefaultProfileComponent) {
                         }
                     }
 
-                    if (profile.badges.isEmpty()) {
+                    val badgesOnPage = profile.badges
+                        .drop(state.badgePage * BADGE_PAGE_SIZE)
+                        .take(BADGE_PAGE_SIZE)
+                    val totalBadgePages = maxOf(1, (profile.badges.size + BADGE_PAGE_SIZE - 1) / BADGE_PAGE_SIZE)
+
+                    if (badgesOnPage.isEmpty()) {
                         item {
                             Text(
                                 text = stringResource(Res.string.badges_empty),
@@ -345,7 +355,7 @@ fun ProfileScreen(component: DefaultProfileComponent) {
                             )
                         }
                     } else {
-                        val badgeRows = profile.badges.chunked(3)
+                        val badgeRows = badgesOnPage.chunked(3)
                         items(badgeRows) { row ->
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -356,6 +366,36 @@ fun ProfileScreen(component: DefaultProfileComponent) {
                                 }
                                 repeat(3 - row.size) {
                                     Spacer(Modifier.weight(1f))
+                                }
+                            }
+                        }
+                    }
+
+                    if (totalBadgePages > 1) {
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = Spacing.s),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                TextButton(
+                                    onClick = { component.onEvent(ProfileEvents.PreviousBadgePage) },
+                                    enabled = state.badgePage > 0
+                                ) {
+                                    Text(stringResource(Res.string.pagination_previous))
+                                }
+                                Text(
+                                    text = stringResource(Res.string.pagination_page_of, state.badgePage + 1, totalBadgePages),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                TextButton(
+                                    onClick = { component.onEvent(ProfileEvents.NextBadgePage) },
+                                    enabled = state.badgePage < totalBadgePages - 1
+                                ) {
+                                    Text(stringResource(Res.string.pagination_next))
                                 }
                             }
                         }

@@ -1,4 +1,4 @@
-package com.ureka.play4change.infra.pipeline.filters
+package com.ureka.play4change.infrastructure.pipeline.filters
 
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest

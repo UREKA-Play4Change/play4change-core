@@ -11,7 +11,7 @@ import com.ureka.play4change.domain.report.TaskReport
 import com.ureka.play4change.domain.report.TaskReportStatus
 import com.ureka.play4change.domain.topic.PageResult
 import com.ureka.play4change.error.client.NotFound
-import com.ureka.play4change.infra.config.SecurityConfig
+import com.ureka.play4change.infrastructure.config.SecurityConfig
 import com.ureka.play4change.web.admin.AdminTaskReportController
 import com.ureka.play4change.web.user.TaskReportController
 import io.micrometer.core.instrument.MeterRegistry

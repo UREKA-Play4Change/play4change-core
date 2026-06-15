@@ -1,4 +1,4 @@
-package com.ureka.play4change.infra.converter
+package com.ureka.play4change.infrastructure.converter
 
 import jakarta.persistence.AttributeConverter
 import jakarta.persistence.Converter

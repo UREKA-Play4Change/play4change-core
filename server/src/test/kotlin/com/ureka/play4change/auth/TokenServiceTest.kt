@@ -11,6 +11,7 @@ import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.springframework.security.crypto.codec.Hex
 import java.security.MessageDigest
+import java.time.Clock
 import java.time.OffsetDateTime
 
 class TokenServiceTest {
@@ -26,7 +27,8 @@ class TokenServiceTest {
     private val tokenService = TokenService(
         refreshTokenRepository = refreshTokenRepository,
         userRepository = userRepository,
-        jwtProperties = jwtProperties
+        jwtProperties = jwtProperties,
+        clock = Clock.systemUTC()
     )
 
     // ── revoke ────────────────────────────────────────────────────────────────

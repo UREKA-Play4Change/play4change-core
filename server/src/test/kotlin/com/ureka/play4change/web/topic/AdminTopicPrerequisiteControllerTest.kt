@@ -15,7 +15,7 @@ import com.ureka.play4change.domain.topic.Topic
 import com.ureka.play4change.domain.topic.TopicStatus
 import com.ureka.play4change.error.client.BadRequest
 import com.ureka.play4change.error.client.NotFound
-import com.ureka.play4change.infra.config.SecurityConfig
+import com.ureka.play4change.infrastructure.config.SecurityConfig
 import com.ureka.play4change.web.admin.AdminTopicPrerequisiteController
 import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every

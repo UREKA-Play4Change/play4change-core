@@ -2,7 +2,7 @@ package com.ureka.play4change.infrastructure.persistence.adapter
 
 import com.ureka.play4change.auth.adapter.outbound.persistence.entity.UserEntity
 import com.ureka.play4change.auth.adapter.outbound.persistence.spring.UserJpaRepository
-import com.ureka.play4change.domain.identity.AuthProvider
+import com.ureka.play4change.auth.AuthProvider
 import com.ureka.play4change.domain.identity.User
 import com.ureka.play4change.domain.identity.UserRepository
 import com.ureka.play4change.domain.identity.UserRole

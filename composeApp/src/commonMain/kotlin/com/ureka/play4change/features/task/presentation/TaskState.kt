@@ -1,7 +1,7 @@
 package com.ureka.play4change.features.task.presentation
 
 import com.ureka.play4change.core.component.base.ComponentState
-import com.ureka.play4change.core.error.AppError
+import com.ureka.play4change.core.error.UiError
 import com.ureka.play4change.core.network.NetworkError
 import com.ureka.play4change.features.task.domain.model.TaskDetail
 
@@ -13,7 +13,7 @@ sealed class SubmissionState {
 
 data class TaskState(
     override val isLoading: Boolean = true,
-    override val error: AppError? = null,
+    override val error: UiError? = null,
     val task: TaskDetail? = null,
 
     // Quiz mode state

@@ -23,10 +23,7 @@ class PeerReviewRepositoryAdapter(
         jpa.findBySubmissionAssignmentIdIn(submissionAssignmentIds).map { it.toDomain() }
 
     override fun findPendingByReviewerUserId(reviewerUserId: String): List<PeerReview> =
-        jpa.findByReviewerUserIdAndReviewedAtIsNull(reviewerUserId).map { it.toDomain() }
-
-    override fun findExpiredPending(now: OffsetDateTime): List<PeerReview> =
-        jpa.findByVerdictIsNullAndExpiresAtBefore(now).map { it.toDomain() }
+        jpa.findByReviewerUserIdAndReviewedAtIsNullAndExpiresAtAfter(reviewerUserId, OffsetDateTime.now()).map { it.toDomain() }
 
     override fun countBySubmissionAssignmentId(submissionAssignmentId: String): Int =
         jpa.countBySubmissionAssignmentId(submissionAssignmentId)

@@ -1,6 +1,6 @@
 package com.ureka.play4change.infrastructure.persistence.entity
 
-import com.ureka.play4change.infra.converter.VectorConverter
+import com.ureka.play4change.infrastructure.converter.VectorConverter
 import jakarta.persistence.*
 import org.hibernate.annotations.ColumnTransformer
 import org.hibernate.annotations.JdbcTypeCode

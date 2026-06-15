@@ -1,6 +1,7 @@
 package com.ureka.play4change.infrastructure.persistence.adapter
 
 import com.ureka.play4change.domain.enrollment.*
+import com.ureka.play4change.domain.topic.PageResult
 import com.ureka.play4change.domain.topic.TaskType
 import com.ureka.play4change.infrastructure.persistence.entity.EnrollmentEntity
 import com.ureka.play4change.infrastructure.persistence.entity.TaskAssignmentEntity
@@ -12,6 +13,8 @@ import com.ureka.play4change.infrastructure.persistence.repository.TopicModuleJp
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
 
 @Component
@@ -39,6 +42,18 @@ class EnrollmentRepositoryAdapter(
 
     override fun findAllByUserId(userId: String): List<Enrollment> =
         enrollmentJpa.findByUserId(userId).map { it.toDomain() }
+
+    override fun findAllByUserIdPaged(userId: String, page: Int, size: Int): PageResult<Enrollment> {
+        val pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "enrolledAt"))
+        val jpaPage = enrollmentJpa.findByUserId(userId, pageable)
+        return PageResult(
+            content = jpaPage.content.map { it.toDomain() },
+            page = jpaPage.number,
+            size = jpaPage.size,
+            totalElements = jpaPage.totalElements,
+            totalPages = jpaPage.totalPages
+        )
+    }
 
     override fun findAssignmentById(id: String): TaskAssignment? =
         assignmentJpa.findById(id).orElse(null)?.toDomain()

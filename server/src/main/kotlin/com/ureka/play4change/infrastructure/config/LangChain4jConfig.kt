@@ -1,4 +1,4 @@
-package com.ureka.play4change.infra.config
+package com.ureka.play4change.infrastructure.config
 
 import com.ureka.play4change.model.*
 import dev.langchain4j.model.chat.ChatLanguageModel

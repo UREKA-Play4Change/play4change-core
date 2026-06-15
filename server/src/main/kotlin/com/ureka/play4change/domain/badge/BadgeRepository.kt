@@ -5,6 +5,7 @@ interface BadgeRepository {
     fun findMicroCompetenceById(id: String): MicroCompetence?
     fun findBadgeByUserIdAndMicroCompetenceId(userId: String, microCompetenceId: String): Badge?
     fun findBadgesByUserId(userId: String): List<Badge>
+    fun findBadgesByUserIdPaged(userId: String, page: Int, size: Int): com.ureka.play4change.domain.topic.PageResult<Badge>
     fun findBadgesByMicroCompetenceId(microCompetenceId: String): List<Badge>
     fun saveBadge(badge: Badge): Badge
     fun saveMicroCompetence(microCompetence: MicroCompetence): MicroCompetence

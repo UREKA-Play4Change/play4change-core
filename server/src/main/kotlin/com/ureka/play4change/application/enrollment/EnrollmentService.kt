@@ -25,6 +25,8 @@ import com.ureka.play4change.error.client.NotFound
 import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -38,11 +40,13 @@ class EnrollmentService(
     private val taskTemplateRepository: TaskTemplateRepository,
     private val enrollmentRepository: EnrollmentRepository,
     private val prerequisiteRepository: PrerequisiteRepository,
-    private val registry: MeterRegistry
+    private val registry: MeterRegistry,
+    private val clock: Clock
 ) : EnrollmentUseCase {
 
     private val log = LoggerFactory.getLogger(EnrollmentService::class.java)
 
+    @Transactional
     override fun enroll(command: EnrollCommand): Either<AppError, Enrollment> = either {
         val topic = ensureNotNull(topicRepository.findById(command.topicId)) {
             NotFound.ResourceNotFound("Topic", command.topicId)
@@ -78,7 +82,7 @@ class EnrollmentService(
                 ?: existingEnrollment.enrolledAt
             val pauseDays = ChronoUnit.DAYS.between(
                 pausedAt.atZoneSameInstant(ZoneOffset.UTC).toLocalDate(),
-                LocalDate.now(ZoneOffset.UTC)
+                LocalDate.now(clock)
             )
             val adjustedEnrolledAt = existingEnrollment.enrolledAt.plusDays(pauseDays)
             return@either enrollmentRepository.save(
@@ -86,7 +90,7 @@ class EnrollmentService(
                     status = EnrollmentStatus.ACTIVE,
                     enrolledAt = adjustedEnrolledAt,
                     pausedAt = null,
-                    lastActivityAt = OffsetDateTime.now()
+                    lastActivityAt = OffsetDateTime.now(clock)
                 )
             )
         }
@@ -101,7 +105,7 @@ class EnrollmentService(
             BadRequest.InvalidField("topicId", "topic has no tasks yet")
         }
 
-        val now = OffsetDateTime.now()
+        val now = OffsetDateTime.now(clock)
         val enrollment = enrollmentRepository.save(
             Enrollment(
                 id = UUID.randomUUID().toString(),

@@ -11,4 +11,6 @@ sealed interface ProfileEvents : ComponentEvents {
     data object ShowLanguagePicker : ProfileEvents
     data object DismissLanguagePicker : ProfileEvents
     data class LanguageSelected(val code: String) : ProfileEvents
+    data object NextBadgePage : ProfileEvents
+    data object PreviousBadgePage : ProfileEvents
 }

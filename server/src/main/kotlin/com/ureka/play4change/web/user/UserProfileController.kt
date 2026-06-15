@@ -2,7 +2,7 @@ package com.ureka.play4change.web.user
 
 import com.ureka.play4change.application.port.UpdateProfileNameCommand
 import com.ureka.play4change.application.port.UpdateProfileNameUseCase
-import com.ureka.play4change.application.user.GetUserProfileUseCase
+import com.ureka.play4change.application.port.GetUserProfileUseCase
 import com.ureka.play4change.error.AppError
 import com.ureka.play4change.web.user.dto.UserProfileResponse
 import jakarta.validation.Valid

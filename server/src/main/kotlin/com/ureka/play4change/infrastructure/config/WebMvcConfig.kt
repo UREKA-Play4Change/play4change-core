@@ -1,4 +1,4 @@
-package com.ureka.play4change.infra.config
+package com.ureka.play4change.infrastructure.config
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean

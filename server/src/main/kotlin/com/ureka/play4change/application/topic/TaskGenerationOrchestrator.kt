@@ -14,19 +14,20 @@ import com.ureka.play4change.domain.topic.TopicModule
 import com.ureka.play4change.domain.topic.TopicModuleRepository
 import com.ureka.play4change.domain.topic.TopicRepository
 import com.ureka.play4change.domain.topic.TopicStatus
+import com.ureka.play4change.infrastructure.ai.AiContextLimits
+import com.ureka.play4change.infrastructure.ai.AiOutputSanitiser
+import com.ureka.play4change.infrastructure.ai.OptionsJsonParser
 import com.ureka.play4change.model.GenerationRequest
 import com.ureka.play4change.model.GenerationStatus
 import com.ureka.play4change.port.TaskGenerationPort
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonPrimitive
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -44,12 +45,22 @@ class TaskGenerationOrchestrator(
     private val badgeRepository: BadgeRepository,
     private val eventPublisher: TopicEventPublisher,
     private val registry: MeterRegistry,
+    @Qualifier("generationCoroutineScope") private val generationScope: CoroutineScope,
     @Value("\${ai.mistral.timeout-seconds:60}") private val timeoutSeconds: Long
 ) {
     private val log = LoggerFactory.getLogger(TaskGenerationOrchestrator::class.java)
 
-    @Async("generationExecutor")
+    /**
+     * Dispatches generation to the [generationScope] backed by the generation thread pool.
+     * Using a coroutine scope instead of `@Async` + `runBlocking` lets the AI call
+     * truly suspend rather than blocking the executor thread for the full duration.
+     */
     fun generateAsync(topicId: String) {
+        generationScope.launch { doGenerate(topicId) }
+    }
+
+    @Suppress("LongMethod") // multi-phase pipeline — splitting would obscure the state machine
+    private suspend fun doGenerate(topicId: String) {
         val sample = Timer.start(registry)
         val startMs = System.currentTimeMillis()
         try {
@@ -83,25 +94,25 @@ class TaskGenerationOrchestrator(
                     id = UUID.randomUUID().toString(),
                     topicId = topicId,
                     orderIndex = 0,
-                    objective = topic.description.take(500)
+                    objective = topic.description.take(AiContextLimits.DESCRIPTION_CHARS)
                 )
             )
 
-            if (rawText.length > 8000) {
-                log.warn("Topic $topicId: content truncated from ${rawText.length} to 8000 chars")
+            if (rawText.length > AiContextLimits.CONTENT_CHARS) {
+                log.warn("Topic $topicId: content truncated from ${rawText.length} to ${AiContextLimits.CONTENT_CHARS} chars")
             }
-            if (topic.description.length > 500) {
-                log.warn("Topic $topicId: module objective truncated from ${topic.description.length} to 500 chars")
+            if (topic.description.length > AiContextLimits.DESCRIPTION_CHARS) {
+                log.warn("Topic $topicId: module objective truncated from ${topic.description.length} to ${AiContextLimits.DESCRIPTION_CHARS} chars")
             }
 
             val request = GenerationRequest(
                 topicId = topicId,
                 moduleId = module.id,
-                subjectDomain = rawText.take(8000),
+                subjectDomain = rawText.take(AiContextLimits.CONTENT_CHARS),
                 audienceLevel = com.ureka.play4change.domain.AudienceLevel.valueOf(topic.audienceLevel.name),
                 language = topic.language,
                 taskCount = topic.taskCount,
-                moduleObjective = topic.description.take(500),
+                moduleObjective = topic.description.take(AiContextLimits.DESCRIPTION_CHARS),
                 onTaskGenerated = { completed, total ->
                     eventPublisher.generationProgress(topicId, completed, total)
                 }
@@ -110,11 +121,9 @@ class TaskGenerationOrchestrator(
             // ANALYSIS → GENERATION
             phaseTransitionService.transitionTo(topicId, GenerationPhase.GENERATION)
 
-            // --- GENERATION phase: AI call ---
-            val result = runBlocking {
-                withTimeoutOrNull(timeoutSeconds * 1_000L) {
-                    taskGenerationPort.generateTasks(request)
-                }
+            // --- GENERATION phase: AI call (suspends, doesn't block the thread) ---
+            val result = withTimeoutOrNull(timeoutSeconds * 1_000L) {
+                taskGenerationPort.generateTasks(request)
             }
 
             if (result == null) {
@@ -153,7 +162,7 @@ class TaskGenerationOrchestrator(
                                 taskType = TaskType.MULTIPLE_CHOICE,
                                 pointsReward = task.pointsReward,
                                 options = task.optionsJson
-                                    ?.let { parseOptionsJson(it) }
+                                    ?.let { OptionsJsonParser.parse(it) }
                                     ?.map { AiOutputSanitiser.sanitise(it) },
                                 correctAnswer = task.correctAnswerIndex,
                                 version = 1,
@@ -209,8 +218,4 @@ class TaskGenerationOrchestrator(
 
     private fun contentKeyFor(topicId: String, type: ContentSourceType): String =
         "topics/$topicId/${if (type == ContentSourceType.PDF) "content.pdf" else "content.txt"}"
-
-    private fun parseOptionsJson(json: String): List<String>? = runCatching {
-        Json.parseToJsonElement(json).jsonArray.map { it.jsonPrimitive.content }
-    }.getOrNull()
 }

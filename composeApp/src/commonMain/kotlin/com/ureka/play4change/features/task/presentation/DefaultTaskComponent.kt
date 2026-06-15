@@ -3,11 +3,11 @@ package com.ureka.play4change.features.task.presentation
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.backhandler.BackCallback
 import com.ureka.play4change.core.component.base.BaseComponent
-import com.ureka.play4change.core.error.AppError
+import com.ureka.play4change.core.error.UiError
 import com.ureka.play4change.core.component.stateful.safeLaunch
 import com.ureka.play4change.core.network.NetworkError
 import com.ureka.play4change.core.network.NetworkException
-import com.ureka.play4change.core.network.toAppError
+import com.ureka.play4change.core.network.toUiError
 import com.ureka.play4change.core.network.toNetworkError
 import com.ureka.play4change.features.task.domain.model.TaskContent
 import com.ureka.play4change.features.task.domain.repository.TaskRepository
@@ -45,11 +45,11 @@ class DefaultTaskComponent(
                     updateState { copy(isLoading = false) }
                     emitEffect(TaskEffect.NavigateToStruggle(e.error.enrollmentId))
                 } else {
-                    updateState { copy(isLoading = false, networkError = e.error, error = e.error.toAppError()) }
+                    updateState { copy(isLoading = false, networkError = e.error, error = e.error.toUiError()) }
                 }
             } catch (e: Exception) {
                 val netError = e.toNetworkError()
-                updateState { copy(isLoading = false, networkError = netError, error = netError.toAppError()) }
+                updateState { copy(isLoading = false, networkError = netError, error = netError.toUiError()) }
             }
         }
     }
@@ -263,6 +263,6 @@ class DefaultTaskComponent(
         }
     }
 
-    override fun TaskState.copyBase(isLoading: Boolean, error: AppError?): TaskState =
+    override fun TaskState.copyBase(isLoading: Boolean, error: UiError?): TaskState =
         copy(isLoading = isLoading, error = error)
 }

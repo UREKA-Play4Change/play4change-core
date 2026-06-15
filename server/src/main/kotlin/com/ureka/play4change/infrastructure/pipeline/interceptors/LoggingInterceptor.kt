@@ -1,4 +1,4 @@
-package com.ureka.play4change.infra.pipeline.interceptors
+package com.ureka.play4change.infrastructure.pipeline.interceptors
 
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse

@@ -8,7 +8,7 @@ import com.ureka.play4change.application.port.UserPreferencesUseCase
 import com.ureka.play4change.auth.adapter.inbound.security.RateLimitService
 import com.ureka.play4change.auth.application.TokenService
 import com.ureka.play4change.error.client.BadRequest
-import com.ureka.play4change.infra.config.SecurityConfig
+import com.ureka.play4change.infrastructure.config.SecurityConfig
 import com.ureka.play4change.web.user.UserPreferencesController
 import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every

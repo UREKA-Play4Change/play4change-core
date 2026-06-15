@@ -55,6 +55,15 @@ private data class PendingReviewDto(
     val submissionPhotoUrl: String? = null
 )
 
+@Serializable
+private data class PagedTopicResponseDto(
+    val content: List<TopicSummaryDto>,
+    val page: Int = 0,
+    val size: Int = 0,
+    val totalElements: Long = 0,
+    val totalPages: Int = 1
+)
+
 // ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
@@ -88,8 +97,10 @@ class HttpHomeRepository(
         var pendingReviews: List<PendingReviewSummary> = emptyList()
         var isEnrolled = false
         try {
-            val topicsResponse = client.get("topics")
-            val topics = json.decodeFromString<List<TopicSummaryDto>>(topicsResponse.bodyAsText())
+            val topicsResponse = client.get("topics") {
+                parameter("size", 50)
+            }
+            val topics = json.decodeFromString<PagedTopicResponseDto>(topicsResponse.bodyAsText()).content
             val enrolledTopics = topics.filter { it.isEnrolled }
             isEnrolled = enrolledTopics.isNotEmpty()
 

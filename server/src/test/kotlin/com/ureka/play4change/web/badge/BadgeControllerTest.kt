@@ -7,7 +7,7 @@ import com.ureka.play4change.application.port.TopicBadgeStatsDto
 import com.ureka.play4change.application.port.UserBadgeDto
 import com.ureka.play4change.auth.adapter.inbound.security.RateLimitService
 import com.ureka.play4change.auth.application.TokenService
-import com.ureka.play4change.infra.config.SecurityConfig
+import com.ureka.play4change.infrastructure.config.SecurityConfig
 import com.ureka.play4change.web.admin.AdminBadgeController
 import com.ureka.play4change.web.user.BadgeController
 import io.micrometer.core.instrument.MeterRegistry

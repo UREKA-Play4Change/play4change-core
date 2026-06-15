@@ -8,15 +8,18 @@ import com.ureka.play4change.error.AppError
 import com.ureka.play4change.infrastructure.persistence.repository.ExplanationMessageJpaRepository
 import com.ureka.play4change.infrastructure.persistence.repository.ExplanationSessionJpaRepository
 import com.ureka.play4change.web.admin.dto.AdaptiveTaskAdminResponse
+import com.ureka.play4change.web.admin.dto.PageResponse
 import com.ureka.play4change.web.admin.dto.TaskTemplateAdminResponse
 import com.ureka.play4change.web.admin.dto.UpdateTaskRequest
 import jakarta.validation.Valid
+import org.springframework.data.domain.PageRequest
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.time.OffsetDateTime
 
@@ -117,15 +120,17 @@ class AdminTaskController(
 
     @GetMapping("/topics/{topicId}/explanations")
     fun getTopicExplanations(
-        @PathVariable topicId: String
-    ): ResponseEntity<List<TopicExplanationResponse>> {
-        val sessions = explanationSessionJpa.findByTopicIdWithDetails(topicId)
-        val userIds = sessions.map { it.enrollment.userId }.distinct()
+        @PathVariable topicId: String,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int
+    ): ResponseEntity<PageResponse<TopicExplanationResponse>> {
+        val sessionPage = explanationSessionJpa.findByTopicIdWithDetails(topicId, PageRequest.of(page, size))
+        val userIds = sessionPage.content.map { it.enrollment.userId }.distinct()
         val usersById = userIds
             .mapNotNull { uid -> userRepository.findById(uid)?.let { uid to it } }
             .toMap()
 
-        val responses = sessions.map { session ->
+        val responses = sessionPage.content.map { session ->
             val user = usersById[session.enrollment.userId]
             val messages = explanationMessageJpa
                 .findBySessionIdOrderBySentAtAsc(session.id)
@@ -145,7 +150,15 @@ class AdminTaskController(
                 messages = messages
             )
         }
-        return ResponseEntity.ok(responses)
+        return ResponseEntity.ok(
+            PageResponse(
+                content = responses,
+                page = sessionPage.number,
+                size = sessionPage.size,
+                totalElements = sessionPage.totalElements,
+                totalPages = sessionPage.totalPages
+            )
+        )
     }
 
     @Suppress("UNCHECKED_CAST")

@@ -1,4 +1,4 @@
-package com.ureka.play4change.infra.config
+package com.ureka.play4change.infrastructure.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ureka.play4change.auth.adapter.inbound.security.JwtAuthFilter
@@ -22,11 +22,11 @@ class SecurityConfig(
     private val jwtAuthFilter: JwtAuthFilter,
     private val objectMapper: ObjectMapper,
     private val corsConfigurationSource: CorsConfigurationSource,
-    private val environment: Environment
+    environment: Environment
 ) {
 
-    private val isProd: Boolean
-        get() = environment.activeProfiles.contains("prod")
+    // Evaluated once at construction — active profiles are fixed after context refresh.
+    private val isProd: Boolean = environment.activeProfiles.contains("prod")
 
     @Bean
     fun authenticationEntryPoint(): AuthenticationEntryPoint =

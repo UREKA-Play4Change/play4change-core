@@ -2,9 +2,9 @@ package com.ureka.play4change.application.identity
 
 import arrow.core.Either
 import com.ureka.play4change.application.port.UpdateProfileNameCommand
-import com.ureka.play4change.application.user.GetUserProfileUseCase
+import com.ureka.play4change.application.port.GetUserProfileUseCase
 import com.ureka.play4change.application.user.UserProfile
-import com.ureka.play4change.domain.identity.AuthProvider
+import com.ureka.play4change.auth.AuthProvider
 import com.ureka.play4change.domain.identity.User
 import com.ureka.play4change.domain.identity.UserRepository
 import com.ureka.play4change.domain.identity.UserRole

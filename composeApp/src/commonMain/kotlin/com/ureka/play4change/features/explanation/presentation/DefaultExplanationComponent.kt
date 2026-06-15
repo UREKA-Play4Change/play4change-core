@@ -3,9 +3,9 @@ package com.ureka.play4change.features.explanation.presentation
 import com.arkivanov.decompose.ComponentContext
 import com.ureka.play4change.core.component.base.BaseComponent
 import com.ureka.play4change.core.component.stateful.safeLaunch
-import com.ureka.play4change.core.error.AppError
+import com.ureka.play4change.core.error.UiError
 import com.ureka.play4change.core.network.NetworkException
-import com.ureka.play4change.core.network.toAppError
+import com.ureka.play4change.core.network.toUiError
 import com.ureka.play4change.core.network.toNetworkError
 import com.ureka.play4change.features.explanation.domain.repository.ExplanationRepository
 import kotlinx.coroutines.delay
@@ -44,9 +44,9 @@ class DefaultExplanationComponent(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: NetworkException) {
-                updateState { copy(isLoading = false, error = e.error.toAppError()) }
+                updateState { copy(isLoading = false, error = e.error.toUiError()) }
             } catch (e: Exception) {
-                updateState { copy(isLoading = false, error = e.toNetworkError().toAppError()) }
+                updateState { copy(isLoading = false, error = e.toNetworkError().toUiError()) }
             }
         }
     }
@@ -104,6 +104,6 @@ class DefaultExplanationComponent(
         }
     }
 
-    override fun ExplanationState.copyBase(isLoading: Boolean, error: AppError?): ExplanationState =
+    override fun ExplanationState.copyBase(isLoading: Boolean, error: UiError?): ExplanationState =
         copy(isLoading = isLoading, error = error)
 }

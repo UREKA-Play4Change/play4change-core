@@ -2,7 +2,7 @@ package com.ureka.play4change.features.explore.presentation
 
 import com.arkivanov.decompose.ComponentContext
 import com.ureka.play4change.core.component.base.BaseComponent
-import com.ureka.play4change.core.error.AppError
+import com.ureka.play4change.core.error.UiError
 import com.ureka.play4change.core.component.stateful.safeLaunch
 import com.ureka.play4change.features.explore.domain.model.EnrollmentStatus
 import com.ureka.play4change.features.explore.domain.repository.ExploreRepository
@@ -14,19 +14,19 @@ class DefaultExploreComponent(
 ) : BaseComponent<ExploreState, ExploreEvents>(componentContext, ExploreState()), ExploreComponent {
 
     init {
-        loadTopics()
+        loadTopics(0)
     }
 
-    private fun loadTopics() {
+    private fun loadTopics(page: Int) {
         safeLaunch(scope) {
-            val topics = repository.getTopics("current-user")
-            updateState { copy(isLoading = false, topics = topics) }
+            val result = repository.getTopics("current-user", page, PAGE_SIZE)
+            updateState { copy(isLoading = false, topics = result.content, page = page, totalPages = result.totalPages) }
         }
     }
 
     override fun onEvent(event: ExploreEvents) {
         when (event) {
-            ExploreEvents.LoadTopics         -> loadTopics()
+            ExploreEvents.LoadTopics         -> loadTopics(state.value.page)
             is ExploreEvents.SetFilter       -> updateState { copy(filter = event.filter) }
             is ExploreEvents.RequestEnroll   -> updateState { copy(pendingEnroll = event.topic) }
             ExploreEvents.ConfirmEnroll      -> confirmEnroll()
@@ -35,6 +35,8 @@ class DefaultExploreComponent(
             ExploreEvents.ConfirmLeave       -> confirmLeave()
             ExploreEvents.DismissLeave       -> updateState { copy(pendingLeave = null) }
             ExploreEvents.NavigateBack       -> emitEffect(ExploreEffect.NavigateBack)
+            ExploreEvents.NextPage           -> { val s = state.value; if (s.page < s.totalPages - 1) loadTopics(s.page + 1) }
+            ExploreEvents.PreviousPage       -> { val s = state.value; if (s.page > 0) loadTopics(s.page - 1) }
         }
     }
 
@@ -61,6 +63,10 @@ class DefaultExploreComponent(
         }
     }
 
-    override fun ExploreState.copyBase(isLoading: Boolean, error: AppError?): ExploreState =
+    override fun ExploreState.copyBase(isLoading: Boolean, error: UiError?): ExploreState =
         copy(isLoading = isLoading, error = error)
+
+    private companion object {
+        const val PAGE_SIZE = 5
+    }
 }
