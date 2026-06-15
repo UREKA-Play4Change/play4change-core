@@ -2,7 +2,7 @@ package com.ureka.play4change.application.identity
 
 import com.ureka.play4change.application.port.UpdatePreferencesCommand
 import com.ureka.play4change.config.LanguageProperties
-import com.ureka.play4change.domain.identity.AuthProvider
+import com.ureka.play4change.auth.AuthProvider
 import com.ureka.play4change.domain.identity.User
 import com.ureka.play4change.domain.identity.UserRepository
 import com.ureka.play4change.domain.identity.UserRole
