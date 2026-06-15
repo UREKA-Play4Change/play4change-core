@@ -38,7 +38,7 @@ class MagicLinkServiceTest {
         clock = Clock.systemUTC()
     )
 
-    private val existingUser = User(
+    private val existingUser = AuthUser(
         id = "user-1",
         email = "demo@example.com",
         name = "Demo User",
