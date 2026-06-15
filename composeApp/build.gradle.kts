@@ -126,10 +126,10 @@ android {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.getByName("release")
-            buildConfigField(
-                "String", "BASE_URL",
-                "\"${project.findProperty("BASE_URL") ?: "https://play4change.ureka.com"}\""
-            )
+            val releaseUrl = (project.findProperty("BASE_URL") as? String)
+                ?.takeIf { it.isNotBlank() }
+                ?: "https://radesh-govind.com/play4change-server"
+            buildConfigField("String", "BASE_URL", "\"$releaseUrl\"")
             buildConfigField("Boolean", "USE_MOCKS", "false")
         }
     }
