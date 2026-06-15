@@ -13,4 +13,6 @@ sealed interface ExploreEvents : ComponentEvents {
     data object ConfirmLeave : ExploreEvents
     data object DismissLeave : ExploreEvents
     data object NavigateBack : ExploreEvents
+    data object NextPage : ExploreEvents
+    data object PreviousPage : ExploreEvents
 }
