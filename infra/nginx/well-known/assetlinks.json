@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.ureka.play4change",
+    "sha256_cert_fingerprints": [
+      "CE:0C:8B:49:93:D5:D0:CD:F7:12:B8:ED:8D:C5:07:AE:6F:DF:50:ED:B6:3A:43:BA:A4:88:37:50:5C:5B:88:16"
+    ]
+  }
+}]

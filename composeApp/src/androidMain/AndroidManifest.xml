@@ -36,6 +36,13 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="http" android:host="localhost" android:port="8080" android:pathPrefix="/auth/verify" />
             </intent-filter>
+            <!-- Magic link deep link — production (real devices) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="radesh-govind.com" android:pathPrefix="/auth/verify" />
+            </intent-filter>
         </activity>
         <provider
             android:name="androidx.core.content.FileProvider"
