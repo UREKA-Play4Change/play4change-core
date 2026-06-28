@@ -18,7 +18,7 @@ class AuthExceptionHandler {
     fun handleBadRequest(ex: IllegalArgumentException): ResponseEntity<MessageResponse> {
         log.debug("Auth bad request: {}", ex.message)
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(MessageResponse("Invalid request"))
+            .body(MessageResponse(ex.message ?: "Invalid request"))
     }
 
     @ExceptionHandler(SecurityException::class)
