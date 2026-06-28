@@ -52,7 +52,6 @@ springdoc = "2.3.0"
 bucket4j = "8.10.1"
 caffeine = "3.1.8"
 awssdk = "2.25.31"
-pdfbox = "3.0.1"
 jsoup = "1.17.2"
 springmockk = "4.0.2"
 
@@ -138,7 +137,6 @@ springdoc-openapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-u
 bucket4j-core = { module = "com.bucket4j:bucket4j-core", version.ref = "bucket4j" }
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
 awssdk-s3 = { module = "software.amazon.awssdk:s3", version.ref = "awssdk" }
-pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "pdfbox" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 
 # ── Testing ───────────────────────────────────────────────────────────────────

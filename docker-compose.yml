@@ -52,6 +52,33 @@
         timeout: 3s
         retries: 5
 
+    # ── Unstructured.io PDF extraction API ────────────────────────────────────
+    unstructured:
+      image: quay.io/unstructured-io/unstructured-api:latest
+      container_name: play4change-unstructured
+      ports:
+        - "9500:8000"
+      restart: unless-stopped
+      healthcheck:
+        test: ["CMD-SHELL", "python3 -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/healthcheck\")'"]
+        interval: 20s
+        timeout: 10s
+        retries: 5
+        start_period: 60s
+
+    # ── Playwright scraper sidecar ────────────────────────────────────────────
+    scraper:
+      build:
+        context: ./infra/scraper
+      container_name: play4change-scraper
+      restart: unless-stopped
+      healthcheck:
+        test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/health',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))\""]
+        interval: 15s
+        timeout: 10s
+        retries: 5
+        start_period: 30s
+
     # ── Spring Boot server ─────────────────────────────────────────────────────
     server:
       build:
@@ -69,6 +96,8 @@
         MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
         MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
         MINIO_BUCKET: play4change
+        SCRAPER_URL: http://scraper:3000
+        UNSTRUCTURED_URL: http://unstructured:8000
         MISTRAL_API_KEY: ${MISTRAL_API_KEY}
         RESEND_API_KEY: ${RESEND_API_KEY}
         RESEND_FROM: ${RESEND_FROM}
@@ -84,6 +113,10 @@
         minio:
           condition: service_healthy
         redis:
+          condition: service_healthy
+        scraper:
+          condition: service_healthy
+        unstructured:
           condition: service_healthy
       healthcheck:
         test: ["CMD", "curl", "-f", "http://localhost:9090/actuator/health"]

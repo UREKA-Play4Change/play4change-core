@@ -1,61 +1,97 @@
 package com.ureka.play4change.infrastructure.content
 
 import com.ureka.play4change.application.port.ContentExtractorPort
-import org.apache.pdfbox.Loader
-import org.apache.pdfbox.text.PDFTextStripper
-import org.jsoup.Jsoup
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.io.ByteArrayResource
+import org.springframework.http.HttpEntity
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
 import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.stereotype.Component
+import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.client.RestTemplate
 
 @Component
-class ContentExtractorAdapter : ContentExtractorPort {
+class ContentExtractorAdapter(
+    @Value("\${content.scraper-url}") private val scraperUrl: String,
+    @Value("\${content.unstructured-url}") private val unstructuredUrl: String
+) : ContentExtractorPort {
 
     private val log = LoggerFactory.getLogger(ContentExtractorAdapter::class.java)
 
-    private val restTemplate: RestTemplate = RestTemplate(
+    // Used for URL scraping — scraper has an internal 35 s cap, 45 s is sufficient headroom.
+    private val scraperRestTemplate: RestTemplate = RestTemplate(
         SimpleClientHttpRequestFactory().also {
             it.setConnectTimeout(CONNECT_TIMEOUT_MS)
-            it.setReadTimeout(READ_TIMEOUT_MS)
+            it.setReadTimeout(SCRAPER_READ_TIMEOUT_MS)
         }
-    ).also { rt ->
-        rt.interceptors.add { request, body, execution ->
-            request.headers["User-Agent"] = USER_AGENT
-            request.headers["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
-            execution.execute(request, body)
+    )
+
+    // Used for PDF extraction — OCR on large scanned documents can take up to 2 minutes.
+    private val unstructuredRestTemplate: RestTemplate = RestTemplate(
+        SimpleClientHttpRequestFactory().also {
+            it.setConnectTimeout(CONNECT_TIMEOUT_MS)
+            it.setReadTimeout(UNSTRUCTURED_READ_TIMEOUT_MS)
         }
-    }
+    )
 
     override fun extractFromUrl(url: String): String {
         UrlSsrfValidator.validate(url)
 
-        val response = try {
-            restTemplate.getForObject(url, String::class.java)
+        val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+        val entity = HttpEntity(mapOf("url" to url), headers)
+
+        @Suppress("UNCHECKED_CAST")
+        val body = try {
+            scraperRestTemplate.postForObject("$scraperUrl/scrape", entity, Map::class.java)
+                as? Map<String, Any?>
         } catch (ex: Exception) {
             throw IllegalStateException("Failed to fetch URL '$url': ${ex.message}", ex)
-        }
-        val html = response ?: throw IllegalStateException("Empty response from $url")
-        val doc = Jsoup.parse(html, url)
-        doc.select("script, style, nav, footer, header, aside, noscript").remove()
-        val text = doc.body().text().trim().replace("\u0000", "")
+        } ?: throw IllegalStateException("Empty response from scraper for '$url'")
+
+        val text = body["text"] as? String
+            ?: throw IllegalStateException("Scraper returned no text for '$url'")
+
         log.debug("Extracted {} chars from URL {}", text.length, url)
         return text
     }
 
     override fun extractFromPdf(pdfBytes: ByteArray): String {
-        return Loader.loadPDF(pdfBytes).use { doc ->
-            val stripper = PDFTextStripper()
-            val text = stripper.getText(doc).trim().replace("\u0000", "")
-            log.debug("Extracted {} chars from PDF ({} pages)", text.length, doc.getNumberOfPages())
-            text
+        val headers = HttpHeaders().apply { contentType = MediaType.MULTIPART_FORM_DATA }
+        val formBody = LinkedMultiValueMap<String, Any>().apply {
+            add("files", object : ByteArrayResource(pdfBytes) {
+                override fun getFilename() = "upload.pdf"
+            })
+            add("strategy", "auto")
         }
+        val entity = HttpEntity(formBody, headers)
+
+        @Suppress("UNCHECKED_CAST")
+        val elements = try {
+            unstructuredRestTemplate.postForObject(
+                "$unstructuredUrl/general/v0/general",
+                entity,
+                List::class.java
+            ) as? List<Map<String, Any?>>
+        } catch (ex: Exception) {
+            throw IllegalStateException("Failed to extract PDF via Unstructured: ${ex.message}", ex)
+        } ?: throw IllegalStateException("Unstructured returned null response")
+
+        val text = elements
+            .mapNotNull { it["text"] as? String }
+            .filter { it.isNotBlank() }
+            .joinToString("\n\n")
+            .trim()
+            .replace("\u0000", "")
+
+        log.debug("Extracted {} chars from PDF via Unstructured ({} elements)", text.length, elements.size)
+        return text
     }
 
     companion object {
-        private const val CONNECT_TIMEOUT_MS = 10_000
-        private const val READ_TIMEOUT_MS = 30_000
-        private const val USER_AGENT =
-            "Mozilla/5.0 (compatible; Play4Change/1.0; +https://play4change.ureka.pt)"
+        private const val CONNECT_TIMEOUT_MS = 5_000
+        private const val SCRAPER_READ_TIMEOUT_MS = 45_000
+        private const val UNSTRUCTURED_READ_TIMEOUT_MS = 120_000
     }
 }
