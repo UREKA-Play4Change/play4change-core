@@ -58,6 +58,9 @@ class TopicController(
         @RequestPart file: MultipartFile,
         @AuthenticationPrincipal adminId: String
     ): ResponseEntity<TopicResponse> {
+        if (file.size > MAX_PDF_SIZE_BYTES) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build()
+        }
         val taskCount = request.taskCount ?: 10
         val expiresAt = request.expiresAt ?: OffsetDateTime.now().plusDays(90)
         val audience = runCatching { AudienceLevel.valueOf(request.difficulty.uppercase()) }
@@ -129,6 +132,10 @@ class TopicController(
         @AuthenticationPrincipal adminId: String
     ): ResponseEntity<TopicResponse> =
         topicUseCase.regenerate(id, adminId).toResponse(HttpStatus.OK)
+
+    companion object {
+        private const val MAX_PDF_SIZE_BYTES = 25L * 1024 * 1024  // 25 MB
+    }
 
     private fun arrow.core.Either<AppError, com.ureka.play4change.domain.topic.Topic>.toResponse(
         successStatus: HttpStatus
