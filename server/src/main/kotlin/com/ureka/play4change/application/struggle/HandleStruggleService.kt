@@ -145,7 +145,8 @@ class HandleStruggleService(
                 taskId = template.id,
                 moduleId = module.id,
                 topicId = enrollment.topicId,
-                subjectDomain = template.description.take(AiContextLimits.STRUGGLE_CONTEXT_CHARS),
+                subjectDomain = (topic.rawExtractedText ?: template.description)
+                    .take(AiContextLimits.STRUGGLE_CONTEXT_CHARS),
                 audienceLevel = com.ureka.play4change.domain.AudienceLevel.valueOf(topic.audienceLevel.name),
                 language = topic.language,
                 attemptCount = 2,
