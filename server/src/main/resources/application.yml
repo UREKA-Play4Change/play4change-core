@@ -25,6 +25,10 @@ spring:
   messages:
     basename: i18n/messages
     encoding: UTF-8
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 26MB
 
 # ── AI — only activates when api-key is set to a real value ──────────────────
 # Leave as 'not-set-yet' to run without Mistral
@@ -98,6 +102,10 @@ app:
 resend:
   api-key: ${RESEND_API_KEY:}
   from: ${RESEND_FROM:noreply@radesh-govind.com}
+
+content:
+  scraper-url: ${SCRAPER_URL:http://localhost:3000}
+  unstructured-url: ${UNSTRUCTURED_URL:http://localhost:9500}
 
 minio:
   endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
