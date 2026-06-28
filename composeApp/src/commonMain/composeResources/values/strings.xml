@@ -38,6 +38,9 @@
   <string name="home_enroll_prompt_title">No topic selected</string>
   <string name="home_enroll_prompt_body">Choose a topic to start receiving daily challenges.</string>
   <string name="home_enroll_prompt_cta">Explore topics</string>
+  <string name="home_recovery_email_banner_title">Secure your account</string>
+  <string name="home_recovery_email_banner_body">Add a recovery email so you can sign in if you ever lose access to your primary address.</string>
+  <string name="home_recovery_email_banner_cta">Go to Profile</string>
   <string name="home_daily_reviews">Daily Reviews</string>
   <string name="home_review_cta">Review →</string>
   <string name="home_task_generating">Your task is being prepared — check back in a moment.</string>
@@ -73,6 +76,22 @@
   <string name="profile_preferences_section">Preferences</string>
   <string name="profile_language_label">Language</string>
   <string name="profile_language_english">English</string>
+
+  <!-- Recovery Emails -->
+  <string name="recovery_emails_section">Recovery Emails</string>
+  <string name="recovery_email_add">Add recovery email</string>
+  <string name="recovery_email_add_dialog_title">Add recovery email</string>
+  <string name="recovery_email_input_label">Email address</string>
+  <string name="recovery_email_verified">Verified</string>
+  <string name="recovery_email_pending">Pending verification</string>
+  <string name="recovery_email_remove">Remove</string>
+  <string name="recovery_email_confirm">Add</string>
+  <string name="recovery_email_max_reached">You\'ve reached the limit of 3 recovery emails.</string>
+  <string name="recovery_email_load_error">Couldn\'t load recovery emails. Make sure the server is running.</string>
+  <string name="recovery_email_verify_dialog_title">Verify recovery email</string>
+  <string name="recovery_email_verify_dialog_hint">Paste the verification code from the email you received.</string>
+  <string name="recovery_email_verify_token_label">Verification code</string>
+  <string name="recovery_email_verify_submit">Verify</string>
 
   <!-- About -->
   <string name="about_title">About</string>

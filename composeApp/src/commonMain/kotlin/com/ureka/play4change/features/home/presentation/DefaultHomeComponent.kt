@@ -9,6 +9,7 @@ import com.ureka.play4change.core.network.toUiError
 import com.ureka.play4change.core.network.toNetworkError
 import com.ureka.play4change.features.home.domain.repository.HomeRepository
 import com.ureka.play4change.features.profile.domain.repository.ProfileRepository
+import com.ureka.play4change.features.profile.domain.repository.RecoveryEmailRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -17,10 +18,26 @@ import kotlin.coroutines.cancellation.CancellationException
 class DefaultHomeComponent(
     componentContext: ComponentContext,
     private val repository: HomeRepository,
-    private val profileRepository: ProfileRepository
+    private val profileRepository: ProfileRepository,
+    private val recoveryEmailRepository: RecoveryEmailRepository
 ) : BaseComponent<HomeState, HomeEvents>(componentContext, HomeState()), HomeComponent {
 
     private var loadJob: Job? = null
+
+    init {
+        checkRecoveryEmails()
+    }
+
+    private fun checkRecoveryEmails() {
+        scope.launch {
+            try {
+                val emails = recoveryEmailRepository.listRecoveryEmails()
+                if (emails.isEmpty()) updateState { copy(showRecoveryEmailBanner = true) }
+            } catch (_: Exception) {
+                // Silently ignore — banner is a nice-to-have, not critical
+            }
+        }
+    }
 
     private fun loadHome() {
         loadJob?.cancel()
@@ -97,8 +114,9 @@ class DefaultHomeComponent(
                 profileRepository.signOut()
                 emitEffect(HomeEffect.LoggedOut)
             }
-            HomeEvents.RetryLoad            -> loadHome()
-            HomeEvents.DismissEnrollPrompt  -> updateState { copy(showEnrollPrompt = false) }
+            HomeEvents.RetryLoad                  -> loadHome()
+            HomeEvents.DismissEnrollPrompt        -> updateState { copy(showEnrollPrompt = false) }
+            HomeEvents.DismissRecoveryEmailBanner -> updateState { copy(showRecoveryEmailBanner = false) }
         }
     }
 

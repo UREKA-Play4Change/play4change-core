@@ -13,6 +13,7 @@ import com.ureka.play4change.core.network.SessionEvent
 import com.ureka.play4change.core.network.SessionEventBus
 import com.ureka.play4change.core.network.TokenStorage
 import com.ureka.play4change.features.auth.domain.repository.AuthRepository
+import com.ureka.play4change.features.profile.domain.repository.RecoveryEmailRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -31,6 +32,7 @@ class DefaultRootComponent(
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val authRepository: AuthRepository = get()
     private val tokenStorage: TokenStorage = get()
+    private val recoveryEmailRepository: RecoveryEmailRepository = get()
 
     init {
         lifecycle.doOnDestroy { scope.cancel() }
@@ -93,6 +95,15 @@ class DefaultRootComponent(
 
     override fun navigateBack() {
         navigation.pop()
+    }
+
+    override fun handleRecoveryEmailVerification(token: String) {
+        scope.launch {
+            try {
+                recoveryEmailRepository.verifyRecoveryEmail(token)
+            } catch (_: Exception) { }
+            if (tokenStorage.getAccessToken() != null) navigateToProfile()
+        }
     }
 
     override fun handleDeepLink(token: String) {

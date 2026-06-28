@@ -8,6 +8,7 @@ import com.ureka.play4change.auth.domain.model.AuthUser
 import com.ureka.play4change.auth.port.inbound.AuthUseCase
 import com.ureka.play4change.auth.port.outbound.EmailPort
 import com.ureka.play4change.auth.port.outbound.MagicLinkTokenRepository
+import com.ureka.play4change.auth.port.outbound.RecoveryEmailRepository
 import com.ureka.play4change.auth.port.outbound.UserRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -19,6 +20,7 @@ import java.util.UUID
 class MagicLinkService(
     private val magicLinkTokenRepository: MagicLinkTokenRepository,
     private val userRepository: UserRepository,
+    private val recoveryEmailRepository: RecoveryEmailRepository,
     private val emailPort: EmailPort,
     private val tokenService: TokenService,
     private val clock: Clock
@@ -49,16 +51,29 @@ class MagicLinkService(
             ?: throw IllegalArgumentException("Invalid magic link token")
 
         val user = userRepository.findByEmail(email)
-            ?: userRepository.save(
-                AuthUser(
-                    id = UUID.randomUUID().toString(),
-                    email = email,
-                    name = null,
-                    provider = AuthProvider.MAGIC_LINK,
-                    providerId = null,
-                    createdAt = OffsetDateTime.now(clock)
+            // Check verified recovery emails — lets users authenticate via their backup address
+            ?: recoveryEmailRepository.findVerifiedByEmail(email)
+                ?.let { userRepository.findById(it.userId) }
+            ?: run {
+                // If this email is a recovery email that hasn't been verified yet,
+                // refuse to create a new account — the user must verify it first.
+                if (recoveryEmailRepository.findByEmail(email) != null) {
+                    throw IllegalArgumentException(
+                        "This email is registered as a recovery email but has not been verified yet. " +
+                        "Please verify it first via the link sent to your inbox."
+                    )
+                }
+                userRepository.save(
+                    AuthUser(
+                        id = UUID.randomUUID().toString(),
+                        email = email,
+                        name = null,
+                        provider = AuthProvider.MAGIC_LINK,
+                        providerId = null,
+                        createdAt = OffsetDateTime.now(clock)
+                    )
                 )
-            )
+            }
 
         return tokenService.issue(user.id, user.email, user.role)
     }

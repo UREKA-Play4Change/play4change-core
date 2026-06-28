@@ -61,6 +61,7 @@ class RateLimitService(private val timeMeter: TimeMeter) {
             normalized == "/auth/oauth" -> 10
             normalized == "/auth/refresh" -> 20
             normalized == "/auth/logout" -> 10
+            normalized == "/auth/recovery-email/verify" -> 10
             // Per-IP caps on high-frequency API paths — prevents brute-force answer submission,
             // verdict flooding, and struggle path replay attacks.
             normalized.matches(Regex("/topics/[^/]+/task-assignments/[^/]+/submit")) -> 30

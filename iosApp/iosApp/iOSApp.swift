@@ -8,10 +8,14 @@ struct iOSApp: App {
             ContentView()
                 .onOpenURL { url in
                     guard
-                        let token = URLComponents(url: url, resolvingAgainstBaseURL: false)?
-                            .queryItems?.first(where: { $0.name == "token" })?.value
+                        let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+                        let token = components.queryItems?.first(where: { $0.name == "token" })?.value
                     else { return }
-                    MainViewControllerKt.handleMagicLinkToken(token: token)
+                    if url.host == "account" {
+                        MainViewControllerKt.handleRecoveryEmailVerificationToken(token: token)
+                    } else {
+                        MainViewControllerKt.handleMagicLinkToken(token: token)
+                    }
                 }
         }
     }

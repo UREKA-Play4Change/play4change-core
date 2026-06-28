@@ -11,5 +11,6 @@ data class HomeState(
     val homeData: HomeData? = null,
     val showLogOutDialog: Boolean = false,
     val showEnrollPrompt: Boolean = false,
+    val showRecoveryEmailBanner: Boolean = false,
     val networkError: NetworkError? = null
 ) : ComponentState

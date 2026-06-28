@@ -2,6 +2,7 @@ package com.ureka.play4change.features.profile.ui
 
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,7 +23,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Email
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,6 +37,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -52,6 +58,7 @@ import com.ureka.play4change.core.model.Badge
 import com.ureka.play4change.core.model.BadgeIconType
 import com.ureka.play4change.design.Spacing
 import com.ureka.play4change.design.components.ShimmerBox
+import com.ureka.play4change.features.profile.domain.model.RecoveryEmail
 import com.ureka.play4change.features.profile.presentation.DefaultProfileComponent
 import com.ureka.play4change.features.profile.presentation.ProfileEvents
 import org.jetbrains.compose.resources.stringResource
@@ -64,11 +71,10 @@ import play4change.composeapp.generated.resources.badge_streak_3
 import play4change.composeapp.generated.resources.badge_streak_7
 import play4change.composeapp.generated.resources.badges_empty
 import play4change.composeapp.generated.resources.badges_title
+import play4change.composeapp.generated.resources.cancel
 import play4change.composeapp.generated.resources.pagination_next
 import play4change.composeapp.generated.resources.pagination_page_of
 import play4change.composeapp.generated.resources.pagination_previous
-import play4change.composeapp.generated.resources.cancel
-import play4change.composeapp.generated.resources.profile_accuracy_label
 import play4change.composeapp.generated.resources.profile_edit_name
 import play4change.composeapp.generated.resources.profile_language_english
 import play4change.composeapp.generated.resources.profile_language_label
@@ -78,7 +84,20 @@ import play4change.composeapp.generated.resources.profile_preferences_section
 import play4change.composeapp.generated.resources.profile_save
 import play4change.composeapp.generated.resources.profile_streak_label
 import play4change.composeapp.generated.resources.profile_title
-import kotlin.math.roundToInt
+import play4change.composeapp.generated.resources.recovery_email_add
+import play4change.composeapp.generated.resources.recovery_email_add_dialog_title
+import play4change.composeapp.generated.resources.recovery_email_confirm
+import play4change.composeapp.generated.resources.recovery_email_input_label
+import play4change.composeapp.generated.resources.recovery_email_load_error
+import play4change.composeapp.generated.resources.recovery_email_max_reached
+import play4change.composeapp.generated.resources.recovery_email_pending
+import play4change.composeapp.generated.resources.recovery_email_remove
+import play4change.composeapp.generated.resources.recovery_email_verified
+import play4change.composeapp.generated.resources.recovery_email_verify_dialog_hint
+import play4change.composeapp.generated.resources.recovery_email_verify_dialog_title
+import play4change.composeapp.generated.resources.recovery_email_verify_submit
+import play4change.composeapp.generated.resources.recovery_email_verify_token_label
+import play4change.composeapp.generated.resources.recovery_emails_section
 
 private const val BADGE_PAGE_SIZE = 5
 
@@ -107,6 +126,28 @@ fun ProfileScreen(component: DefaultProfileComponent) {
                 currentLanguage = state.profile?.preferredLanguage ?: "en",
                 onSelect = { component.onEvent(ProfileEvents.LanguageSelected(it)) },
                 onDismiss = { component.onEvent(ProfileEvents.DismissLanguagePicker) }
+            )
+        }
+
+        if (state.addEmailDialogVisible) {
+            AddRecoveryEmailDialog(
+                emailInput = state.recoveryEmailInput,
+                isSaving = state.isSavingRecoveryEmail,
+                dialogError = state.recoveryEmailDialogError,
+                onInputChange = { component.onEvent(ProfileEvents.RecoveryEmailInputChanged(it)) },
+                onConfirm = { component.onEvent(ProfileEvents.SubmitAddRecoveryEmail) },
+                onDismiss = { component.onEvent(ProfileEvents.DismissAddRecoveryEmailDialog) }
+            )
+        }
+
+        if (state.verifyDialogVisible) {
+            VerifyRecoveryEmailDialog(
+                tokenInput = state.verifyTokenInput,
+                isVerifying = state.isVerifyingRecoveryEmail,
+                dialogError = state.verifyDialogError,
+                onInputChange = { component.onEvent(ProfileEvents.VerifyTokenInputChanged(it)) },
+                onConfirm = { component.onEvent(ProfileEvents.SubmitVerifyRecoveryEmail) },
+                onDismiss = { component.onEvent(ProfileEvents.DismissVerifyRecoveryEmailDialog) }
             )
         }
 
@@ -238,7 +279,7 @@ fun ProfileScreen(component: DefaultProfileComponent) {
 
                                 Spacer(Modifier.height(Spacing.l))
 
-                                // Stats row
+                                // Stats row — streak + points
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceEvenly
@@ -255,12 +296,6 @@ fun ProfileScreen(component: DefaultProfileComponent) {
                                         label = stringResource(Res.string.profile_points_label),
                                         valueColor = MaterialTheme.colorScheme.primary
                                     )
-                                    StatColumn(
-                                        emoji = "🎯",
-                                        value = "${(profile.accuracy * 100).roundToInt()}%",
-                                        label = stringResource(Res.string.profile_accuracy_label),
-                                        valueColor = MaterialTheme.colorScheme.secondary
-                                    )
                                 }
                             }
                         }
@@ -268,21 +303,7 @@ fun ProfileScreen(component: DefaultProfileComponent) {
 
                     // ── Preferences section ────────────────────────────────────
                     item {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = Spacing.xs),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.s)
-                        ) {
-                            Text(
-                                text = stringResource(Res.string.profile_preferences_section).uppercase(),
-                                style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.2.sp),
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            HorizontalDivider(modifier = Modifier.weight(1f))
-                        }
+                        SectionHeader(stringResource(Res.string.profile_preferences_section))
                     }
 
                     item {
@@ -318,23 +339,117 @@ fun ProfileScreen(component: DefaultProfileComponent) {
                         }
                     }
 
+                    // ── Recovery Emails section ────────────────────────────────
+                    item {
+                        val count = if (!state.isLoadingRecoveryEmails && !state.recoveryEmailLoadFailed)
+                            state.recoveryEmails.size else -1
+                        SectionHeader(
+                            title = stringResource(Res.string.recovery_emails_section),
+                            trailing = if (count >= 0) "$count/3" else null
+                        )
+                    }
+
+                    when {
+                        state.isLoadingRecoveryEmails -> item {
+                            ShimmerBox(modifier = Modifier.fillMaxWidth().height(64.dp))
+                        }
+                        state.recoveryEmailLoadFailed -> item {
+                            Surface(
+                                shape = MaterialTheme.shapes.medium,
+                                color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(Spacing.m),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.Info,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = stringResource(Res.string.recovery_email_load_error),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                        }
+                        else -> items(state.recoveryEmails) { email ->
+                            RecoveryEmailItem(
+                                email = email,
+                                onVerify = { component.onEvent(ProfileEvents.ShowVerifyRecoveryEmailDialog) },
+                                onRemove = { component.onEvent(ProfileEvents.RemoveRecoveryEmail(email.id)) }
+                            )
+                        }
+                    }
+
+                    item {
+                        val atLimit = state.recoveryEmails.size >= 3
+                        if (atLimit) {
+                            Surface(
+                                shape = MaterialTheme.shapes.medium,
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.s),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.Info,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = stringResource(Res.string.recovery_email_max_reached),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        } else {
+                            Surface(
+                                onClick = { component.onEvent(ProfileEvents.ShowAddRecoveryEmailDialog) },
+                                shape = MaterialTheme.shapes.medium,
+                                color = Color.Transparent,
+                                border = BorderStroke(
+                                    1.dp,
+                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.m),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.Add,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(Modifier.size(Spacing.xs))
+                                    Text(
+                                        text = stringResource(Res.string.recovery_email_add),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     // ── Badges section ─────────────────────────────────────────
                     item {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = Spacing.xs),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.s)
-                        ) {
-                            Text(
-                                text = stringResource(Res.string.badges_title).uppercase(),
-                                style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.2.sp),
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            HorizontalDivider(modifier = Modifier.weight(1f))
-                        }
+                        SectionHeader(stringResource(Res.string.badges_title))
                     }
 
                     val badgesOnPage = profile.badges
@@ -402,6 +517,32 @@ fun ProfileScreen(component: DefaultProfileComponent) {
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SectionHeader(title: String, trailing: String? = null) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = Spacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+    ) {
+        Text(
+            text = title.uppercase(),
+            style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.2.sp),
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        HorizontalDivider(modifier = Modifier.weight(1f))
+        if (trailing != null) {
+            Text(
+                text = trailing,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -519,6 +660,194 @@ private fun badgeEmoji(iconType: BadgeIconType): String = when (iconType) {
     BadgeIconType.STAR       -> "⭐"
     BadgeIconType.CAMERA     -> "📷"
     BadgeIconType.COMPASS    -> "🧭"
+}
+
+@Composable
+private fun RecoveryEmailItem(email: RecoveryEmail, onVerify: () -> Unit, onRemove: () -> Unit) {
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.s),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.m)
+        ) {
+            // Avatar circle with email icon
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (email.verified) MaterialTheme.colorScheme.primaryContainer
+                        else MaterialTheme.colorScheme.tertiaryContainer
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Rounded.Email,
+                    contentDescription = null,
+                    tint = if (email.verified) MaterialTheme.colorScheme.primary
+                           else MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            // Address + status chip
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = email.email,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Surface(
+                    shape = MaterialTheme.shapes.extraSmall,
+                    color = if (email.verified) MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.errorContainer
+                ) {
+                    Text(
+                        text = if (email.verified) stringResource(Res.string.recovery_email_verified)
+                               else stringResource(Res.string.recovery_email_pending),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = if (email.verified) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            // Verify action (pending only)
+            if (!email.verified) {
+                TextButton(
+                    onClick = onVerify,
+                    contentPadding = PaddingValues(horizontal = Spacing.s, vertical = Spacing.xxs)
+                ) {
+                    Text(
+                        text = stringResource(Res.string.recovery_email_verify_submit),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
+            // Delete
+            IconButton(
+                onClick = onRemove,
+                modifier = Modifier.size(36.dp)
+            ) {
+                Icon(
+                    Icons.Rounded.Delete,
+                    contentDescription = stringResource(Res.string.recovery_email_remove),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun VerifyRecoveryEmailDialog(
+    tokenInput: String,
+    isVerifying: Boolean,
+    dialogError: String?,
+    onInputChange: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.recovery_email_verify_dialog_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = stringResource(Res.string.recovery_email_verify_dialog_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedTextField(
+                    value = tokenInput,
+                    onValueChange = onInputChange,
+                    label = { Text(stringResource(Res.string.recovery_email_verify_token_label)) },
+                    singleLine = true,
+                    enabled = !isVerifying,
+                    isError = dialogError != null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (dialogError != null) {
+                    Text(
+                        text = dialogError,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                enabled = tokenInput.trim().isNotBlank() && !isVerifying
+            ) { Text(stringResource(Res.string.recovery_email_verify_submit)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !isVerifying) {
+                Text(stringResource(Res.string.cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun AddRecoveryEmailDialog(
+    emailInput: String,
+    isSaving: Boolean,
+    dialogError: String?,
+    onInputChange: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.recovery_email_add_dialog_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                OutlinedTextField(
+                    value = emailInput,
+                    onValueChange = onInputChange,
+                    label = { Text(stringResource(Res.string.recovery_email_input_label)) },
+                    singleLine = true,
+                    enabled = !isSaving,
+                    isError = dialogError != null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (dialogError != null) {
+                    Text(
+                        text = dialogError,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                enabled = emailInput.trim().isNotBlank() && !isSaving
+            ) { Text(stringResource(Res.string.recovery_email_confirm)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !isSaving) {
+                Text(stringResource(Res.string.cancel))
+            }
+        }
+    )
 }
 
 @Composable

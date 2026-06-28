@@ -8,6 +8,6 @@ import org.koin.dsl.module
 val homeModule = module {
     single<HomeRepository> { HttpHomeRepository(get(), get()) }
     factory { (context: com.arkivanov.decompose.ComponentContext) ->
-        DefaultHomeComponent(context, get(), get())
+        DefaultHomeComponent(context, get(), get(), get())
     }
 }

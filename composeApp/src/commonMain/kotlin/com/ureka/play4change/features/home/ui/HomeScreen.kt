@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.rounded.ExitToApp
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Explore
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.RateReview
@@ -77,6 +78,9 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import play4change.composeapp.generated.resources.Res
 import play4change.composeapp.generated.resources.cancel
+import play4change.composeapp.generated.resources.home_recovery_email_banner_body
+import play4change.composeapp.generated.resources.home_recovery_email_banner_cta
+import play4change.composeapp.generated.resources.home_recovery_email_banner_title
 import play4change.composeapp.generated.resources.home_completed_today
 import play4change.composeapp.generated.resources.home_daily_reviews
 import play4change.composeapp.generated.resources.home_task_generating
@@ -280,6 +284,16 @@ fun HomeScreen(component: DefaultHomeComponent) {
                         .padding(innerPadding),
                     verticalArrangement = Arrangement.spacedBy(Spacing.m)
                 ) {
+
+                    // ── Recovery email security banner ────────────────────────────────
+                    if (state.showRecoveryEmailBanner) {
+                        item {
+                            RecoveryEmailBanner(
+                                onGoToProfile = { onEvent(HomeEvents.OpenProfile) },
+                                onDismiss = { onEvent(HomeEvents.DismissRecoveryEmailBanner) }
+                            )
+                        }
+                    }
 
                     // ── HERO ─────────────────────────────────────────────────────────
                     item {
@@ -808,6 +822,64 @@ internal fun greetingName(userName: String): String {
         .split("\\s+".toRegex())
         .filter { it.isNotEmpty() }
     return words.firstOrNull()?.replaceFirstChar { it.uppercaseChar() } ?: "there"
+}
+
+@Composable
+private fun RecoveryEmailBanner(onGoToProfile: () -> Unit, onDismiss: () -> Unit) {
+    Card(
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.l)
+    ) {
+        Row(
+            modifier = Modifier.padding(Spacing.m),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+        ) {
+            Icon(
+                Icons.Rounded.Info,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                modifier = Modifier.size(20.dp).padding(top = 2.dp)
+            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+            ) {
+                Text(
+                    text = stringResource(Res.string.home_recovery_email_banner_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+                Text(
+                    text = stringResource(Res.string.home_recovery_email_banner_body),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
+                )
+                TextButton(onClick = onGoToProfile) {
+                    Text(
+                        text = stringResource(Res.string.home_recovery_email_banner_cta),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+            }
+            IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
+                Icon(
+                    Icons.Rounded.Close,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+    }
 }
 
 @Composable

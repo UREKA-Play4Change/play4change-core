@@ -30,10 +30,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIntent(intent: Intent) {
-        val token = intent.data
-            ?.takeIf { it.path?.startsWith("/auth/verify") == true }
-            ?.getQueryParameter("token")
-            ?: return
-        root.handleDeepLink(token)
+        val uri = intent.data ?: return
+        val token = uri.getQueryParameter("token") ?: return
+        when (uri.host) {
+            "auth" -> root.handleDeepLink(token)
+            "account" -> root.handleRecoveryEmailVerification(token)
+        }
     }
 }

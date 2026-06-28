@@ -15,4 +15,11 @@ class ConsoleEmailAdapter : EmailPort {
         log.info("Token: $token")
         log.info("=====================================================")
     }
+
+    override fun sendRecoveryEmailVerification(toEmail: String, token: String) {
+        log.info("=== RECOVERY EMAIL VERIFICATION TOKEN (dev mode — no real email sent) ===")
+        log.info("To: $toEmail")
+        log.info("Token: $token")
+        log.info("=========================================================================")
+    }
 }

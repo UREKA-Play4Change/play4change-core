@@ -13,4 +13,13 @@ sealed interface ProfileEvents : ComponentEvents {
     data class LanguageSelected(val code: String) : ProfileEvents
     data object NextBadgePage : ProfileEvents
     data object PreviousBadgePage : ProfileEvents
+    data object ShowAddRecoveryEmailDialog : ProfileEvents
+    data object DismissAddRecoveryEmailDialog : ProfileEvents
+    data class RecoveryEmailInputChanged(val value: String) : ProfileEvents
+    data object SubmitAddRecoveryEmail : ProfileEvents
+    data class RemoveRecoveryEmail(val id: String) : ProfileEvents
+    data object ShowVerifyRecoveryEmailDialog : ProfileEvents
+    data object DismissVerifyRecoveryEmailDialog : ProfileEvents
+    data class VerifyTokenInputChanged(val value: String) : ProfileEvents
+    data object SubmitVerifyRecoveryEmail : ProfileEvents
 }

@@ -25,6 +25,7 @@ interface RootComponent {
     fun navigateToExplanation(sessionId: String)
     fun navigateBack()
     fun handleDeepLink(token: String)
+    fun handleRecoveryEmailVerification(token: String)
 
     sealed class Child {
         data class Splash(val component: DefaultSplashComponent) : Child()
