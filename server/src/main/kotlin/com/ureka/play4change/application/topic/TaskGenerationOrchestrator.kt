@@ -16,6 +16,7 @@ import com.ureka.play4change.domain.topic.TopicRepository
 import com.ureka.play4change.domain.topic.TopicStatus
 import com.ureka.play4change.infrastructure.ai.AiContextLimits
 import com.ureka.play4change.infrastructure.ai.AiOutputSanitiser
+import com.ureka.play4change.infrastructure.ai.ContentChunker
 import com.ureka.play4change.infrastructure.ai.OptionsJsonParser
 import com.ureka.play4change.model.GenerationRequest
 import com.ureka.play4change.model.GenerationStatus
@@ -98,115 +99,154 @@ class TaskGenerationOrchestrator(
                 )
             )
 
-            if (rawText.length > AiContextLimits.CONTENT_CHARS) {
-                log.warn("Topic $topicId: content truncated from ${rawText.length} to ${AiContextLimits.CONTENT_CHARS} chars")
-            }
             if (topic.description.length > AiContextLimits.DESCRIPTION_CHARS) {
-                log.warn("Topic $topicId: module objective truncated from ${topic.description.length} to ${AiContextLimits.DESCRIPTION_CHARS} chars")
+                log.warn(
+                    "Topic $topicId: module objective truncated from ${topic.description.length} " +
+                        "to ${AiContextLimits.DESCRIPTION_CHARS} chars"
+                )
             }
 
-            val request = GenerationRequest(
-                topicId = topicId,
-                moduleId = module.id,
-                subjectDomain = rawText.take(AiContextLimits.CONTENT_CHARS),
-                audienceLevel = com.ureka.play4change.domain.AudienceLevel.valueOf(topic.audienceLevel.name),
-                language = topic.language,
-                taskCount = topic.taskCount,
-                moduleObjective = topic.description.take(AiContextLimits.DESCRIPTION_CHARS),
-                onTaskGenerated = { completed, total ->
-                    eventPublisher.generationProgress(topicId, completed, total)
-                }
-            )
+            val chunks = ContentChunker.chunk(rawText)
+            if (chunks.size > 1) {
+                log.info(
+                    "Topic {}: content split into {} chunks ({} chars total)",
+                    topicId, chunks.size, rawText.length
+                )
+            }
 
             // ANALYSIS → GENERATION
             phaseTransitionService.transitionTo(topicId, GenerationPhase.GENERATION)
 
-            // --- GENERATION phase: AI call (suspends, doesn't block the thread) ---
-            val result = withTimeoutOrNull(timeoutSeconds * 1_000L) {
-                taskGenerationPort.generateTasks(request)
-            }
+            // --- GENERATION phase: one AI call per chunk ---
+            // Templates are saved after each chunk so the next chunk's generation can
+            // detect cross-chunk duplicates via pgvector before making its own AI call.
+            var globalTaskIndex = 0
+            val allTemplates = mutableListOf<TaskTemplate>()
 
-            if (result == null) {
-                log.error("Task generation timed out ({}s) for topic {}", timeoutSeconds, topicId)
-                phaseTransitionService.transitionTo(topicId, GenerationPhase.FAILED)
-                topicRepository.updateStatus(topicId, TopicStatus.FAILED)
-                eventPublisher.failed(topicId, "AI generation timed out after ${timeoutSeconds}s")
-                sample.stop(registry.timer("task.generation.duration", "status", "timeout"))
-                return
-            }
+            for ((chunkIndex, chunk) in chunks.withIndex()) {
+                val request = GenerationRequest(
+                    topicId = topicId,
+                    moduleId = module.id,
+                    subjectDomain = chunk,
+                    audienceLevel = com.ureka.play4change.domain.AudienceLevel.valueOf(topic.audienceLevel.name),
+                    language = topic.language,
+                    taskCount = topic.taskCount,
+                    moduleObjective = topic.description.take(AiContextLimits.DESCRIPTION_CHARS),
+                    onTaskGenerated = { completed, total ->
+                        eventPublisher.generationProgress(topicId, completed, total)
+                    }
+                )
 
-            result.fold(
-                ifLeft = { error ->
-                    log.error("Task generation returned error for topic {}: {}", topicId, error)
-                    phaseTransitionService.transitionTo(topicId, GenerationPhase.FAILED)
-                    topicRepository.updateStatus(topicId, TopicStatus.FAILED)
-                    eventPublisher.failed(topicId, "AI generation failed: ${error.javaClass.simpleName}")
-                    sample.stop(registry.timer("task.generation.duration", "status", "failed"))
-                },
-                ifRight = { generationResult ->
-                    // GENERATION → INDEXING
-                    phaseTransitionService.transitionTo(topicId, GenerationPhase.INDEXING)
+                val result = withTimeoutOrNull(timeoutSeconds * 1_000L) {
+                    taskGenerationPort.generateTasks(request)
+                }
 
-                    // --- INDEXING phase: persist templates and instances ---
-                    val templates = generationResult.tasks
-                        .filter { it.status == GenerationStatus.SUCCESS }
-                        .mapIndexed { idx, task ->
-                            TaskTemplate(
-                                id = UUID.randomUUID().toString(),
-                                moduleId = module.id,
-                                dayIndex = idx,
-                                poolIndex = 0,
-                                title = AiOutputSanitiser.sanitise(task.title),
-                                description = AiOutputSanitiser.sanitise(task.description),
-                                hint = AiOutputSanitiser.sanitise(task.hint),
-                                taskType = TaskType.MULTIPLE_CHOICE,
-                                pointsReward = task.pointsReward,
-                                options = task.optionsJson
-                                    ?.let { OptionsJsonParser.parse(it) }
-                                    ?.map { AiOutputSanitiser.sanitise(it) },
-                                correctAnswer = task.correctAnswerIndex,
-                                version = 1,
-                                isCurrent = true,
-                                supersededBy = null,
-                                embedding = task.embedding,
-                                language = request.language,
-                                createdAt = OffsetDateTime.now()
+                if (result == null) {
+                    if (chunkIndex == 0) {
+                        log.error("Task generation timed out ({}s) for topic {} chunk 0", timeoutSeconds, topicId)
+                        phaseTransitionService.transitionTo(topicId, GenerationPhase.FAILED)
+                        topicRepository.updateStatus(topicId, TopicStatus.FAILED)
+                        eventPublisher.failed(topicId, "AI generation timed out after ${timeoutSeconds}s")
+                        sample.stop(registry.timer("task.generation.duration", "status", "timeout"))
+                        return
+                    }
+                    log.warn(
+                        "Topic {}: chunk {} timed out — proceeding with {} tasks collected so far",
+                        topicId, chunkIndex, allTemplates.size
+                    )
+                    break
+                }
+
+                var chunkFailed = false
+                result.fold(
+                    ifLeft = { error ->
+                        if (chunkIndex == 0) {
+                            log.error("Task generation failed for topic {} chunk 0: {}", topicId, error)
+                            chunkFailed = true
+                        } else {
+                            log.warn(
+                                "Topic {}: chunk {} failed: {} — proceeding with {} tasks",
+                                topicId, chunkIndex, error, allTemplates.size
                             )
                         }
-
-                    taskTemplateRepository.saveAll(templates)
-                    batchInstanceGenerationService.generateAndSave(templates)
-
-                    // Upsert MicroCompetence — create on first generation, update name/description on regeneration
-                    val existing = badgeRepository.findMicroCompetenceByTopicId(topicId)
-                    val microCompetence = if (existing != null) {
-                        existing.copy(
-                            name = topic.title,
-                            description = topic.description.ifBlank { topic.title }
-                        )
-                    } else {
-                        MicroCompetence(
-                            id = UUID.randomUUID().toString(),
-                            name = topic.title,
-                            description = topic.description.ifBlank { topic.title },
-                            topicId = topicId
-                        )
+                    },
+                    ifRight = { generationResult ->
+                        val chunkTemplates = generationResult.tasks
+                            .filter { it.status == GenerationStatus.SUCCESS }
+                            .mapIndexed { idx, task ->
+                                TaskTemplate(
+                                    id = UUID.randomUUID().toString(),
+                                    moduleId = module.id,
+                                    dayIndex = globalTaskIndex + idx,
+                                    poolIndex = 0,
+                                    title = AiOutputSanitiser.sanitise(task.title),
+                                    description = AiOutputSanitiser.sanitise(task.description),
+                                    hint = AiOutputSanitiser.sanitise(task.hint),
+                                    taskType = TaskType.MULTIPLE_CHOICE,
+                                    pointsReward = task.pointsReward,
+                                    options = task.optionsJson
+                                        ?.let { OptionsJsonParser.parse(it) }
+                                        ?.map { AiOutputSanitiser.sanitise(it) },
+                                    correctAnswer = task.correctAnswerIndex,
+                                    version = 1,
+                                    isCurrent = true,
+                                    supersededBy = null,
+                                    embedding = task.embedding,
+                                    language = request.language,
+                                    createdAt = OffsetDateTime.now()
+                                )
+                            }
+                        taskTemplateRepository.saveAll(chunkTemplates)
+                        allTemplates += chunkTemplates
+                        globalTaskIndex += chunkTemplates.size
                     }
-                    badgeRepository.saveMicroCompetence(microCompetence)
-                    log.info("MicroCompetence upserted for topic {}", topicId)
+                )
 
-                    // INDEXING → ACTIVE
-                    phaseTransitionService.transitionTo(topicId, GenerationPhase.ACTIVE)
-                    topicRepository.updateStatus(topicId, TopicStatus.ACTIVE)
-                    val totalMs = System.currentTimeMillis() - startMs
-                    log.info(
-                        "Topic {} generation complete — {} task(s) created in {}ms",
-                        topicId, templates.size, totalMs
-                    )
-                    eventPublisher.completed(topicId, totalMs)
-                    sample.stop(registry.timer("task.generation.duration", "status", "success"))
+                if (chunkFailed) {
+                    phaseTransitionService.transitionTo(topicId, GenerationPhase.FAILED)
+                    topicRepository.updateStatus(topicId, TopicStatus.FAILED)
+                    eventPublisher.failed(topicId, "AI generation failed: ${result.leftOrNull()?.javaClass?.simpleName}")
+                    sample.stop(registry.timer("task.generation.duration", "status", "failed"))
+                    return
                 }
+            }
+
+            // GENERATION → INDEXING
+            phaseTransitionService.transitionTo(topicId, GenerationPhase.INDEXING)
+
+            // --- INDEXING phase: generate instances for all collected templates ---
+            // Templates are already persisted (saved per-chunk above); only instance
+            // generation and badge upsert remain.
+            batchInstanceGenerationService.generateAndSave(allTemplates)
+
+            val existing = badgeRepository.findMicroCompetenceByTopicId(topicId)
+            val microCompetence = if (existing != null) {
+                existing.copy(
+                    name = topic.title,
+                    description = topic.description.ifBlank { topic.title }
+                )
+            } else {
+                MicroCompetence(
+                    id = UUID.randomUUID().toString(),
+                    name = topic.title,
+                    description = topic.description.ifBlank { topic.title },
+                    topicId = topicId
+                )
+            }
+            badgeRepository.saveMicroCompetence(microCompetence)
+            log.info("MicroCompetence upserted for topic {}", topicId)
+
+            // INDEXING → ACTIVE
+            phaseTransitionService.transitionTo(topicId, GenerationPhase.ACTIVE)
+            topicRepository.updateStatus(topicId, TopicStatus.ACTIVE)
+            val totalMs = System.currentTimeMillis() - startMs
+            log.info(
+                "Topic {} generation complete — {} task(s) across {} chunk(s) in {}ms",
+                topicId, allTemplates.size, chunks.size, totalMs
             )
+            eventPublisher.completed(topicId, totalMs)
+            sample.stop(registry.timer("task.generation.duration", "status", "success"))
+
         } catch (ex: Exception) {
             log.error("Unexpected error during task generation for topic {}: {}", topicId, ex.message, ex)
             phaseTransitionService.transitionTo(topicId, GenerationPhase.FAILED)
