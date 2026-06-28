@@ -64,7 +64,6 @@ dependencies {
 
     // Content & storage
     implementation(libs.awssdk.s3)
-    implementation(libs.pdfbox)
     implementation(libs.jsoup)
 
     spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:1.13.0")
