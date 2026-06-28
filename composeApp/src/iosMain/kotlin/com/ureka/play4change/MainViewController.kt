@@ -16,9 +16,14 @@ private val koinInit by lazy {
 
 // Called from Swift's onOpenURL handler.
 private var deepLinkHandler: ((String) -> Unit)? = null
+private var recoveryEmailVerificationHandler: ((String) -> Unit)? = null
 
 fun handleMagicLinkToken(token: String) {
     deepLinkHandler?.invoke(token)
+}
+
+fun handleRecoveryEmailVerificationToken(token: String) {
+    recoveryEmailVerificationHandler?.invoke(token)
 }
 
 fun MainViewController() = ComposeUIViewController {
@@ -33,7 +38,11 @@ fun MainViewController() = ComposeUIViewController {
     }
     DisposableEffect(root) {
         deepLinkHandler = { token -> root.handleDeepLink(token) }
-        onDispose { deepLinkHandler = null }
+        recoveryEmailVerificationHandler = { token -> root.handleRecoveryEmailVerification(token) }
+        onDispose {
+            deepLinkHandler = null
+            recoveryEmailVerificationHandler = null
+        }
     }
     App(root)
 }
